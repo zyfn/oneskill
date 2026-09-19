@@ -40,7 +40,7 @@ oneskill/skills/my-skill ─┤
 oneskill 是单文件脚本、没有依赖，clone 到任意位置即可（脚本按自身所在目录定位源目录和名单）。下面以 clone 进家目录为例：
 
 ```bash
-git clone <repo-url> ~/oneskill
+git clone https://github.com/zyfn/oneskill.git ~/oneskill
 cd ~/oneskill
 ```
 
