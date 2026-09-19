@@ -2,7 +2,7 @@
 
 **Agent skill 的统一管理：一份真身，按需链接分发。**
 
-同一台机器上跑多个 Agent（QwenWork、Codex、Claude Code……）时，它们各有各的 skills 目录。想让几个 Agent 共用同一个 skill，只能复制几份分别放进去；skill 一更新，其余副本立刻过期，改哪份、漏哪份全靠自己记。
+同一台机器上跑多个 Agent（Codex、Claude Code、Gemini CLI……）时，它们各有各的 skills 目录。想让几个 Agent 共用同一个 skill，只能复制几份分别放进去；skill 一更新，其余副本立刻过期，改哪份、漏哪份全靠自己记。
 
 oneskill 把 skill 的真实内容只存放一处（源目录），各 Agent 的 skills 目录里放指向它的符号链接。改源目录，所有 Agent 同时生效；删掉某条链接，就收回那个 Agent 的使用权，真实内容不受影响。
 
@@ -17,7 +17,7 @@ oneskill 把 skill 的真实内容只存放一处（源目录），各 Agent 的
 名单（agents.registry）记录每个 Agent 的标准 skills 目录，脚本据此解析路径，在对应目录创建符号链接：
 
 ```
-                          ┌─ symlink ─▶ ~/.qwenworkcn/skills/my-skill
+                          ┌─ symlink ▶ ~/.claude/skills/my-skill
 oneskill/skills/my-skill ─┤
                           └─ symlink ─▶ ~/.codex/skills/my-skill
 ```
@@ -33,7 +33,7 @@ oneskill/skills/my-skill ─┤
 
 ## 快速开始
 
-以下示例使用一个名为 `my-skill` 的 skill，机器上装着 QwenWork 和 Codex。
+以下示例使用一个名为 `my-skill` 的 skill，机器上装着 Codex 和 Claude Code。
 
 **1. 安装**
 
@@ -43,8 +43,6 @@ oneskill 是单文件脚本、没有依赖，clone 到任意位置即可（脚�
 git clone https://github.com/zyfn/oneskill.git ~/oneskill
 cd ~/oneskill
 ```
-
-后续更新在目录里 `git pull` 即可：真身更新，所有 Agent 的链接立刻生效。
 
 **2. 把 skill 放进源目录**
 
@@ -58,13 +56,13 @@ cp -R /path/to/my-skill skills/my-skill
 
 ```
 $ ./oneskill.sh detect
-┌──────────┬──────────────────────┬─────────────────┐
-│ AGENT    │ SKILL DIR            │ STATUS          │
-├──────────┼──────────────────────┼─────────────────┤
-│ qwenwork │ ~/.qwenworkcn/skills │ ✓ installed     │
-│ codex    │ ~/.codex/skills      │ ✓ installed     │
-│ claude   │ ~/.claude/skills     │ ✗ not installed │
-└──────────┴──────────────────────┴─────────────────┘
+┌────────┬──────────────────┬─────────────────┐
+│ AGENT  │ SKILL DIR        │ STATUS          │
+├────────┼──────────────────┼─────────────────┤
+│ claude │ ~/.claude/skills │ ✓ installed     │
+│ codex  │ ~/.codex/skills  │ ✓ installed     │
+│ gemini │ ~/.gemini/skills │ ✗ not installed │
+└────────┴──────────────────┴─────────────────┘
 ```
 
 **4. 链给某个 Agent**
@@ -82,16 +80,16 @@ $ ./oneskill.sh link codex my-skill
 
 ```
 $ ./oneskill.sh list
-┌──────────┬──────────┬───────┐
-│ SKILL    │ qwenwork │ codex │
-├──────────┼──────────┼───────┤
-│ my-skill │ ✗        │ ✓     │
-└──────────┴──────────┴───────┘
+┌──────────┬────────┬───────┐
+│ SKILL    │ claude │ codex │
+├──────────┼────────┼───────┤
+│ my-skill │ ✗      │ ✓     │
+└──────────┴────────┴───────┘
 
 ✓ linked   ! broken   ✗ not linked
 ```
 
-codex 列的 ✓ 表示链接已生效；qwenwork 还是 ✗，需要的话再 `link qwenwork my-skill`。
+codex 列的 ✓ 表示链接已生效；claude 还是 ✗，需要的话再 `link claude my-skill`。
 
 ## 命令一览
 
@@ -113,7 +111,7 @@ Agent 名单靠维护，不靠扫描。早期版本试过自动发现：扫家�
 
 符号链接不是复制。源目录一旦移走，所有链接就悬空；validate 会重建能重建的、报告不能重建的，但不会替使用者删任何东西，源恢复后悬空链接自行复活。
 
-各 Agent 的 skill 格式并不互通。QwenWork、Codex、Claude Code 都用「一个含 SKILL.md 的目录」这套约定，链接过去直接生效；Cursor、Qoder 未必从这些目录加载，链之前先确认，否则链接建了也不起作用。
+各 Agent 的 skill 格式并不互通。Codex、Claude Code 等采用「一个含 SKILL.md 的目录」这套约定的 Agent，链接过去直接生效；Cursor、Qoder 未必从这些目录加载，链之前先确认，否则链接建了也不起作用。
 
 ## 安全边界
 
