@@ -1,0 +1,6 @@
+# 源目录内容不随仓库分发，只保留空目录骨架
+skills/*
+!skills/.gitkeep
+
+# macOS
+.DS_Store

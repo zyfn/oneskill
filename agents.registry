@@ -1,0 +1,17 @@
+# agents.registry — known agents and their standard skill dirs
+#
+# Curated list of agents whose skill-loading convention has been confirmed.
+# detect reads this file only; it performs no filesystem guessing or discovery,
+# because the presence of a skills/ dir or SKILL.md files does not prove that a
+# directory belongs to an agent that loads skills from there.
+#
+# Format:  <name> | <skill dir>      (dir may use ~, expanded at runtime)
+# Manage entries with:  oneskill.sh agent add|update <name> <dir>
+# Lines starting with # and blank lines are ignored.
+
+qwenwork | ~/.qwenworkcn/skills
+codex    | ~/.codex/skills
+claude   | ~/.claude/skills
+qoder    | ~/.qoder/skills
+cursor   | ~/.cursor/skills
+gemini   | ~/.gemini/skills
