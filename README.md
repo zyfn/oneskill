@@ -105,13 +105,7 @@ codex 列的 ✓ 表示链接已生效；claude 还是 ✗，需要的话再 `li
 | `agent add <name> <dir>` | 向名单添加一个 Agent |
 | `agent update <name> <dir>` | 修改名单中已有条目 |
 
-## 设计取舍
-
-Agent 名单靠维护，不靠扫描。早期版本试过自动发现：扫家目录下所有 skills 目录，里面有 SKILL.md 就当是 Agent。结果扫出了 .r2c、.loongsuite-pilot 这类无关工具的缓存目录，差点往里面建链接。一个目录是不是 Agent 无法从文件系统猜出来，所以维护一份确认过的名单 agents.registry，用 `agent add` 增补。
-
-符号链接不是复制。源目录一旦移走，所有链接就悬空；validate 会重建能重建的、报告不能重建的，但不会替使用者删任何东西，源恢复后悬空链接自行复活。
-
-各 Agent 的 skill 格式并不互通。Codex、Claude Code 等采用「一个含 SKILL.md 的目录」这套约定的 Agent，链接过去直接生效；Cursor、Qoder 未必从这些目录加载，链之前先确认，否则链接建了也不起作用。
+注意：链接只对采用「一个含 SKILL.md 的目录」这套约定的 Agent 生效（Codex、Claude Code 等）。Cursor、Qoder 未必从这些目录加载，链之前先确认。
 
 ## 安全边界
 
