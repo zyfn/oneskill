@@ -102,6 +102,7 @@ codex 列的 ✓ 表示链接已生效；claude 还是 ✗，需要的话再 `li
 | `link-all <agent>` | 链接源目录中全部 skill |
 | `unlink-all <agent> --yes` | 移除某 Agent 的全部链接，需确认 |
 | `validate [agent]` | 修复悬空链接；源已不存在的只报告、不删除 |
+| `serve [port]` | 本地管理页面：链接矩阵点选、validate、加 Agent。只监听 127.0.0.1，每次启动打印一次性 token，需 python3 |
 | `agent add <name> <dir>` | 向名单添加一个 Agent |
 | `agent update <name> <dir>` | 修改名单中已有条目 |
 
@@ -113,4 +114,4 @@ codex 列的 ✓ 表示链接已生效；claude 还是 ✗，需要的话再 `li
 
 ## 维护
 
-单文件 bash，无外部依赖；问题与改进直接修改 oneskill.sh 与 agents.registry 即可。
+核心是单文件 bash，无外部依赖；`serve` 的页面额外需要 python3（macOS、Linux 自带）。问题与改进直接修改 oneskill.sh 与 agents.registry 即可。
