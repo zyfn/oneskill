@@ -337,7 +337,7 @@ PAGE = """<!doctype html><html><head><meta charset=utf-8>
  --accent:#0071e3;--accent-hi:#0077ed;--sel:#0a66ff;
  --green:#34c759;--red:#ff3b30;--orange:#ff9500;
  --green-t:rgba(52,199,89,.14);--red-t:rgba(255,59,48,.12);
- --track:rgba(0,0,0,.12);--btn2:#e9e9eb;--btn2-hi:#dedee0;--console:#f4f4f6;
+ --track:#e9e9ea;--btn2:#e9e9eb;--btn2-hi:#dedee0;--console:#f4f4f6;
  --edge:0 0 0 .5px rgba(0,0,0,.07);
  --ease:cubic-bezier(.25,.46,.45,.94);
 }
@@ -345,7 +345,7 @@ PAGE = """<!doctype html><html><head><meta charset=utf-8>
  --win:#000;--side:rgba(28,28,30,.82);--card:#1c1c1e;
  --text:#f5f5f7;--text2:#98989d;--hair:rgba(255,255,255,.10);
  --field:rgba(255,255,255,.08);--hover:rgba(255,255,255,.06);
- --sel:#0a84ff;--track:rgba(255,255,255,.16);--btn2:#323236;--btn2-hi:#3a3a3e;--console:#141416;
+ --sel:#0a84ff;--track:#39393d;--btn2:#323236;--btn2-hi:#3a3a3e;--console:#141416;
  --edge:0 0 0 .5px rgba(255,255,255,.09);
 }}
 *{box-sizing:border-box}
@@ -383,16 +383,13 @@ aside{width:236px;flex:none;position:sticky;top:0;height:100vh;padding:16px 10px
  box-shadow:0 6px 24px rgba(0,0,0,.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
  transition:opacity .18s var(--ease),transform .18s var(--ease);z-index:20}
 #toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;cursor:pointer}
-main{flex:1;padding:26px 26px 64px;max-width:920px;width:100%;margin:0 auto}
+main{flex:1;padding:22px 26px 64px;max-width:920px;width:100%;margin:0 auto}
 #errbar{display:none;background:var(--red-t);color:var(--red);border-radius:9px;padding:9px 13px;margin:0 0 18px;font-size:12.5px;font-weight:500}
-.phead h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.015em}
-.phead p{margin:3px 0 0;font-size:12.5px;color:var(--text2)}
-.phead{margin:0 0 22px}
 /* grouped lists */
-.glabel{font-size:11.5px;color:var(--text2);margin:0 2px 5px}
+.glabel{font-size:11px;color:var(--text2);margin:0 2px 5px}
 .group{background:var(--card);border-radius:10px;box-shadow:var(--edge);overflow:hidden}
 .group.pad{padding:10px 12px}
-.group+.glabel{margin-top:24px}
+.group+.glabel{margin-top:22px}
 table{width:100%;border-collapse:collapse}
 th{font-size:11px;font-weight:400;color:var(--text2);text-align:left;padding:8px 14px 5px}
 td{padding:0 14px;height:42px;text-align:left;font-size:13px}
@@ -404,11 +401,11 @@ tbody tr:hover{background-color:var(--hover)}
 .pill{display:inline-flex;align-items:center;height:19px;padding:0 9px;border-radius:980px;font-size:11px;font-weight:500}
 .pill.ok{background:var(--green-t);color:var(--green)}
 .pill.bad{background:var(--red-t);color:var(--red)}
-/* switch */
-.sw{position:relative;display:inline-block;width:40px;height:24px;vertical-align:middle}
+/* switch: measured iOS geometry */
+.sw{position:relative;display:inline-block;width:42px;height:26px;vertical-align:middle}
 .sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.sw .tr{position:absolute;inset:0;background:var(--track);border-radius:12px;transition:background .15s var(--ease);pointer-events:none}
-.sw .tr:before{content:"";position:absolute;width:20px;height:20px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.3),0 0 0 .5px rgba(0,0,0,.04);transition:transform .15s var(--ease)}
+.sw .tr{position:absolute;inset:0;background:var(--track);border-radius:13px;transition:background .16s var(--ease);pointer-events:none}
+.sw .tr:before{content:"";position:absolute;width:22px;height:22px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.22),0 0 0 .5px rgba(0,0,0,.04);transition:transform .16s var(--ease)}
 .sw input:checked+.tr{background:var(--green)}
 .sw input:checked+.tr:before{transform:translateX(16px)}
 .sw.warn input:checked+.tr{background:var(--orange)}
@@ -442,14 +439,11 @@ input.txt:focus{box-shadow:0 0 0 3px rgba(10,102,255,.35)}
  <main>
   <div id=errbar></div>
   <section id=view-skills class=view>
-   <div class=phead><h1>Skills</h1><p>Every skill in the source directory and which agents can see it. Toggle to link or unlink.</p></div>
    <div class=glabel>Link matrix</div>
    <div class=group><table id=matrix></table></div>
-   <div class=note>Orange means the link exists but its source is missing — run the wrench in the toolbar to repair.
-    <span style="float:right"><select id=ag-sel></select> <button class="btn ghost" style="height:24px;padding:0 10px;font-size:12px" onclick=runAll()>Link all</button></span></div>
+   <div class=note>Orange = link exists but its source is missing; repair with the wrench.</div>
   </section>
   <section id=view-agents class="view active">
-   <div class=phead><h1>Agents</h1><p>Every agent oneskill knows about — installed or not. Add one and it becomes linkable immediately.</p></div>
    <div class=glabel>Known agents</div>
    <div class=group><table id=ag-table></table></div>
    <div class=glabel>Add agent</div>
@@ -502,7 +496,6 @@ function draw(){
           ' data-skill="'+esc(r.skill)+'" data-agent="'+esc(a.name)+'"><span class=tr></span></label></td>';
       }).join('')+'</tr>').join('')+'</tbody>'
     : '<tbody><tr><td class=empty>No installed agents yet.</td></tr></tbody>';
-  $('ag-sel').innerHTML=A.map(a=>'<option value="'+esc(a.name)+'">'+esc(a.name)+'</option>').join('');
 }
 let toastTimer=0;
 function say(t){
@@ -532,15 +525,18 @@ $('matrix').addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset && t.dataset.skill) toggle(t.dataset.skill,t.dataset.agent);
 });
-function runAll(){const s=$('ag-sel').value; if(s) run(['link-all',s]);}
 function addAgent(){run(['agent','add',$('add-name').value.trim(),$('add-dir').value.trim()]);$('add-name').value='';$('add-dir').value='';}
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>{
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active',s.id==='view-'+el.dataset.view));
-  const h=document.querySelector('#view-'+el.dataset.view+' .phead h1');
-  if(h) h.textContent=el.dataset.title;
+  document.title='oneskill — '+el.dataset.title;
 }));
+(function(){
+  const h=location.hash.replace('#','');
+  const el=h&&document.querySelector('.nav-item[data-view="'+h+'"]');
+  if(el) el.click();
+})();
 load();
 </script></body></html>
 """
