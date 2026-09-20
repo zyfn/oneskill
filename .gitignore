@@ -2,8 +2,9 @@
 skills/*
 !skills/.gitkeep
 
-# 构建依赖不入库；web/dist 入库（运行时零依赖的前提）
+# 构建产物与依赖都不入库；serve 启动时按需自动构建
 web/node_modules
+web/dist
 
 # macOS
 .DS_Store

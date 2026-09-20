@@ -25,6 +25,7 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.join(BASE, "skills")
 REGISTRY = os.path.join(BASE, "agents.registry")
 DIST = os.path.join(BASE, "web", "dist")
+WEB = os.path.join(BASE, "web")
 PORT0 = 8787
 
 # ── core ────────────────────────────────────────────────────────────────
@@ -243,6 +244,41 @@ def run_action(args):
         return False, "usage error: %s" % e
     return False, "command not allowed: %s" % c
 
+# ── web build ───────────────────────────────────────────────────────────
+
+def _dist_stale():
+    idx = os.path.join(DIST, "index.html")
+    if not os.path.isfile(idx):
+        return True
+    dm = os.path.getmtime(idx)
+    files = [os.path.join(WEB, f) for f in
+             ("index.html", "package.json", "tailwind.config.js", "postcss.config.js", "vite.config.js")]
+    for root, _, names in os.walk(os.path.join(WEB, "src")):
+        files += [os.path.join(root, n) for n in names]
+    return any(os.path.isfile(f) and os.path.getmtime(f) > dm for f in files)
+
+def _npm():
+    if shutil.which("npm"):
+        return ["npm"]
+    if shutil.which("mise"):
+        return ["mise", "exec", "--", "npm"]
+    return None
+
+def ensure_dist():
+    if not _dist_stale():
+        return True
+    npm = _npm()
+    if npm is None:
+        print("web/dist is missing or stale and no npm was found (PATH or mise).", flush=True)
+        print("install node, then:  cd web && npm install && npm run build", flush=True)
+        return False
+    if not os.path.isdir(os.path.join(WEB, "node_modules")):
+        print("installing web dependencies…", flush=True)
+        if subprocess.run(npm + ["install", "--no-audit", "--no-fund"], cwd=WEB).returncode:
+            return False
+    print("building web ui…", flush=True)
+    return subprocess.run(npm + ["run", "build"], cwd=WEB).returncode == 0
+
 # ── web ─────────────────────────────────────────────────────────────────
 
 
@@ -301,6 +337,8 @@ class H(BaseHTTPRequestHandler):
         self._send(200, json.dumps({"ok": ok, "output": out}))
 
 def serve(open_browser=False):
+    if not ensure_dist():
+        sys.exit(1)
     token = secrets.token_hex(16)
     H.token = token
     port = PORT0

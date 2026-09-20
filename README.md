@@ -98,10 +98,13 @@ sunfire-cli  ✓         ✗
 
 ## 维护
 
-单文件 python3 运行时，无第三方依赖（macOS、Linux 自带解释器）。页面是 React + Tailwind 源码（`web/`），构建产物 `web/dist` 随仓库分发——**使用不需要 node，改页面才需要**：
+运行时是单文件 python3，无第三方依赖。页面是 React + Tailwind 源码（`web/`），构建产物不入库：`serve` 启动时若发现 `web/dist` 缺失或比源码旧，会自动 `npm install && npm run build`（npm 从 PATH 或 mise 里找）。所以**首次启动需要 node**，之后构建产物缓存在本地。
+
+手动构建或开发：
 
 ```bash
-cd web && npm install && npm run build
+cd web && npm install && npm run build   # 手动构建
+npm run dev                              # vite dev server，/api 代理到 8787
 ```
 
-开发时 `npm run dev` 起 vite（5173 端口，/api 代理到 8787 的服务）。数据文件三个：`agents.registry`（Agent 名单）、`migrate.ignore`（保护名单）、`skills/`（源目录）。
+数据文件三个：`agents.registry`（Agent 名单）、`migrate.ignore`（保护名单）、`skills/`（源目录）。
