@@ -330,102 +330,145 @@ ALLOWED = {"link", "unlink", "link-all", "unlink-all", "validate", "agent"}
 PAGE = """<!doctype html><html><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>oneskill</title>
 <style>
-:root{--bg:#f5f5f7;--card:#fff;--text:#1d1d1f;--text2:#86868b;--hair:rgba(0,0,0,.08);--side:rgba(246,246,248,.8);--accent:#0071e3;--green:#34c759;--red:#ff3b30;--orange:#ff9500;--green-t:rgba(52,199,89,.13);--red-t:rgba(255,59,48,.11);--track:#e9e9ea;--console:#f2f2f4;--shadow:0 1px 2px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.05)}
-@media (prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--text:#f5f5f7;--text2:#98989d;--hair:rgba(255,255,255,.12);--side:rgba(28,28,30,.8);--track:#39393d;--console:#141416;--shadow:0 1px 2px rgba(0,0,0,.5)}}
+:root{
+ --bg:#f5f5f7;--card:#ffffff;--text:#1d1d1f;--text2:#86868b;--hair:rgba(0,0,0,.08);
+ --side:rgba(246,246,248,.72);--field:rgba(120,120,128,.12);--accent:#0071e3;--accent-press:#0062c4;
+ --green:#34c759;--red:#ff3b30;--orange:#ff9500;--green-t:rgba(52,199,89,.14);--red-t:rgba(255,59,48,.12);
+ --track:#e9e9ea;--console:#f4f4f6;--hover:rgba(120,120,128,.08);
+ --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
+ --btn2:#ffffff;--btn2-line:rgba(0,0,0,.14);
+}
+@media (prefers-color-scheme:dark){:root{
+ --bg:#000000;--card:#1c1c1e;--text:#f5f5f7;--text2:#98989d;--hair:rgba(255,255,255,.10);
+ --side:rgba(22,22,24,.72);--field:rgba(255,255,255,.10);--track:#39393d;--console:#131315;--hover:rgba(255,255,255,.06);
+ --shadow:0 1px 2px rgba(0,0,0,.6);
+ --btn2:#2c2c2e;--btn2-line:rgba(255,255,255,.16);
+}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.47;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.47 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(0,113,227,.28)}
 .app{display:flex;min-height:100vh}
-aside{width:232px;flex:none;position:sticky;top:0;height:100vh;padding:20px 12px;background:var(--side);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-right:1px solid var(--hair);display:flex;flex-direction:column}
-.brand{display:flex;gap:10px;align-items:center;padding:2px 10px 16px}
-.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#0a84ff,#5e5ce6);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:14px;box-shadow:0 2px 6px rgba(10,132,255,.35)}
-.brand-name{font-size:15px;font-weight:600;letter-spacing:-.01em}
+aside{width:240px;flex:none;position:sticky;top:0;height:100vh;padding:16px 10px 12px;background:var(--side);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-right:1px solid var(--hair);display:flex;flex-direction:column;user-select:none}
+.tl{display:flex;gap:8px;padding:2px 0 14px 8px}
+.tl i{display:block;width:12px;height:12px;border-radius:50%}
+.tl .r{background:#ff5f57}.tl .y{background:#febc2e}.tl .g{background:#28c840}
+.brand{display:flex;gap:10px;align-items:center;padding:0 10px 14px}
+.logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(140deg,#0a84ff,#5e5ce6 70%);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(10,132,255,.4),inset 0 1px 0 rgba(255,255,255,.25)}
+.brand-name{font-size:14px;font-weight:600;letter-spacing:-.01em}
 .brand-sub{font-size:11px;color:var(--text2)}
-.nav-group{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;padding:14px 12px 6px}
-.nav-item{display:flex;align-items:center;gap:9px;padding:6px 10px;margin:1px 0;border-radius:7px;color:var(--text);text-decoration:none;cursor:pointer;font-size:13.5px;font-weight:500}
-.nav-item svg{width:15px;height:15px;flex:none;opacity:.85}
-.nav-item:hover{background:rgba(120,120,128,.14)}
+.nav-group{font-size:11px;font-weight:600;color:var(--text2);padding:12px 12px 4px;letter-spacing:.02em}
+.nav-item{display:flex;align-items:center;gap:9px;padding:5px 9px;margin:1px 0;border-radius:7px;color:var(--text);cursor:default;font-size:13px;font-weight:500}
+.nav-item svg{width:15px;height:15px;flex:none;opacity:.9}
+.nav-item:hover{background:var(--hover)}
 .nav-item.active{background:var(--accent);color:#fff}
-.nav-item.active svg{opacity:1}
-.side-foot{margin-top:auto;padding:10px 12px;font-size:11px;color:var(--text2)}
-main{flex:1;padding:34px 40px 60px;max-width:1060px}
-.topbar h1{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:0}
-.topbar .sub{color:var(--text2);font-size:13px;margin:4px 0 24px}
-.view{display:none}.view.active{display:block}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
-.stat{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:16px 18px}
-.stat .n{font-size:26px;font-weight:700;letter-spacing:-.02em}
-.stat .l{font-size:12px;color:var(--text2);margin-top:2px}
+.nav-item .badge{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--text2);background:var(--field);border-radius:980px;padding:1px 7px;min-width:10px;text-align:center}
+.nav-item.active .badge{color:#fff;background:rgba(255,255,255,.22)}
+.side-foot{margin-top:auto;padding:10px 12px;font-size:10.5px;color:var(--text2)}
+.content{flex:1;min-width:0;display:flex;flex-direction:column}
+.toolbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:12px;height:52px;padding:0 22px;background:var(--side);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:1px solid var(--hair)}
+.tb-title{font-size:14px;font-weight:600;flex:1}
+.search{display:flex;align-items:center;gap:6px;background:var(--field);border-radius:8px;padding:0 8px;height:28px;width:210px}
+.search svg{width:13px;height:13px;color:var(--text2);flex:none}
+.search input{border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:13px;width:100%}
+.iconbtn{width:28px;height:28px;border:0;border-radius:7px;background:transparent;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.iconbtn:hover{background:var(--hover)}
+.iconbtn svg{width:14px;height:14px}
+main{flex:1;padding:24px 26px 60px;max-width:980px;width:100%}
+#errbar{display:none;background:var(--red-t);color:var(--red);border-radius:10px;padding:10px 14px;margin:0 0 16px;font-size:13px;font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 8px}
+.stat{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px}
+.stat .n{font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat .l{font-size:11.5px;color:var(--text2);margin-top:1px;font-weight:500}
 .stat .n.g{color:var(--green)}.stat .n.o{color:var(--orange)}
-.card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:6px 20px 14px;margin-bottom:18px}
-.card h3{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 4px}
+.glabel{font-size:12px;font-weight:500;color:var(--text2);margin:18px 2px 6px}
+.group{background:var(--card);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.group.pad{padding:10px 14px}
 table{width:100%;border-collapse:collapse}
-td,th{padding:11px 10px;text-align:left;border-bottom:1px solid var(--hair);font-size:13.5px}
-tr:last-child td{border-bottom:0}
-th{font-size:11.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+th{font-size:11px;font-weight:600;color:var(--text2);text-align:left;padding:8px 14px 6px;letter-spacing:.02em}
+td{padding:9px 14px;text-align:left;font-size:13.5px}
 td.c,th.c{text-align:center}
+tbody tr+tr{background-image:linear-gradient(var(--hair),var(--hair));background-size:calc(100% - 14px) 1px;background-position:14px 0;background-repeat:no-repeat}
+tbody tr:hover{background-color:var(--hover)}
 .dim{color:var(--text2)}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
-.pill{display:inline-flex;align-items:center;padding:2px 10px;border-radius:980px;font-size:12px;font-weight:500}
+.pill{display:inline-flex;align-items:center;padding:1px 9px;border-radius:980px;font-size:11.5px;font-weight:600}
 .pill.ok{background:var(--green-t);color:var(--green)}
 .pill.bad{background:var(--red-t);color:var(--red)}
-.sw{position:relative;display:inline-block;width:42px;height:25px;vertical-align:middle}
+.sw{position:relative;display:inline-block;width:40px;height:24px;vertical-align:middle}
 .sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.sw .tr{position:absolute;inset:0;background:var(--track);border-radius:13px;transition:background .18s;pointer-events:none}
-.sw .tr:before{content:"";position:absolute;width:21px;height:21px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .18s}
+.sw .tr{position:absolute;inset:0;background:var(--track);border-radius:12px;transition:background .16s;pointer-events:none}
+.sw .tr:before{content:"";position:absolute;width:20px;height:20px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.3),0 0 0 .5px rgba(0,0,0,.04);transition:transform .16s cubic-bezier(.3,1.4,.6,1)}
 .sw input:checked+.tr{background:var(--green)}
-.sw input:checked+.tr:before{transform:translateX(17px)}
+.sw input:checked+.tr:before{transform:translateX(16px)}
 .sw.warn input:checked+.tr{background:var(--orange)}
-.btn{border:0;border-radius:980px;padding:7px 17px;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;background:var(--accent);color:#fff}
-.btn:active{opacity:.8}
-.btn.ghost{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0}
-select,input{font:inherit;font-size:13.5px;color:var(--text);background:var(--card);border:1px solid var(--hair);border-radius:8px;padding:6px 10px;outline:none}
-input:focus,select:focus{box-shadow:0 0 0 3px rgba(0,113,227,.25);border-color:var(--accent)}
-pre#out{background:var(--console);border-radius:10px;padding:12px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.6;min-height:44px;max-height:260px;overflow:auto;white-space:pre-wrap;margin:0;width:100%}
-.empty{color:var(--text2);padding:16px 0;font-size:13px}
-.note{font-size:12px;color:var(--text2);padding:8px 0 4px}
+.btn{border:0;border-radius:8px;height:30px;padding:0 14px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 .5px 1.5px rgba(0,0,0,.15),inset 0 .5px 0 rgba(255,255,255,.2)}
+.btn:active{background:var(--accent-press)}
+.btn.ghost{background:var(--btn2);color:var(--text);box-shadow:0 .5px 1.5px rgba(0,0,0,.08),inset 0 0 0 .5px var(--btn2-line)}
+.btn.ghost:active{filter:brightness(.96)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:4px 0}
+select,input.txt{font:inherit;font-size:13px;color:var(--text);background:var(--btn2);border:0;border-radius:8px;height:30px;padding:0 10px;outline:0;box-shadow:inset 0 0 0 .5px var(--btn2-line),0 .5px 1.5px rgba(0,0,0,.06)}
+input.txt:focus,select:focus{box-shadow:inset 0 0 0 2px rgba(0,113,227,.55)}
+pre#out{background:var(--console);border-radius:10px;padding:12px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.6;min-height:44px;max-height:280px;overflow:auto;white-space:pre-wrap;margin:0;width:100%}
+pre#out::-webkit-scrollbar{width:8px;height:8px}
+pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4px}
+.empty{color:var(--text2);padding:14px;font-size:13px}
+.note{font-size:11.5px;color:var(--text2);padding:8px 2px 0}
+.view{display:none}.view.active{display:block}
 </style></head><body>
 <div class=app>
 <aside>
+ <div class=tl><i class=r></i><i class=y></i><i class=g></i></div>
  <div class=brand><div class=logo>os</div><div><div class=brand-name>oneskill</div><div class=brand-sub>symlink manager</div></div></div>
  <div class=nav-group>Manage</div>
  <a class="nav-item active" data-view=overview data-title=Overview><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.4><rect x=2 y=2 width=5 height=5 rx=1.3/><rect x=9 y=2 width=5 height=5 rx=1.3/><rect x=2 y=9 width=5 height=5 rx=1.3/><rect x=9 y=9 width=5 height=5 rx=1.3/></svg>Overview</a>
- <a class=nav-item data-view=links data-title=Links><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.4><circle cx=4 cy=8 r=2.3/><circle cx=12 cy=8 r=2.3/><path d="M6.3 8h3.4"/></svg>Links</a>
- <a class=nav-item data-view=agents data-title=Agents><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.4><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg>Agents</a>
+ <a class=nav-item data-view=links data-title=Links><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.4><circle cx=4 cy=8 r=2.3/><circle cx=12 cy=8 r=2.3/><path d="M6.3 8h3.4"/></svg>Links<span class=badge id=b-links></span></a>
+ <a class=nav-item data-view=agents data-title=Agents><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.4><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg>Agents<span class=badge id=b-agents></span></a>
  <div class=nav-group>Tools</div>
  <a class=nav-item data-view=actions data-title=Actions><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.4><path d="M2.5 5h11M2.5 11h11"/><circle cx=6 cy=5 r=1.7/><circle cx=10 cy=11 r=1.7/></svg>Actions</a>
- <div class=side-foot>127.0.0.1 · session token</div>
+ <div class=side-foot>localhost · session token · v1</div>
 </aside>
-<main>
- <div class=topbar><h1 id=vtitle>Overview</h1><div class=sub>one source, linked everywhere</div></div>
- <div id=errbar style="display:none;background:var(--red-t);color:var(--red);border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:13px"></div>
- <section id=view-overview class="view active">
-  <div class=stats id=stats></div>
-  <div class=card><h3>Agents</h3><table id=ov-agents></table></div>
- </section>
- <section id=view-links class=view>
-  <div class=card><h3>Link matrix</h3><table id=matrix></table>
-   <div class=note>Toggle to link or unlink. An orange switch means the link exists but its source is missing — run Validate in Actions to repair.</div></div>
- </section>
- <section id=view-agents class=view>
-  <div class=card><h3>Known agents</h3><table id=ag-table></table></div>
-  <div class=card><h3>Add agent</h3><div class=row><input id=add-name placeholder=name><input id=add-dir placeholder="~/path/to/skills" style="width:280px"><button class=btn onclick=addAgent()>Add</button></div></div>
- </section>
- <section id=view-actions class=view>
-  <div class=card><h3>Maintenance</h3><div class=row>
-   <button class=btn onclick="run(['validate'])">Validate &amp; repair</button>
-   <button class="btn ghost" onclick=load()>Refresh</button>
-   <select id=ag-sel></select>
-   <button class=btn onclick=runAll()>Link all to selected</button>
-  </div></div>
-  <div class=card><h3>Output</h3><div class=row><pre id=out></pre></div></div>
- </section>
-</main>
+<div class=content>
+ <div class=toolbar>
+  <div class=tb-title id=vtitle>Overview</div>
+  <label class=search><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.6><circle cx=7 cy=7 r=4.2/><path d="M10.2 10.2 13.5 13.5"/></svg><input id=q placeholder=Search></label>
+  <button class=iconbtn onclick=load() title=Refresh><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.5><path d="M13.2 8a5.2 5.2 0 1 1-1.6-3.8"/><path d="M13.4 2.6v2.8h-2.8"/></svg></button>
+ </div>
+ <main>
+  <div id=errbar></div>
+  <section id=view-overview class="view active">
+   <div class=stats id=stats></div>
+   <div class=glabel>Agents on this machine</div>
+   <div class=group><table id=ov-agents></table></div>
+  </section>
+  <section id=view-links class=view>
+   <div class=glabel>Link matrix</div>
+   <div class=group><table id=matrix></table></div>
+   <div class=note>Toggle to link or unlink. Orange means the link exists but its source is missing — run Validate in Actions.</div>
+  </section>
+  <section id=view-agents class=view>
+   <div class=glabel>Known agents</div>
+   <div class=group><table id=ag-table></table></div>
+   <div class=glabel>Add agent</div>
+   <div class="group pad"><div class=row><input class=txt id=add-name placeholder=name><input class=txt id=add-dir placeholder="~/path/to/skills" style="width:280px"><button class=btn onclick=addAgent()>Add</button></div></div>
+  </section>
+  <section id=view-actions class=view>
+   <div class=glabel>Maintenance</div>
+   <div class="group pad"><div class=row>
+    <button class=btn onclick="run(['validate'])">Validate &amp; repair</button>
+    <button class="btn ghost" onclick=load()>Refresh</button>
+    <select id=ag-sel></select>
+    <button class=btn onclick=runAll()>Link all to selected</button>
+   </div></div>
+   <div class=glabel>Output</div>
+   <div class="group pad"><pre id=out></pre></div>
+  </section>
+ </main>
+</div>
 </div>
 <script>
 const tok=new URLSearchParams(location.search).get('t')||'';
 const api=p=>fetch(p+(p.includes('?')?'&':'?')+'t='+encodeURIComponent(tok));
-let state={agents:[],rows:[]};
+let state={agents:[],rows:[],q:''};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const inst=()=>state.agents.filter(a=>a.installed);
@@ -433,13 +476,13 @@ async function load(){
   const [d,l]=await Promise.all([api('/api/detect'),api('/api/list')]);
   if(!d.ok||!l.ok){
     $('errbar').style.display='block';
-    $('errbar').textContent='Session token 已失效（服务重启过）。回到终端看 oneskill.sh serve 打印的链接，用新地址重新打开本页。';
+    $('errbar').textContent='Session token 已失效（服务重启过）。回终端看 oneskill.sh serve 打印的链接，用新地址重开本页。';
     return;
   }
   const a=await d.json(), r=await l.json();
   if(!Array.isArray(a)||!Array.isArray(r)){
     $('errbar').style.display='block';
-    $('errbar').textContent='接口返回了意外数据，刷新页面重试。';
+    $('errbar').textContent='接口返回了意外数据，刷新重试。';
     return;
   }
   $('errbar').style.display='none';
@@ -450,20 +493,25 @@ const pill=ok=>ok?'<span class="pill ok">Installed</span>':'<span class="pill ba
 function draw(){
   const A=inst(); let links=0,broken=0;
   state.rows.forEach(r=>A.forEach(a=>{const m=r.links[a.name]; if(m==='✓')links++; if(m==='!')broken++;}));
+  $('b-links').textContent=links;
+  $('b-agents').textContent=A.length;
   $('stats').innerHTML=[[state.rows.length,'Skills in source',''],[A.length,'Agents installed',''],[links,'Active links','g'],[broken,'Broken links',broken?'o':'']]
     .map(s=>'<div class=stat><div class="n '+s[2]+'">'+s[0]+'</div><div class=l>'+s[1]+'</div></div>').join('');
-  const agRows=state.agents.map(a=>'<tr><td>'+esc(a.name)+'</td><td class="dim mono">'+esc(a.dir)+'</td><td>'+pill(a.installed)+'</td></tr>').join('');
-  const head='<tr><th>Agent</th><th>Skill dir</th><th>Status</th></tr>';
+  const q=state.q;
+  const agF=state.agents.filter(a=>a.name.toLowerCase().includes(q));
+  const head='<thead><tr><th>Agent</th><th>Skill dir</th><th>Status</th></tr></thead>';
+  const agRows='<tbody>'+agF.map(a=>'<tr><td>'+esc(a.name)+'</td><td class="dim mono">'+esc(a.dir)+'</td><td>'+pill(a.installed)+'</td></tr>').join('')+'</tbody>';
   $('ov-agents').innerHTML=head+agRows;
   $('ag-table').innerHTML=head+agRows;
+  const R=state.rows.filter(r=>r.skill.toLowerCase().includes(q));
   $('matrix').innerHTML=A.length
-    ? '<tr><th>Skill</th>'+A.map(a=>'<th class=c>'+esc(a.name)+'</th>').join('')+'</tr>'+
-      state.rows.map(r=>'<tr><td class=mono>'+esc(r.skill)+'</td>'+A.map(a=>{
+    ? '<thead><tr><th>Skill</th>'+A.map(a=>'<th class=c>'+esc(a.name)+'</th>').join('')+'</tr></thead><tbody>'+
+      R.map(r=>'<tr><td class=mono>'+esc(r.skill)+'</td>'+A.map(a=>{
         const m=r.links[a.name]; const on=(m==='✓'||m==='!');
         return '<td class=c><label class="sw'+(m==='!'?' warn':'')+'"><input type=checkbox '+(on?'checked':'')+
           ' data-skill="'+esc(r.skill)+'" data-agent="'+esc(a.name)+'"><span class=tr></span></label></td>';
-      }).join('')+'</tr>').join('')
-    : '<tr><td class=empty>No installed agents yet.</td></tr>';
+      }).join('')+'</tr>').join('')+'</tbody>'
+    : '<tbody><tr><td class=empty>No installed agents yet.</td></tr></tbody>';
   $('ag-sel').innerHTML=A.map(a=>'<option value="'+esc(a.name)+'">'+esc(a.name)+'</option>').join('');
 }
 function say(t){$('out').textContent=t}
@@ -471,7 +519,7 @@ async function run(args){
   say('$ oneskill.sh '+args.join(' ')+'\\n…');
   const r=await fetch('/api/action?t='+encodeURIComponent(tok),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({args})});
   if(!r.ok){
-    say('$ oneskill.sh '+args.join(' ')+'\\n✗ 请求失败（HTTP '+r.status+'）。若为 403，token 已失效，用终端打印的新链接重开本页。');
+    say('$ oneskill.sh '+args.join(' ')+'\\n✗ 请求失败（HTTP '+r.status+'）。403 表示 token 失效，用终端打印的新链接重开本页。');
     return;
   }
   const j=await r.json();
@@ -487,6 +535,7 @@ $('matrix').addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset && t.dataset.skill) toggle(t.dataset.skill,t.dataset.agent);
 });
+$('q').addEventListener('input',e=>{state.q=e.target.value.toLowerCase();draw();});
 function runAll(){const s=$('ag-sel').value; if(s) run(['link-all',s]);}
 function addAgent(){run(['agent','add',$('add-name').value.trim(),$('add-dir').value.trim()]);$('add-name').value='';$('add-dir').value='';}
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>{
@@ -496,7 +545,8 @@ document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',(
   $('vtitle').textContent=el.dataset.title;
 }));
 load();
-</script></body></html>"""
+</script></body></html>
+"""
 
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
