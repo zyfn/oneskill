@@ -358,14 +358,12 @@ aside{width:236px;flex:none;position:sticky;top:0;height:100vh;padding:16px 10px
  background:var(--side);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
  border-right:1px solid var(--hair);display:flex;flex-direction:column;user-select:none}
 .brandrow{display:flex;align-items:center;gap:8px;padding:0 8px 14px}
-.btile{width:22px;height:22px;border-radius:6px;background:var(--field);box-shadow:var(--edge);display:flex;align-items:center;justify-content:center;color:var(--text2)}
-.btile svg{width:12px;height:12px;stroke-width:1.8}
-.bname{font-size:13.5px;font-weight:600;letter-spacing:-.01em}
+.bname{font-size:14px;font-weight:600;letter-spacing:-.01em}
 .search{display:flex;align-items:center;gap:6px;background:var(--field);border-radius:7px;padding:0 8px;height:27px;margin:0 2px 14px}
 .search svg{width:12px;height:12px;color:var(--text2);flex:none}
 .search input{border:0;outline:0;background:transparent;color:var(--text);font:inherit;width:100%}
 .nav-item{display:flex;align-items:center;gap:10px;height:32px;padding:0 9px;margin:1px 0;border-radius:7px;cursor:default;font-size:13px;font-weight:400;color:var(--text);transition:background .12s var(--ease)}
-.nav-item svg{width:16px;height:16px;flex:none;stroke-width:1.5;opacity:.72}
+.nav-item svg{width:18px;height:18px;flex:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
 .nav-item:hover{background:var(--hover)}
 .nav-item.active{background:var(--sel);color:#fff;font-weight:500}
 .nav-item.active svg{opacity:1}
@@ -379,22 +377,23 @@ aside{width:236px;flex:none;position:sticky;top:0;height:100vh;padding:16px 10px
 .acct-sub{font-size:10.5px;color:var(--text2)}
 /* ── content ── */
 .content{flex:1;min-width:0;display:flex;flex-direction:column}
-.toolbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:8px;height:46px;padding:0 22px;
+.toolbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:flex-end;gap:8px;height:44px;padding:0 22px;
  background:var(--side);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
  border-bottom:1px solid var(--hair)}
 .tb-title{font-size:13px;font-weight:600;flex:1}
-.iconbtn{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.iconbtn{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .iconbtn:hover{background:var(--hover);color:var(--text)}
 .iconbtn svg{width:13px;height:13px;stroke-width:1.6}
-main{flex:1;padding:26px 26px 64px;max-width:880px;width:100%}
+main{flex:1;padding:26px 26px 64px;max-width:920px;width:100%;margin:0 auto}
 #errbar{display:none;background:var(--red-t);color:var(--red);border-radius:9px;padding:9px 13px;margin:0 0 18px;font-size:12.5px;font-weight:500}
 .phead h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.015em}
 .phead p{margin:3px 0 0;font-size:12.5px;color:var(--text2)}
 .phead{margin:0 0 22px}
 /* stats: light, no shadow */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 26px}
-.stat{background:var(--card);border-radius:10px;box-shadow:var(--edge);padding:13px 15px}
-.stat .n{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-radius:10px;box-shadow:var(--edge);overflow:hidden;margin:0 0 26px}
+.stat{padding:14px 16px}
+.stat+.stat{border-left:.5px solid var(--hair)}
+.stat .n{font-size:20px;font-weight:600;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
 .stat .l{font-size:11px;color:var(--text2);margin-top:2px}
 .stat .n.g{color:var(--green)}.stat .n.o{color:var(--orange)}
 /* grouped lists */
@@ -441,10 +440,10 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
 </style></head><body>
 <div class=app>
 <aside>
- <div class=brandrow><span class=btile><svg viewBox="0 0 16 16" fill=none stroke=currentColor><circle cx=5 cy=8 r=2.6/><circle cx=11 cy=8 r=2.6/><path d="M7.6 8h.8"/></svg></span><span class=bname>oneskill</span></div>
+ <div class=brandrow><span class=bname>oneskill</span></div>
  <label class=search><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.6><circle cx=7 cy=7 r=4.2/><path d="M10.2 10.2 13.5 13.5"/></svg><input id=q placeholder=Search></label>
  <a class="nav-item active" data-view=overview data-title=Overview><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=2 width=5 height=5 rx=1.3/><rect x=9 y=2 width=5 height=5 rx=1.3/><rect x=2 y=9 width=5 height=5 rx=1.3/><rect x=9 y=9 width=5 height=5 rx=1.3/></svg>Overview</a>
- <a class=nav-item data-view=links data-title=Links><svg viewBox="0 0 16 16" fill=none stroke=currentColor><circle cx=4.5 cy=8 r=2.4/><circle cx=11.5 cy=8 r=2.4/><path d="M6.9 8h2.2"/></svg>Links<span class=badge id=b-links></span></a>
+ <a class=nav-item data-view=links data-title=Links><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M6.7 9.3 9.3 6.7"/><path d="M7.8 4.6 9.2 3.2a2.7 2.7 0 0 1 3.8 3.8l-1.4 1.4"/><path d="M8.2 11.4 6.8 12.8a2.7 2.7 0 0 1-3.8-3.8l1.4-1.4"/></svg>Links<span class=badge id=b-links></span></a>
  <a class=nav-item data-view=agents data-title=Agents><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg>Agents<span class=badge id=b-agents></span></a>
  <div class=nav-label>Tools</div>
  <a class=nav-item data-view=actions data-title=Actions><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M2.5 5h11M2.5 11h11"/><circle cx=6 cy=5 r=1.7/><circle cx=10 cy=11 r=1.7/></svg>Actions</a>
@@ -452,7 +451,6 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
 </aside>
 <div class=content>
  <div class=toolbar>
-  <div class=tb-title id=vtitle>Overview</div>
   <button class=iconbtn onclick=load() title=Refresh><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M13.2 8a5.2 5.2 0 1 1-1.6-3.8"/><path d="M13.4 2.6v2.8h-2.8"/></svg></button>
  </div>
  <main>
@@ -568,7 +566,6 @@ document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',(
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active',s.id==='view-'+el.dataset.view));
-  $('vtitle').textContent=el.dataset.title;
   const h=document.querySelector('#view-'+el.dataset.view+' .phead h1');
   if(h) h.textContent=el.dataset.title;
 }));
