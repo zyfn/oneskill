@@ -358,23 +358,16 @@ aside{width:236px;flex:none;position:sticky;top:0;height:100vh;padding:16px 10px
  background:var(--side);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
  border-right:1px solid var(--hair);display:flex;flex-direction:column;user-select:none}
 .brandrow{display:flex;align-items:center;gap:8px;padding:0 8px 14px}
+.mark{flex:none;border-radius:6px;box-shadow:inset 0 .5px 0 rgba(255,255,255,.28),0 1px 2px rgba(0,0,0,.25)}
 .bname{font-size:14px;font-weight:600;letter-spacing:-.01em}
-.search{display:flex;align-items:center;gap:6px;background:var(--field);border-radius:7px;padding:0 8px;height:27px;margin:0 2px 14px}
-.search svg{width:12px;height:12px;color:var(--text2);flex:none}
-.search input{border:0;outline:0;background:transparent;color:var(--text);font:inherit;width:100%}
 .nav-item{display:flex;align-items:center;gap:10px;height:32px;padding:0 9px;margin:1px 0;border-radius:7px;cursor:default;font-size:13px;font-weight:400;color:var(--text);transition:background .12s var(--ease)}
 .nav-item svg{width:18px;height:18px;flex:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
 .nav-item:hover{background:var(--hover)}
 .nav-item.active{background:var(--sel);color:#fff;font-weight:500}
 .nav-item.active svg{opacity:1}
-.nav-label{font-size:11px;color:var(--text2);padding:14px 10px 4px}
 .badge{margin-left:auto;min-width:18px;height:17px;padding:0 5px;border-radius:9px;background:rgba(0,0,0,.08);color:var(--text2);font-size:10.5px;font-weight:600;line-height:17px;text-align:center}
 .badge.red{background:var(--red);color:#fff}
 .nav-item.active .badge{background:rgba(255,255,255,.25);color:#fff}
-.acct{margin-top:auto;display:flex;gap:9px;align-items:center;padding:10px 8px 0}
-.ava{width:26px;height:26px;border-radius:50%;background:linear-gradient(140deg,#ffa132,#e0592a);color:#fff;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
-.acct-name{font-size:12.5px;font-weight:500}
-.acct-sub{font-size:10.5px;color:var(--text2)}
 /* ── content ── */
 .content{flex:1;min-width:0;display:flex;flex-direction:column}
 .toolbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:flex-end;gap:8px;height:44px;padding:0 22px;
@@ -383,7 +376,13 @@ aside{width:236px;flex:none;position:sticky;top:0;height:100vh;padding:16px 10px
 .tb-title{font-size:13px;font-weight:600;flex:1}
 .iconbtn{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .iconbtn:hover{background:var(--hover);color:var(--text)}
-.iconbtn svg{width:13px;height:13px;stroke-width:1.6}
+.iconbtn svg{width:14px;height:14px;stroke-width:1.6}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,10px);opacity:0;pointer-events:none;
+ background:rgba(30,30,32,.92);color:#f5f5f7;border-radius:12px;padding:10px 14px;max-width:560px;
+ font:11.5px/1.55 "SF Mono",ui-monospace,Menlo,monospace;white-space:pre-wrap;
+ box-shadow:0 6px 24px rgba(0,0,0,.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+ transition:opacity .18s var(--ease),transform .18s var(--ease);z-index:20}
+#toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;cursor:pointer}
 main{flex:1;padding:26px 26px 64px;max-width:920px;width:100%;margin:0 auto}
 #errbar{display:none;background:var(--red-t);color:var(--red);border-radius:9px;padding:9px 13px;margin:0 0 18px;font-size:12.5px;font-weight:500}
 .phead h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.015em}
@@ -423,9 +422,6 @@ tbody tr:hover{background-color:var(--hover)}
 select,input.txt{font:inherit;font-size:12.5px;color:var(--text);background:var(--btn2);border:0;border-radius:7px;height:28px;padding:0 9px;outline:0}
 select:hover,input.txt:hover{background:var(--btn2-hi)}
 input.txt:focus{box-shadow:0 0 0 3px rgba(10,102,255,.35)}
-pre#out{background:var(--console);border-radius:9px;box-shadow:var(--edge);padding:10px 12px;font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.55;min-height:40px;max-height:280px;overflow:auto;white-space:pre-wrap;margin:0;width:100%}
-pre#out::-webkit-scrollbar{width:8px;height:8px}
-pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4px}
 .empty{color:var(--text2);padding:14px;font-size:12.5px}
 .note{font-size:11px;color:var(--text2);padding:7px 2px 0}
 .view{display:none}.view.active{display:block}
@@ -433,16 +429,14 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
 </style></head><body>
 <div class=app>
 <aside>
- <div class=brandrow><span class=bname>oneskill</span></div>
- <label class=search><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.6><circle cx=7 cy=7 r=4.2/><path d="M10.2 10.2 13.5 13.5"/></svg><input id=q placeholder=Search></label>
+ <div class=brandrow><svg class=mark width=22 height=22 viewBox="0 0 32 32"><defs><linearGradient id=lg x1=0 y1=0 x2=1 y2=1><stop offset=0 stop-color="#3d9bff"/><stop offset=1 stop-color="#0055d6"/></linearGradient></defs><rect width=32 height=32 rx=7.5 fill="url(#lg)"/><g fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M13 19l6-6"/><path d="M14.6 10.6l2.2-2.2a4.4 4.4 0 0 1 6.2 6.2l-2.2 2.2"/><path d="M17.4 21.4l-2.2 2.2a4.4 4.4 0 0 1-6.2-6.2l2.2-2.2"/></g></svg><span class=bname>oneskill</span></div>
  <a class="nav-item active" data-view=agents data-title=Agents><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg>Agents<span class=badge id=b-agents></span></a>
  <a class=nav-item data-view=skills data-title=Skills><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=1.5/><path d="M7 3v10M2 8h12"/></svg>Skills<span class=badge id=b-skills></span></a>
- <div class=nav-label>Tools</div>
- <a class=nav-item data-view=actions data-title=Actions><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M2.5 5h11M2.5 11h11"/><circle cx=6 cy=5 r=1.7/><circle cx=10 cy=11 r=1.7/></svg>Actions</a>
- <div class=acct><div class=ava>f</div><div><div class=acct-name>finn</div><div class=acct-sub>localhost · session</div></div></div>
 </aside>
 <div class=content>
  <div class=toolbar>
+  <div class=tb-title></div>
+  <button class=iconbtn onclick="run(['validate'])" title="Validate & repair"><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M9.6 2.6a3.6 3.6 0 0 0-4.5 4.6L2.4 9.9a1.5 1.5 0 0 0 2.1 2.1l2.7-2.7a3.6 3.6 0 0 0 4.6-4.5L9.7 6.9 8.4 6.6l-.3-1.3z"/><path d="M10.8 10.8l2.6 2.6"/></svg></button>
   <button class=iconbtn onclick=load() title=Refresh><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M13.2 8a5.2 5.2 0 1 1-1.6-3.8"/><path d="M13.4 2.6v2.8h-2.8"/></svg></button>
  </div>
  <main>
@@ -451,7 +445,8 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
    <div class=phead><h1>Skills</h1><p>Every skill in the source directory and which agents can see it. Toggle to link or unlink.</p></div>
    <div class=glabel>Link matrix</div>
    <div class=group><table id=matrix></table></div>
-   <div class=note>Orange means the link exists but its source is missing — run Validate in Actions.</div>
+   <div class=note>Orange means the link exists but its source is missing — run the wrench in the toolbar to repair.
+    <span style="float:right"><select id=ag-sel></select> <button class="btn ghost" style="height:24px;padding:0 10px;font-size:12px" onclick=runAll()>Link all</button></span></div>
   </section>
   <section id=view-agents class="view active">
    <div class=phead><h1>Agents</h1><p>Every agent oneskill knows about — installed or not. Add one and it becomes linkable immediately.</p></div>
@@ -460,25 +455,14 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
    <div class=glabel>Add agent</div>
    <div class="group pad"><div class=row><input class=txt id=add-name placeholder=name><input class=txt id=add-dir placeholder="~/path/to/skills" style="width:260px"><button class=btn onclick=addAgent()>Add</button></div></div>
   </section>
-  <section id=view-actions class=view>
-   <div class=phead><h1>Actions</h1><p>Maintenance tasks. Every action runs the real CLI and prints its output below.</p></div>
-   <div class=glabel>Maintenance</div>
-   <div class="group pad"><div class=row>
-    <button class=btn onclick="run(['validate'])">Validate &amp; repair</button>
-    <button class="btn ghost" onclick=load()>Refresh</button>
-    <select id=ag-sel></select>
-    <button class=btn onclick=runAll()>Link all to selected</button>
-   </div></div>
-   <div class=glabel>Output</div>
-   <div class="group pad"><pre id=out></pre></div>
-  </section>
  </main>
 </div>
+<div id=toast onclick="this.classList.remove('show')"></div>
 </div>
 <script>
 const tok=new URLSearchParams(location.search).get('t')||'';
 const api=p=>fetch(p+(p.includes('?')?'&':'?')+'t='+encodeURIComponent(tok));
-let state={agents:[],rows:[],q:''};
+let state={agents:[],rows:[]};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const inst=()=>state.agents.filter(a=>a.installed);
@@ -505,12 +489,11 @@ function draw(){
   state.rows.forEach(r=>A.forEach(a=>{const m=r.links[a.name]; if(m==='✓')links++; if(m==='!')broken++;}));
   const bl=$('b-skills'); bl.textContent=links; bl.className='badge'+(broken?' red':'');
   $('b-agents').textContent=A.length;
-  const q=state.q;
-  const agF=state.agents.filter(a=>a.name.toLowerCase().includes(q));
+  const agF=state.agents;
   const head='<thead><tr><th>Agent</th><th>Skill dir</th><th>Status</th></tr></thead>';
   const agRows='<tbody>'+agF.map(a=>'<tr><td>'+esc(a.name)+'</td><td class="dim mono">'+esc(a.dir)+'</td><td>'+pill(a.installed)+'</td></tr>').join('')+'</tbody>';
   $('ag-table').innerHTML=head+agRows;
-  const R=state.rows.filter(r=>r.skill.toLowerCase().includes(q));
+  const R=state.rows;
   $('matrix').innerHTML=A.length
     ? '<thead><tr><th>Skill</th>'+A.map(a=>'<th class=c>'+esc(a.name)+'</th>').join('')+'</tr></thead><tbody>'+
       R.map(r=>'<tr><td class=mono>'+esc(r.skill)+'</td>'+A.map(a=>{
@@ -521,7 +504,14 @@ function draw(){
     : '<tbody><tr><td class=empty>No installed agents yet.</td></tr></tbody>';
   $('ag-sel').innerHTML=A.map(a=>'<option value="'+esc(a.name)+'">'+esc(a.name)+'</option>').join('');
 }
-function say(t){$('out').textContent=t}
+let toastTimer=0;
+function say(t){
+  const el=$('toast');
+  el.textContent=t;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),6000);
+}
 async function run(args){
   say('$ oneskill.sh '+args.join(' ')+'\\n…');
   const r=await fetch('/api/action?t='+encodeURIComponent(tok),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({args})});
@@ -542,7 +532,6 @@ $('matrix').addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset && t.dataset.skill) toggle(t.dataset.skill,t.dataset.agent);
 });
-$('q').addEventListener('input',e=>{state.q=e.target.value.toLowerCase();draw();});
 function runAll(){const s=$('ag-sel').value; if(s) run(['link-all',s]);}
 function addAgent(){run(['agent','add',$('add-name').value.trim(),$('add-dir').value.trim()]);$('add-name').value='';$('add-dir').value='';}
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>{
