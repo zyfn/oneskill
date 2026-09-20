@@ -331,103 +331,98 @@ PAGE = """<!doctype html><html><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>oneskill</title>
 <style>
 :root{
- --win:#f5f5f7;--side:rgba(244,244,246,.82);--card:#ffffff;--hero:#ececee;
- --text:#1d1d1f;--text2:#6e6e73;--hair:rgba(0,0,0,.08);
- --field:rgba(0,0,0,.06);--hover:rgba(0,0,0,.04);
+ --win:#f5f5f7;--side:rgba(244,244,246,.82);--card:#ffffff;
+ --text:#1d1d1f;--text2:#86868b;--hair:rgba(0,0,0,.08);
+ --field:rgba(0,0,0,.055);--hover:rgba(0,0,0,.04);
  --accent:#0071e3;--accent-hi:#0077ed;--sel:#0a66ff;
  --green:#34c759;--red:#ff3b30;--orange:#ff9500;
  --green-t:rgba(52,199,89,.14);--red-t:rgba(255,59,48,.12);
  --track:rgba(0,0,0,.12);--btn2:#e9e9eb;--btn2-hi:#dedee0;--console:#f4f4f6;
- --edge:0 0 0 .5px rgba(0,0,0,.06);--card-sh:0 1px 2px rgba(0,0,0,.03);
+ --edge:0 0 0 .5px rgba(0,0,0,.07);
  --ease:cubic-bezier(.25,.46,.45,.94);
 }
 @media (prefers-color-scheme:dark){:root{
- --win:#000;--side:rgba(28,28,30,.82);--card:#1c1c1e;--hero:#2c2c2e;
+ --win:#000;--side:rgba(28,28,30,.82);--card:#1c1c1e;
  --text:#f5f5f7;--text2:#98989d;--hair:rgba(255,255,255,.10);
  --field:rgba(255,255,255,.08);--hover:rgba(255,255,255,.06);
  --sel:#0a84ff;--track:rgba(255,255,255,.16);--btn2:#323236;--btn2-hi:#3a3a3e;--console:#141416;
- --edge:0 0 0 .5px rgba(255,255,255,.08);--card-sh:0 1px 2px rgba(0,0,0,.5);
+ --edge:0 0 0 .5px rgba(255,255,255,.09);
 }}
 *{box-sizing:border-box}
 html{background:var(--win)}
 body{margin:0;color:var(--text);font:13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 ::selection{background:rgba(10,102,255,.3)}
 .app{display:flex;min-height:100vh}
-/* sidebar */
-aside{width:248px;flex:none;position:sticky;top:0;height:100vh;padding:14px 10px 10px;
+/* ── sidebar ─ */
+aside{width:236px;flex:none;position:sticky;top:0;height:100vh;padding:16px 10px 12px;
  background:var(--side);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
  border-right:1px solid var(--hair);display:flex;flex-direction:column;user-select:none}
-.search{display:flex;align-items:center;gap:6px;background:var(--field);border-radius:8px;padding:0 8px;height:28px;margin:0 2px 10px}
-.search svg{width:13px;height:13px;color:var(--text2);flex:none}
+.brandrow{display:flex;align-items:center;gap:8px;padding:0 8px 14px}
+.btile{width:22px;height:22px;border-radius:6px;background:var(--field);box-shadow:var(--edge);display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.btile svg{width:12px;height:12px;stroke-width:1.8}
+.bname{font-size:13.5px;font-weight:600;letter-spacing:-.01em}
+.search{display:flex;align-items:center;gap:6px;background:var(--field);border-radius:7px;padding:0 8px;height:27px;margin:0 2px 14px}
+.search svg{width:12px;height:12px;color:var(--text2);flex:none}
 .search input{border:0;outline:0;background:transparent;color:var(--text);font:inherit;width:100%}
-.idrow{display:flex;gap:9px;align-items:center;padding:0 6px 12px}
-.ava{width:32px;height:32px;border-radius:50%;background:linear-gradient(140deg,#8e8e93,#636366);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
-.id-name{font-size:13px;font-weight:500}
-.id-sub{font-size:11px;color:var(--text2);line-height:1.25}
-.nav-item{display:flex;align-items:center;gap:9px;height:30px;padding:0 7px;margin:1px 0;border-radius:7px;cursor:default;font-size:13px;font-weight:400;transition:background .12s var(--ease)}
+.nav-item{display:flex;align-items:center;gap:10px;height:32px;padding:0 9px;margin:1px 0;border-radius:7px;cursor:default;font-size:13px;font-weight:400;color:var(--text);transition:background .12s var(--ease)}
+.nav-item svg{width:16px;height:16px;flex:none;stroke-width:1.5;opacity:.72}
 .nav-item:hover{background:var(--hover)}
 .nav-item.active{background:var(--sel);color:#fff;font-weight:500}
-.chip{width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:inset 0 .5px 0 rgba(255,255,255,.35),0 .5px 1.5px rgba(0,0,0,.25)}
-.chip svg{width:13px;height:13px;stroke-width:1.7}
-.chip.b{background:linear-gradient(140deg,#409cff,#0062cc)}
-.chip.g{background:linear-gradient(140deg,#64d970,#248a3d)}
-.chip.p{background:linear-gradient(140deg,#d08bff,#8944ab)}
-.chip.o{background:linear-gradient(140deg,#ffb340,#c93400)}
-.nav-gap{height:14px}
-.badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:rgba(0,0,0,.10);color:var(--text2);font-size:11px;font-weight:600;line-height:18px;text-align:center}
+.nav-item.active svg{opacity:1}
+.nav-label{font-size:11px;color:var(--text2);padding:14px 10px 4px}
+.badge{margin-left:auto;min-width:18px;height:17px;padding:0 5px;border-radius:9px;background:rgba(0,0,0,.08);color:var(--text2);font-size:10.5px;font-weight:600;line-height:17px;text-align:center}
 .badge.red{background:var(--red);color:#fff}
 .nav-item.active .badge{background:rgba(255,255,255,.25);color:#fff}
-/* content */
+.acct{margin-top:auto;display:flex;gap:9px;align-items:center;padding:10px 8px 0}
+.ava{width:26px;height:26px;border-radius:50%;background:linear-gradient(140deg,#ffa132,#e0592a);color:#fff;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
+.acct-name{font-size:12.5px;font-weight:500}
+.acct-sub{font-size:10.5px;color:var(--text2)}
+/* ── content ── */
 .content{flex:1;min-width:0;display:flex;flex-direction:column}
-.toolbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:8px;height:52px;padding:0 20px;
+.toolbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:8px;height:46px;padding:0 22px;
  background:var(--side);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
  border-bottom:1px solid var(--hair)}
-.chev{display:flex;background:var(--field);border-radius:7px;height:26px}
-.chev button{width:28px;border:0;background:transparent;color:var(--text2);cursor:default;display:flex;align-items:center;justify-content:center}
-.chev button+button{border-left:1px solid var(--hair)}
-.chev svg{width:11px;height:11px}
-.tb-spacer{flex:1}
-main{flex:1;padding:20px 22px 56px;max-width:860px;width:100%}
-#errbar{display:none;background:var(--red-t);color:var(--red);border-radius:10px;padding:10px 14px;margin:0 0 16px;font-size:12.5px;font-weight:500}
-/* hero (pane header card) */
-.hero{background:var(--hero);border-radius:12px;padding:24px 20px 22px;text-align:center;margin:0 0 20px}
-.hero .hicon{width:56px;height:56px;border-radius:13px;margin:0 auto 10px;background:linear-gradient(180deg,#fdfdfe,#d8d8dc);display:flex;align-items:center;justify-content:center;color:#5a5a5e;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.12)}
-@media (prefers-color-scheme:dark){.hero .hicon{background:linear-gradient(180deg,#48484a,#323236);color:#d0d0d2;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.14),0 1px 3px rgba(0,0,0,.5)}}
-.hero .hicon svg{width:26px;height:26px;stroke-width:1.5}
-.hero h2{margin:0 0 4px;font-size:20px;font-weight:600;letter-spacing:-.01em}
-.hero p{margin:0 auto;max-width:520px;font-size:12.5px;color:var(--text2)}
-/* stats */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 20px}
-.stat{background:var(--card);border-radius:10px;box-shadow:var(--edge),var(--card-sh);padding:12px 14px}
-.stat .n{font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
+.tb-title{font-size:13px;font-weight:600;flex:1}
+.iconbtn{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.iconbtn:hover{background:var(--hover);color:var(--text)}
+.iconbtn svg{width:13px;height:13px;stroke-width:1.6}
+main{flex:1;padding:26px 26px 64px;max-width:880px;width:100%}
+#errbar{display:none;background:var(--red-t);color:var(--red);border-radius:9px;padding:9px 13px;margin:0 0 18px;font-size:12.5px;font-weight:500}
+.phead h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.015em}
+.phead p{margin:3px 0 0;font-size:12.5px;color:var(--text2)}
+.phead{margin:0 0 22px}
+/* stats: light, no shadow */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 26px}
+.stat{background:var(--card);border-radius:10px;box-shadow:var(--edge);padding:13px 15px}
+.stat .n{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
 .stat .l{font-size:11px;color:var(--text2);margin-top:2px}
 .stat .n.g{color:var(--green)}.stat .n.o{color:var(--orange)}
-/* grouped cards */
-.glabel{font-size:12px;color:var(--text2);margin:0 2px 5px}
-.group{background:var(--card);border-radius:10px;box-shadow:var(--edge),var(--card-sh);overflow:hidden}
+/* grouped lists */
+.glabel{font-size:11.5px;color:var(--text2);margin:0 2px 5px}
+.group{background:var(--card);border-radius:10px;box-shadow:var(--edge);overflow:hidden}
 .group.pad{padding:10px 12px}
-.group+.glabel,.stats+.glabel{margin-top:20px}
+.group+.glabel,.stats+.glabel{margin-top:24px}
 table{width:100%;border-collapse:collapse}
 th{font-size:11px;font-weight:400;color:var(--text2);text-align:left;padding:8px 14px 5px}
-td{padding:0 14px;height:44px;text-align:left;font-size:13px}
+td{padding:0 14px;height:42px;text-align:left;font-size:13px}
 td.c,th.c{text-align:center}
 tbody tr+tr{background-image:linear-gradient(var(--hair),var(--hair));background-size:calc(100% - 14px) .5px;background-position:14px 0;background-repeat:no-repeat}
 tbody tr:hover{background-color:var(--hover)}
 .dim{color:var(--text2)}
-.mono{font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
-.pill{display:inline-flex;align-items:center;height:20px;padding:0 9px;border-radius:980px;font-size:11.5px;font-weight:500}
+.mono{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:12px}
+.pill{display:inline-flex;align-items:center;height:19px;padding:0 9px;border-radius:980px;font-size:11px;font-weight:500}
 .pill.ok{background:var(--green-t);color:var(--green)}
 .pill.bad{background:var(--red-t);color:var(--red)}
 /* switch */
-.sw{position:relative;display:inline-block;width:42px;height:25px;vertical-align:middle}
+.sw{position:relative;display:inline-block;width:40px;height:24px;vertical-align:middle}
 .sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.sw .tr{position:absolute;inset:0;background:var(--track);border-radius:13px;transition:background .15s var(--ease);pointer-events:none}
-.sw .tr:before{content:"";position:absolute;width:21px;height:21px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.3),0 0 0 .5px rgba(0,0,0,.04);transition:transform .15s var(--ease)}
+.sw .tr{position:absolute;inset:0;background:var(--track);border-radius:12px;transition:background .15s var(--ease);pointer-events:none}
+.sw .tr:before{content:"";position:absolute;width:20px;height:20px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.3),0 0 0 .5px rgba(0,0,0,.04);transition:transform .15s var(--ease)}
 .sw input:checked+.tr{background:var(--green)}
-.sw input:checked+.tr:before{transform:translateX(17px)}
+.sw input:checked+.tr:before{transform:translateX(16px)}
 .sw.warn input:checked+.tr{background:var(--orange)}
-/* controls: native rounded-rect buttons */
-.btn{border:0;border-radius:8px;height:30px;padding:0 14px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;background:var(--accent);color:#fff;transition:background .12s var(--ease),transform .1s ease-out}
+/* controls */
+.btn{border:0;border-radius:8px;height:29px;padding:0 13px;font:inherit;font-size:12.5px;font-weight:500;cursor:pointer;background:var(--accent);color:#fff;transition:background .12s var(--ease),transform .1s ease-out}
 .btn:hover{background:var(--accent-hi)}
 .btn:active{transform:scale(.97)}
 .btn.ghost{background:var(--btn2);color:var(--text)}
@@ -436,7 +431,7 @@ tbody tr:hover{background-color:var(--hover)}
 select,input.txt{font:inherit;font-size:12.5px;color:var(--text);background:var(--btn2);border:0;border-radius:7px;height:28px;padding:0 9px;outline:0}
 select:hover,input.txt:hover{background:var(--btn2-hi)}
 input.txt:focus{box-shadow:0 0 0 3px rgba(10,102,255,.35)}
-pre#out{background:var(--console);border-radius:10px;box-shadow:var(--edge);padding:10px 12px;font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.55;min-height:40px;max-height:280px;overflow:auto;white-space:pre-wrap;margin:0;width:100%}
+pre#out{background:var(--console);border-radius:9px;box-shadow:var(--edge);padding:10px 12px;font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.55;min-height:40px;max-height:280px;overflow:auto;white-space:pre-wrap;margin:0;width:100%}
 pre#out::-webkit-scrollbar{width:8px;height:8px}
 pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4px}
 .empty{color:var(--text2);padding:14px;font-size:12.5px}
@@ -446,41 +441,43 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
 </style></head><body>
 <div class=app>
 <aside>
+ <div class=brandrow><span class=btile><svg viewBox="0 0 16 16" fill=none stroke=currentColor><circle cx=5 cy=8 r=2.6/><circle cx=11 cy=8 r=2.6/><path d="M7.6 8h.8"/></svg></span><span class=bname>oneskill</span></div>
  <label class=search><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.6><circle cx=7 cy=7 r=4.2/><path d="M10.2 10.2 13.5 13.5"/></svg><input id=q placeholder=Search></label>
- <div class=idrow><div class=ava>f</div><div><div class=id-name>finn</div><div class=id-sub>oneskill · localhost</div></div></div>
- <a class="nav-item active" data-view=overview data-title=Overview><span class="chip b"><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=2 width=5 height=5 rx=1.3/><rect x=9 y=2 width=5 height=5 rx=1.3/><rect x=2 y=9 width=5 height=5 rx=1.3/><rect x=9 y=9 width=5 height=5 rx=1.3/></svg></span>Overview</a>
- <a class=nav-item data-view=links data-title=Links><span class="chip g"><svg viewBox="0 0 16 16" fill=none stroke=currentColor><circle cx=4 cy=8 r=2.3/><circle cx=12 cy=8 r=2.3/><path d="M6.3 8h3.4"/></svg></span>Links<span class=badge id=b-links></span></a>
- <a class=nav-item data-view=agents data-title=Agents><span class="chip p"><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg></span>Agents<span class=badge id=b-agents></span></a>
- <div class=nav-gap></div>
- <a class=nav-item data-view=actions data-title=Actions><span class="chip o"><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M2.5 5h11M2.5 11h11"/><circle cx=6 cy=5 r=1.7/><circle cx=10 cy=11 r=1.7/></svg></span>Actions</a>
+ <a class="nav-item active" data-view=overview data-title=Overview><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=2 width=5 height=5 rx=1.3/><rect x=9 y=2 width=5 height=5 rx=1.3/><rect x=2 y=9 width=5 height=5 rx=1.3/><rect x=9 y=9 width=5 height=5 rx=1.3/></svg>Overview</a>
+ <a class=nav-item data-view=links data-title=Links><svg viewBox="0 0 16 16" fill=none stroke=currentColor><circle cx=4.5 cy=8 r=2.4/><circle cx=11.5 cy=8 r=2.4/><path d="M6.9 8h2.2"/></svg>Links<span class=badge id=b-links></span></a>
+ <a class=nav-item data-view=agents data-title=Agents><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg>Agents<span class=badge id=b-agents></span></a>
+ <div class=nav-label>Tools</div>
+ <a class=nav-item data-view=actions data-title=Actions><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M2.5 5h11M2.5 11h11"/><circle cx=6 cy=5 r=1.7/><circle cx=10 cy=11 r=1.7/></svg>Actions</a>
+ <div class=acct><div class=ava>f</div><div><div class=acct-name>finn</div><div class=acct-sub>localhost · session</div></div></div>
 </aside>
 <div class=content>
  <div class=toolbar>
-  <div class=chev><button><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=2><path d="M10 3 5 8l5 5"/></svg></button><button><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=2><path d="M6 3l5 5-5 5"/></svg></button></div>
-  <div class=tb-spacer></div>
-  <button class="btn ghost" onclick=load() style="height:26px;padding:0 11px;font-size:12px">Refresh</button>
+  <div class=tb-title id=vtitle>Overview</div>
+  <button class=iconbtn onclick=load() title=Refresh><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M13.2 8a5.2 5.2 0 1 1-1.6-3.8"/><path d="M13.4 2.6v2.8h-2.8"/></svg></button>
  </div>
  <main>
   <div id=errbar></div>
   <section id=view-overview class="view active">
-   <div class=hero><div class=hicon><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=2 width=5 height=5 rx=1.3/><rect x=9 y=2 width=5 height=5 rx=1.3/><rect x=2 y=9 width=5 height=5 rx=1.3/><rect x=9 y=9 width=5 height=5 rx=1.3/></svg></div>
-    <h2>Overview</h2><p>One source of truth for your skills, symlinked into every agent that needs them.</p></div>
+   <div class=phead><h1>Overview</h1><p>One source of truth for your skills, symlinked into every agent that needs them.</p></div>
    <div class=stats id=stats></div>
    <div class=glabel>Agents on this machine</div>
    <div class=group><table id=ov-agents></table></div>
   </section>
   <section id=view-links class=view>
+   <div class=phead><h1>Links</h1><p>Which agent can see which skill. Toggle to link or unlink.</p></div>
    <div class=glabel>Link matrix</div>
    <div class=group><table id=matrix></table></div>
-   <div class=note>Toggle to link or unlink. Orange means the link exists but its source is missing — run Validate in Actions.</div>
+   <div class=note>Orange means the link exists but its source is missing — run Validate in Actions.</div>
   </section>
   <section id=view-agents class=view>
+   <div class=phead><h1>Agents</h1><p>The known-agent registry. Add one and it becomes linkable immediately.</p></div>
    <div class=glabel>Known agents</div>
    <div class=group><table id=ag-table></table></div>
    <div class=glabel>Add agent</div>
    <div class="group pad"><div class=row><input class=txt id=add-name placeholder=name><input class=txt id=add-dir placeholder="~/path/to/skills" style="width:260px"><button class=btn onclick=addAgent()>Add</button></div></div>
   </section>
   <section id=view-actions class=view>
+   <div class=phead><h1>Actions</h1><p>Maintenance tasks. Every action runs the real CLI and prints its output below.</p></div>
    <div class=glabel>Maintenance</div>
    <div class="group pad"><div class=row>
     <button class=btn onclick="run(['validate'])">Validate &amp; repair</button>
@@ -571,6 +568,9 @@ document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',(
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active',s.id==='view-'+el.dataset.view));
+  $('vtitle').textContent=el.dataset.title;
+  const h=document.querySelector('#view-'+el.dataset.view+' .phead h1');
+  if(h) h.textContent=el.dataset.title;
 }));
 load();
 </script></body></html>
