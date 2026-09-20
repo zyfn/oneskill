@@ -44,65 +44,49 @@ git clone https://github.com/zyfn/oneskill.git ~/oneskill
 cd ~/oneskill
 ```
 
-**2. 把 skill 放进源目录**
+**2. 打开管理页面**
 
-每个 skill 一个子目录，内含 SKILL.md。只放自行安装的 skill；各 Agent 自带的 skill 会随官方更新被覆盖或重建，不要搬进源目录：
+macOS 上双击 `oneskill.command` 即可：起一个只监听 127.0.0.1 的本地服务并自动开浏览器，地址里带一次性 token。其它系统或终端里：
 
 ```bash
-cp -R /path/to/my-skill skills/my-skill
+python3 oneskill.py serve --open
 ```
 
-**3. 看本机有哪些 Agent 可用**
+页面有三个视图：**Agents**（名单与安装状态、加 Agent）、**Skills**（skill × agent 链接矩阵，开关即 link/unlink）、**Migrate**（扫描各 Agent 目录里散落的真实 skill 目录，勾选后一键收编）。
+
+**3. 收编散落的 skill**
+
+Migrate 视图列出每个已安装 Agent 目录下「不是符号链接」的 skill 目录。勾选、点 Migrate selected：真实目录移进源目录，原位置留下符号链接——该 Agent 继续可用，真身从此只有一份。
+
+各 Agent **自带的** skill 不要收编（会随官方更新被覆盖或重建）。它们默认被 `migrate.ignore` 保护名单隐藏（每行 `agent:skill名`），扫描不会列出来，误点不到。
+
+**4. 链接与验证**
+
+Skills 视图里拨开关即可；扳手图标跑 validate（修悬空链接，源已不存在的只报告不删）。终端里同样能做，子命令与页面同源：
 
 ```
-$ ./oneskill.sh detect
-┌────────┬──────────────────┬─────────────────┐
-│ AGENT  │ SKILL DIR        │ STATUS          │
-├────────┼──────────────────┼─────────────────┤
-│ claude │ ~/.claude/skills │ ✓ installed     │
-│ codex  │ ~/.codex/skills  │ ✓ installed     │
-│ gemini │ ~/.gemini/skills │ ✗ not installed │
-└────────┴──────────────────┴─────────────────┘
-```
-
-**4. 链给某个 Agent**
-
-第一个参数是 Agent 名（取自上表），第二个是源目录中的 skill 名：
-
-```
-$ ./oneskill.sh link codex my-skill
-✓ linked: codex/my-skill -> ~/oneskill/skills/my-skill
-```
-
-想一次链全部 skill，用 `link-all codex`。
-
-**5. 验证**
-
-```
-$ ./oneskill.sh list
-┌──────────┬────────┬───────┐
-│ SKILL    │ claude │ codex │
-├──────────┼────────┼───────┤
-│ my-skill │ ✗      │ ✓     │
-└──────────┴────────┴───────┘
+$ python3 oneskill.py list
+SKILL        qwenwork  codex
+a1           ✓         ✓
+sunfire-cli  ✓         ✗
 
 ✓ linked   ! broken   ✗ not linked
 ```
-
-codex 列的 ✓ 表示链接已生效；claude 还是 ✗，需要的话再 `link claude my-skill`。
 
 ## 命令一览
 
 | 命令 | 作用 |
 | --- | --- |
-| `detect` | 报告本机已知 Agent 的安装状态 |
-| `list` | 源目录各 skill × 各 Agent 的链接状态（✓ 已链 / ! 悬空 / ✗ 未链） |
+| `serve [--open]` | 起管理页面；只监听 127.0.0.1，打印一次性 token |
+| `detect [--json]` | 报告本机已知 Agent 的安装状态 |
+| `list [--json]` | 源目录各 skill × 各 Agent 的链接状态（✓ 已链 / ! 悬空 / ✗ 未链） |
+| `scan [--json]` | 列出各 Agent 目录下未收编的真实 skill 目录（保护名单内的隐藏） |
 | `link <agent> <skill>` | 创建一个 skill 的链接 |
 | `unlink <agent> <skill>` | 移除一个链接 |
 | `link-all <agent>` | 链接源目录中全部 skill |
 | `unlink-all <agent> --yes` | 移除某 Agent 的全部链接，需确认 |
+| `migrate <agent> <skill>` | 把散落的 skill 目录移进源目录，原位置回链 |
 | `validate [agent]` | 修复悬空链接；源已不存在的只报告、不删除 |
-| `serve [port]` | 本地管理页面：链接矩阵点选、validate、加 Agent。只监听 127.0.0.1，每次启动打印一次性 token，需 python3 |
 | `agent add <name> <dir>` | 向名单添加一个 Agent |
 | `agent update <name> <dir>` | 修改名单中已有条目 |
 
@@ -110,8 +94,8 @@ codex 列的 ✓ 表示链接已生效；claude 还是 ✗，需要的话再 `li
 
 ## 安全边界
 
-脚本只创建和删除符号链接。目标位置若已存在同名的真实文件或目录，它报错停手，不覆盖；批量移除必须带 `--yes`。
+只创建和删除符号链接、只移动你勾选的目录。目标位置若已存在同名的真实文件或目录，报错停手，不覆盖；批量移除必须带 `--yes`；迁移前校验原路径不是符号链接、源目录无同名冲突，迁移后回读验证链接可用。保护名单 `migrate.ignore` 里的条目扫描不列、迁移不动。
 
 ## 维护
 
-核心是单文件 bash，无外部依赖；`serve` 的页面额外需要 python3（macOS、Linux 自带）。问题与改进直接修改 oneskill.sh 与 agents.registry 即可。
+单文件 python3，无第三方依赖（macOS、Linux 自带解释器）。数据文件三个：`agents.registry`（Agent 名单）、`migrate.ignore`（保护名单）、`skills/`（源目录）。问题与改进直接改 `oneskill.py` 即可。
