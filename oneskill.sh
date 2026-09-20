@@ -389,18 +389,11 @@ main{flex:1;padding:26px 26px 64px;max-width:920px;width:100%;margin:0 auto}
 .phead h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.015em}
 .phead p{margin:3px 0 0;font-size:12.5px;color:var(--text2)}
 .phead{margin:0 0 22px}
-/* stats: light, no shadow */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-radius:10px;box-shadow:var(--edge);overflow:hidden;margin:0 0 26px}
-.stat{padding:14px 16px}
-.stat+.stat{border-left:.5px solid var(--hair)}
-.stat .n{font-size:20px;font-weight:600;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
-.stat .l{font-size:11px;color:var(--text2);margin-top:2px}
-.stat .n.g{color:var(--green)}.stat .n.o{color:var(--orange)}
 /* grouped lists */
 .glabel{font-size:11.5px;color:var(--text2);margin:0 2px 5px}
 .group{background:var(--card);border-radius:10px;box-shadow:var(--edge);overflow:hidden}
 .group.pad{padding:10px 12px}
-.group+.glabel,.stats+.glabel{margin-top:24px}
+.group+.glabel{margin-top:24px}
 table{width:100%;border-collapse:collapse}
 th{font-size:11px;font-weight:400;color:var(--text2);text-align:left;padding:8px 14px 5px}
 td{padding:0 14px;height:42px;text-align:left;font-size:13px}
@@ -443,7 +436,7 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
  <div class=brandrow><span class=bname>oneskill</span></div>
  <label class=search><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.6><circle cx=7 cy=7 r=4.2/><path d="M10.2 10.2 13.5 13.5"/></svg><input id=q placeholder=Search></label>
  <a class="nav-item active" data-view=agents data-title=Agents><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg>Agents<span class=badge id=b-agents></span></a>
- <a class=nav-item data-view=links data-title=Links><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M6.7 9.3 9.3 6.7"/><path d="M7.8 4.6 9.2 3.2a2.7 2.7 0 0 1 3.8 3.8l-1.4 1.4"/><path d="M8.2 11.4 6.8 12.8a2.7 2.7 0 0 1-3.8-3.8l1.4-1.4"/></svg>Links<span class=badge id=b-links></span></a>
+ <a class=nav-item data-view=skills data-title=Skills><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=1.5/><path d="M7 3v10M2 8h12"/></svg>Skills<span class=badge id=b-skills></span></a>
  <div class=nav-label>Tools</div>
  <a class=nav-item data-view=actions data-title=Actions><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M2.5 5h11M2.5 11h11"/><circle cx=6 cy=5 r=1.7/><circle cx=10 cy=11 r=1.7/></svg>Actions</a>
  <div class=acct><div class=ava>f</div><div><div class=acct-name>finn</div><div class=acct-sub>localhost · session</div></div></div>
@@ -454,15 +447,14 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
  </div>
  <main>
   <div id=errbar></div>
-  <section id=view-links class=view>
-   <div class=phead><h1>Links</h1><p>Which agent can see which skill. Toggle to link or unlink.</p></div>
+  <section id=view-skills class=view>
+   <div class=phead><h1>Skills</h1><p>Every skill in the source directory and which agents can see it. Toggle to link or unlink.</p></div>
    <div class=glabel>Link matrix</div>
    <div class=group><table id=matrix></table></div>
    <div class=note>Orange means the link exists but its source is missing — run Validate in Actions.</div>
   </section>
   <section id=view-agents class="view active">
    <div class=phead><h1>Agents</h1><p>Every agent oneskill knows about — installed or not. Add one and it becomes linkable immediately.</p></div>
-   <div class=stats id=stats></div>
    <div class=glabel>Known agents</div>
    <div class=group><table id=ag-table></table></div>
    <div class=glabel>Add agent</div>
@@ -511,10 +503,8 @@ const pill=ok=>ok?'<span class="pill ok">Installed</span>':'<span class="pill ba
 function draw(){
   const A=inst(); let links=0,broken=0;
   state.rows.forEach(r=>A.forEach(a=>{const m=r.links[a.name]; if(m==='✓')links++; if(m==='!')broken++;}));
-  const bl=$('b-links'); bl.textContent=links; bl.className='badge'+(broken?' red':'');
+  const bl=$('b-skills'); bl.textContent=links; bl.className='badge'+(broken?' red':'');
   $('b-agents').textContent=A.length;
-  $('stats').innerHTML=[[state.rows.length,'Skills in source',''],[A.length,'Agents installed',''],[links,'Active links','g'],[broken,'Broken links',broken?'o':'']]
-    .map(s=>'<div class=stat><div class="n '+s[2]+'">'+s[0]+'</div><div class=l>'+s[1]+'</div></div>').join('');
   const q=state.q;
   const agF=state.agents.filter(a=>a.name.toLowerCase().includes(q));
   const head='<thead><tr><th>Agent</th><th>Skill dir</th><th>Status</th></tr></thead>';
