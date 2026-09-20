@@ -327,79 +327,155 @@ TOKEN = os.environ["ONESKILL_TOKEN"]
 PORT = int(os.environ["ONESKILL_PORT"])
 ALLOWED = {"link", "unlink", "link-all", "unlink-all", "validate", "agent"}
 
-PAGE = """<!doctype html><meta charset=utf-8><title>oneskill</title>
+PAGE = """<!doctype html><html><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>oneskill</title>
 <style>
- body{font:14px/1.5 ui-monospace,Menlo,monospace;margin:0;background:#111417;color:#d8dee4}
- main{max-width:860px;margin:0 auto;padding:28px 20px}
- h1{font-size:17px;font-weight:600;margin:0 0 4px} h1 span{color:#7d8590;font-weight:400}
- h2{font-size:13px;color:#7d8590;font-weight:600;margin:26px 0 8px;text-transform:uppercase;letter-spacing:.06em}
- table{border-collapse:collapse;width:100%} td,th{border:1px solid #2d3339;padding:6px 10px;text-align:left}
- th{color:#7d8590;font-weight:600;font-size:12px}
- td.c,th.c{text-align:center;width:90px}
- button{font:inherit;background:#1c2126;color:#d8dee4;border:1px solid #2d3339;padding:3px 10px;cursor:pointer;border-radius:4px}
- button:hover{border-color:#444c56}
- .ok{color:#57ab5a}.bad{color:#e5534b}.warn{color:#c69026}.dim{color:#7d8590}
- pre{background:#1c2126;border:1px solid #2d3339;border-radius:6px;padding:10px;min-height:18px;white-space:pre-wrap;font-size:12px}
- form{display:flex;gap:8px;flex-wrap:wrap} input{font:inherit;background:#1c2126;color:#d8dee4;border:1px solid #2d3339;border-radius:4px;padding:4px 8px}
-</style><main>
-<h1>oneskill <span>— one source, linked everywhere</span></h1>
-<h2>agents</h2><table id=agents></table>
-<h2>link matrix</h2><table id=matrix></table>
-<p class=dim>click a cell to link / unlink</p>
-<h2>actions</h2>
-<form onsubmit="return false">
- <button onclick=run(['validate'])>validate</button>
- <button onclick=runAll()>link-all first agent</button>
-</form>
-<h2>add agent</h2>
-<form id=addform>
- <input name=name placeholder=name required><input name=dir placeholder="~/path/to/skills" required style=width:260px>
- <button onclick=addAgent()>add</button>
-</form>
-<h2>output</h2><pre id=out></pre>
+:root{--bg:#f5f5f7;--card:#fff;--text:#1d1d1f;--text2:#86868b;--hair:rgba(0,0,0,.08);--side:rgba(246,246,248,.8);--accent:#0071e3;--green:#34c759;--red:#ff3b30;--orange:#ff9500;--green-t:rgba(52,199,89,.13);--red-t:rgba(255,59,48,.11);--track:#e9e9ea;--console:#f2f2f4;--shadow:0 1px 2px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.05)}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--text:#f5f5f7;--text2:#98989d;--hair:rgba(255,255,255,.12);--side:rgba(28,28,30,.8);--track:#39393d;--console:#141416;--shadow:0 1px 2px rgba(0,0,0,.5)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.47;-webkit-font-smoothing:antialiased}
+.app{display:flex;min-height:100vh}
+aside{width:232px;flex:none;position:sticky;top:0;height:100vh;padding:20px 12px;background:var(--side);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-right:1px solid var(--hair);display:flex;flex-direction:column}
+.brand{display:flex;gap:10px;align-items:center;padding:2px 10px 16px}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#0a84ff,#5e5ce6);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:14px;box-shadow:0 2px 6px rgba(10,132,255,.35)}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.brand-sub{font-size:11px;color:var(--text2)}
+.nav-group{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;padding:14px 12px 6px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:6px 10px;margin:1px 0;border-radius:7px;color:var(--text);text-decoration:none;cursor:pointer;font-size:13.5px;font-weight:500}
+.nav-item svg{width:15px;height:15px;flex:none;opacity:.85}
+.nav-item:hover{background:rgba(120,120,128,.14)}
+.nav-item.active{background:var(--accent);color:#fff}
+.nav-item.active svg{opacity:1}
+.side-foot{margin-top:auto;padding:10px 12px;font-size:11px;color:var(--text2)}
+main{flex:1;padding:34px 40px 60px;max-width:1060px}
+.topbar h1{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:0}
+.topbar .sub{color:var(--text2);font-size:13px;margin:4px 0 24px}
+.view{display:none}.view.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:16px 18px}
+.stat .n{font-size:26px;font-weight:700;letter-spacing:-.02em}
+.stat .l{font-size:12px;color:var(--text2);margin-top:2px}
+.stat .n.g{color:var(--green)}.stat .n.o{color:var(--orange)}
+.card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:6px 20px 14px;margin-bottom:18px}
+.card h3{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 4px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:11px 10px;text-align:left;border-bottom:1px solid var(--hair);font-size:13.5px}
+tr:last-child td{border-bottom:0}
+th{font-size:11.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+td.c,th.c{text-align:center}
+.dim{color:var(--text2)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.pill{display:inline-flex;align-items:center;padding:2px 10px;border-radius:980px;font-size:12px;font-weight:500}
+.pill.ok{background:var(--green-t);color:var(--green)}
+.pill.bad{background:var(--red-t);color:var(--red)}
+.sw{position:relative;display:inline-block;width:42px;height:25px;vertical-align:middle}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.sw .tr{position:absolute;inset:0;background:var(--track);border-radius:13px;transition:background .18s;pointer-events:none}
+.sw .tr:before{content:"";position:absolute;width:21px;height:21px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .18s}
+.sw input:checked+.tr{background:var(--green)}
+.sw input:checked+.tr:before{transform:translateX(17px)}
+.sw.warn input:checked+.tr{background:var(--orange)}
+.btn{border:0;border-radius:980px;padding:7px 17px;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;background:var(--accent);color:#fff}
+.btn:active{opacity:.8}
+.btn.ghost{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0}
+select,input{font:inherit;font-size:13.5px;color:var(--text);background:var(--card);border:1px solid var(--hair);border-radius:8px;padding:6px 10px;outline:none}
+input:focus,select:focus{box-shadow:0 0 0 3px rgba(0,113,227,.25);border-color:var(--accent)}
+pre#out{background:var(--console);border-radius:10px;padding:12px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.6;min-height:44px;max-height:260px;overflow:auto;white-space:pre-wrap;margin:0;width:100%}
+.empty{color:var(--text2);padding:16px 0;font-size:13px}
+.note{font-size:12px;color:var(--text2);padding:8px 0 4px}
+</style></head><body>
+<div class=app>
+<aside>
+ <div class=brand><div class=logo>os</div><div><div class=brand-name>oneskill</div><div class=brand-sub>symlink manager</div></div></div>
+ <div class=nav-group>Manage</div>
+ <a class="nav-item active" data-view=overview data-title=Overview><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.4><rect x=2 y=2 width=5 height=5 rx=1.3/><rect x=9 y=2 width=5 height=5 rx=1.3/><rect x=2 y=9 width=5 height=5 rx=1.3/><rect x=9 y=9 width=5 height=5 rx=1.3/></svg>Overview</a>
+ <a class=nav-item data-view=links data-title=Links><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.4><circle cx=4 cy=8 r=2.3/><circle cx=12 cy=8 r=2.3/><path d="M6.3 8h3.4"/></svg>Links</a>
+ <a class=nav-item data-view=agents data-title=Agents><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.4><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg>Agents</a>
+ <div class=nav-group>Tools</div>
+ <a class=nav-item data-view=actions data-title=Actions><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.4><path d="M2.5 5h11M2.5 11h11"/><circle cx=6 cy=5 r=1.7/><circle cx=10 cy=11 r=1.7/></svg>Actions</a>
+ <div class=side-foot>127.0.0.1 · session token</div>
+</aside>
+<main>
+ <div class=topbar><h1 id=vtitle>Overview</h1><div class=sub>one source, linked everywhere</div></div>
+ <section id=view-overview class="view active">
+  <div class=stats id=stats></div>
+  <div class=card><h3>Agents</h3><table id=ov-agents></table></div>
+ </section>
+ <section id=view-links class=view>
+  <div class=card><h3>Link matrix</h3><table id=matrix></table>
+   <div class=note>Toggle to link or unlink. An orange switch means the link exists but its source is missing — run Validate in Actions to repair.</div></div>
+ </section>
+ <section id=view-agents class=view>
+  <div class=card><h3>Known agents</h3><table id=ag-table></table></div>
+  <div class=card><h3>Add agent</h3><div class=row><input id=add-name placeholder=name><input id=add-dir placeholder="~/path/to/skills" style="width:280px"><button class=btn onclick=addAgent()>Add</button></div></div>
+ </section>
+ <section id=view-actions class=view>
+  <div class=card><h3>Maintenance</h3><div class=row>
+   <button class=btn onclick="run(['validate'])">Validate &amp; repair</button>
+   <button class="btn ghost" onclick=load()>Refresh</button>
+   <select id=ag-sel></select>
+   <button class=btn onclick=runAll()>Link all to selected</button>
+  </div></div>
+  <div class=card><h3>Output</h3><div class=row><pre id=out></pre></div></div>
+ </section>
+</main>
+</div>
 <script>
-const tok = new URLSearchParams(location.search).get('t') || '';
-const api = (p) => fetch(p + (p.includes('?')?'&':'?') + 't=' + encodeURIComponent(tok));
-let state = {agents:[], rows:[]};
-function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const tok=new URLSearchParams(location.search).get('t')||'';
+const api=p=>fetch(p+(p.includes('?')?'&':'?')+'t='+encodeURIComponent(tok));
+let state={agents:[],rows:[]};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const inst=()=>state.agents.filter(a=>a.installed);
 async function load(){
-  const [d,l] = await Promise.all([api('/api/detect'), api('/api/list')]);
-  state.agents = await d.json(); state.rows = await l.json();
+  const [d,l]=await Promise.all([api('/api/detect'),api('/api/list')]);
+  state.agents=await d.json(); state.rows=await l.json();
   draw();
 }
+const pill=ok=>ok?'<span class="pill ok">Installed</span>':'<span class="pill bad">Not installed</span>';
 function draw(){
-  const inst = state.agents.filter(a=>a.installed);
-  document.getElementById('agents').innerHTML =
-    '<tr><th>agent</th><th>skill dir</th><th class=c>installed</th></tr>' +
-    state.agents.map(a=>`<tr><td>${esc(a.name)}</td><td class=dim>${esc(a.dir)}</td><td class=c>${a.installed?'<span class=ok>✓</span>':'<span class=bad>✗</span>'}</td></tr>`).join('');
-  document.getElementById('matrix').innerHTML =
-    '<tr><th>skill</th>'+inst.map(a=>`<th class=c>${esc(a.name)}</th>`).join('')+'</tr>' +
-    state.rows.map(r=>'<tr><td>'+esc(r.skill)+'</td>'+inst.map(a=>{
-      const m=r.links[a.name]; const cls=m==='✓'?'ok':m==='!'?'warn':'bad';
-      return `<td class=c><a href=# onclick="toggle('${esc(r.skill)}','${esc(a.name)}');return false" class=${cls}>${m}</a></td>`;
-    }).join('')+'</tr>').join('');
+  const A=inst(); let links=0,broken=0;
+  state.rows.forEach(r=>A.forEach(a=>{const m=r.links[a.name]; if(m==='✓')links++; if(m==='!')broken++;}));
+  $('stats').innerHTML=[[state.rows.length,'Skills in source',''],[A.length,'Agents installed',''],[links,'Active links','g'],[broken,'Broken links',broken?'o':'']]
+    .map(s=>'<div class=stat><div class="n '+s[2]+'">'+s[0]+'</div><div class=l>'+s[1]+'</div></div>').join('');
+  const agRows=state.agents.map(a=>'<tr><td>'+esc(a.name)+'</td><td class="dim mono">'+esc(a.dir)+'</td><td>'+pill(a.installed)+'</td></tr>').join('');
+  const head='<tr><th>Agent</th><th>Skill dir</th><th>Status</th></tr>';
+  $('ov-agents').innerHTML=head+agRows;
+  $('ag-table').innerHTML=head+agRows;
+  $('matrix').innerHTML=A.length
+    ? '<tr><th>Skill</th>'+A.map(a=>'<th class=c>'+esc(a.name)+'</th>').join('')+'</tr>'+
+      state.rows.map(r=>'<tr><td class=mono>'+esc(r.skill)+'</td>'+A.map(a=>{
+        const m=r.links[a.name]; const on=(m==='✓'||m==='!');
+        return '<td class=c><label class="sw'+(m==='!'?' warn':'')+'"><input type=checkbox '+(on?'checked':'')+
+          " onchange=\"toggle('"+esc(r.skill)+"','"+esc(a.name)+"')\"><span class=tr></span></label></td>";
+      }).join('')+'</tr>').join('')
+    : '<tr><td class=empty>No installed agents yet.</td></tr>';
+  $('ag-sel').innerHTML=A.map(a=>'<option value="'+esc(a.name)+'">'+esc(a.name)+'</option>').join('');
 }
-function say(t){document.getElementById('out').textContent=t}
+function say(t){$('out').textContent=t}
 async function run(args){
-  say('$ oneskill.sh ' + args.join(' ') + '\\n…');
-  const r = await fetch('/api/action?t='+encodeURIComponent(tok), {method:'POST',
-    headers:{'Content-Type':'application/json'}, body:JSON.stringify({args})});
-  const j = await r.json();
-  say('$ oneskill.sh ' + args.join(' ') + '\\n' + j.output);
+  say('$ oneskill.sh '+args.join(' ')+'\\n…');
+  const r=await fetch('/api/action?t='+encodeURIComponent(tok),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({args})});
+  const j=await r.json();
+  say('$ oneskill.sh '+args.join(' ')+'\\n'+j.output);
   await load();
 }
 function toggle(skill,agent){
-  const row = state.rows.find(r=>r.skill===skill);
-  run([row.links[agent]==='✓' ? 'unlink' : 'link', agent, skill]);
+  const row=state.rows.find(r=>r.skill===skill);
+  const m=row.links[agent];
+  run([(m==='✓'||m==='!')?'unlink':'link',agent,skill]);
 }
-function runAll(){ if(state.agents.length) run(['link-all', state.agents.find(a=>a.installed).name]); }
-function addAgent(){
-  const f=document.getElementById('addform');
-  run(['agent','add',f.name.value.trim(),f.dir.value.trim()]);
-  f.reset();
-}
+function runAll(){const s=$('ag-sel').value; if(s) run(['link-all',s]);}
+function addAgent(){run(['agent','add',$('add-name').value.trim(),$('add-dir').value.trim()]);$('add-name').value='';$('add-dir').value='';}
+document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>{
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active',s.id==='view-'+el.dataset.view));
+  $('vtitle').textContent=el.dataset.title;
+}));
 load();
-</script></main>"""
+</script></body></html>"""
 
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
