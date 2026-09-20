@@ -354,19 +354,16 @@ body{margin:0;color:var(--text);font:13px/18px -apple-system,BlinkMacSystemFont,
 ::selection{background:rgba(10,102,255,.3)}
 .app{display:flex;min-height:100vh}
 /* sidebar */
-aside{width:248px;flex:none;position:sticky;top:0;height:100vh;padding:12px 10px 10px;
+aside{width:248px;flex:none;position:sticky;top:0;height:100vh;padding:14px 10px 10px;
  background:var(--side);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
  border-right:1px solid var(--hair);display:flex;flex-direction:column;user-select:none}
-.tl{display:flex;gap:8px;padding:2px 0 10px 6px}
-.tl i{width:12px;height:12px;border-radius:50%}
-.tl .r{background:#ff5f57}.tl .y{background:#febc2e}.tl .g{background:#28c840}
-.search{display:flex;align-items:center;gap:6px;background:var(--field);border-radius:8px;padding:0 8px;height:28px;margin:0 2px 12px}
+.search{display:flex;align-items:center;gap:6px;background:var(--field);border-radius:8px;padding:0 8px;height:28px;margin:0 2px 10px}
 .search svg{width:13px;height:13px;color:var(--text2);flex:none}
 .search input{border:0;outline:0;background:transparent;color:var(--text);font:inherit;width:100%}
-.brand{display:flex;gap:9px;align-items:center;padding:0 6px 12px}
-.logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(140deg,#0a84ff,#0055d6 72%);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:13px;box-shadow:inset 0 .5px 0 rgba(255,255,255,.3),0 1px 2px rgba(0,0,0,.2)}
-.brand-name{font-size:13.5px;font-weight:600;letter-spacing:-.01em}
-.brand-sub{font-size:11px;color:var(--text2);line-height:1.25}
+.idrow{display:flex;gap:9px;align-items:center;padding:0 6px 12px}
+.ava{width:32px;height:32px;border-radius:50%;background:linear-gradient(140deg,#8e8e93,#636366);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
+.id-name{font-size:13px;font-weight:500}
+.id-sub{font-size:11px;color:var(--text2);line-height:1.25}
 .nav-item{display:flex;align-items:center;gap:9px;height:30px;padding:0 7px;margin:1px 0;border-radius:7px;cursor:default;font-size:13px;font-weight:400;transition:background .12s var(--ease)}
 .nav-item:hover{background:var(--hover)}
 .nav-item.active{background:var(--sel);color:#fff;font-weight:500}
@@ -380,10 +377,6 @@ aside{width:248px;flex:none;position:sticky;top:0;height:100vh;padding:12px 10px
 .badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:rgba(0,0,0,.10);color:var(--text2);font-size:11px;font-weight:600;line-height:18px;text-align:center}
 .badge.red{background:var(--red);color:#fff}
 .nav-item.active .badge{background:rgba(255,255,255,.25);color:#fff}
-.side-foot{margin-top:auto;display:flex;gap:9px;align-items:center;padding:10px 6px 2px;border-top:1px solid var(--hair)}
-.ava{width:28px;height:28px;border-radius:50%;background:linear-gradient(140deg,#8e8e93,#636366);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center}
-.foot-name{font-size:12.5px;font-weight:500}
-.foot-sub{font-size:10.5px;color:var(--text2)}
 /* content */
 .content{flex:1;min-width:0;display:flex;flex-direction:column}
 .toolbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:8px;height:52px;padding:0 20px;
@@ -398,7 +391,8 @@ main{flex:1;padding:20px 22px 56px;max-width:860px;width:100%}
 #errbar{display:none;background:var(--red-t);color:var(--red);border-radius:10px;padding:10px 14px;margin:0 0 16px;font-size:12.5px;font-weight:500}
 /* hero (pane header card) */
 .hero{background:var(--hero);border-radius:12px;padding:24px 20px 22px;text-align:center;margin:0 0 20px}
-.hero .hicon{width:56px;height:56px;border-radius:13px;margin:0 auto 10px;background:linear-gradient(140deg,#409cff,#0055d6);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:inset 0 .5px 0 rgba(255,255,255,.35),0 2px 6px rgba(0,85,214,.35)}
+.hero .hicon{width:56px;height:56px;border-radius:13px;margin:0 auto 10px;background:linear-gradient(180deg,#fdfdfe,#d8d8dc);display:flex;align-items:center;justify-content:center;color:#5a5a5e;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.12)}
+@media (prefers-color-scheme:dark){.hero .hicon{background:linear-gradient(180deg,#48484a,#323236);color:#d0d0d2;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.14),0 1px 3px rgba(0,0,0,.5)}}
 .hero .hicon svg{width:26px;height:26px;stroke-width:1.5}
 .hero h2{margin:0 0 4px;font-size:20px;font-weight:600;letter-spacing:-.01em}
 .hero p{margin:0 auto;max-width:520px;font-size:12.5px;color:var(--text2)}
@@ -452,15 +446,13 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
 </style></head><body>
 <div class=app>
 <aside>
- <div class=tl><i class=r></i><i class=y></i><i class=g></i></div>
  <label class=search><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.6><circle cx=7 cy=7 r=4.2/><path d="M10.2 10.2 13.5 13.5"/></svg><input id=q placeholder=Search></label>
- <div class=brand><div class=logo>os</div><div><div class=brand-name>oneskill</div><div class=brand-sub>symlink manager</div></div></div>
+ <div class=idrow><div class=ava>f</div><div><div class=id-name>finn</div><div class=id-sub>oneskill · localhost</div></div></div>
  <a class="nav-item active" data-view=overview data-title=Overview><span class="chip b"><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=2 width=5 height=5 rx=1.3/><rect x=9 y=2 width=5 height=5 rx=1.3/><rect x=2 y=9 width=5 height=5 rx=1.3/><rect x=9 y=9 width=5 height=5 rx=1.3/></svg></span>Overview</a>
  <a class=nav-item data-view=links data-title=Links><span class="chip g"><svg viewBox="0 0 16 16" fill=none stroke=currentColor><circle cx=4 cy=8 r=2.3/><circle cx=12 cy=8 r=2.3/><path d="M6.3 8h3.4"/></svg></span>Links<span class=badge id=b-links></span></a>
  <a class=nav-item data-view=agents data-title=Agents><span class="chip p"><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg></span>Agents<span class=badge id=b-agents></span></a>
  <div class=nav-gap></div>
  <a class=nav-item data-view=actions data-title=Actions><span class="chip o"><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M2.5 5h11M2.5 11h11"/><circle cx=6 cy=5 r=1.7/><circle cx=10 cy=11 r=1.7/></svg></span>Actions</a>
- <div class=side-foot><div class=ava>f</div><div><div class=foot-name>finn</div><div class=foot-sub>localhost · session token</div></div></div>
 </aside>
 <div class=content>
  <div class=toolbar>
