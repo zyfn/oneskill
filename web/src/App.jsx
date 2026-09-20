@@ -131,7 +131,10 @@ export default function App() {
                   <Table head={[{ t: 'Skill', w: '30%' }, ...inst.map(a => ({ t: a.name, c: true }))]} >
                     {rows.map(r => (
                       <tr key={r.skill}>
-                        <Td mono>{r.skill}</Td>
+                        <Td>
+                          <div className="font-mono text-[12px]">{r.skill}</div>
+                          {r.desc ? <div className="text-[11px] text-ink2 truncate max-w-full" title={r.desc}>{r.desc}</div> : null}
+                        </Td>
                         {inst.map(a => {
                           const m = r.links[a.name]
                           return <Td key={a.name} c><Switch on={m === '✓' || m === '!'} warn={m === '!'}

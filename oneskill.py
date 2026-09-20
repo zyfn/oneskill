@@ -80,9 +80,40 @@ def link_mark(agent, skill):
         return "✓" if os.path.exists(p) else "!"
     return "✗"
 
+def skill_desc(name):
+    p = os.path.join(SOURCE, name, "SKILL.md")
+    if not os.path.isfile(p):
+        return ""
+    try:
+        with open(p, encoding="utf-8") as f:
+            lines = f.readlines()
+    except OSError:
+        return ""
+    if not lines or lines[0].strip() != "---":
+        return ""
+    for i, line in enumerate(lines[1:], start=1):
+        s = line.strip()
+        if s == "---":
+            break
+        if s.lower().startswith("description:"):
+            v = s.split(":", 1)[1].strip()
+            if v in (">", "|", ">-", "|-", ">+", "|+"):
+                parts = []
+                for nxt in lines[i + 1:]:
+                    if nxt.strip() and (nxt[0] == " " or nxt[0] == "\t"):
+                        parts.append(nxt.strip())
+                    else:
+                        break
+                v = " ".join(parts)
+            elif len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+                v = v[1:-1]
+            return v
+    return ""
+
 def list_data():
     agents = active_agents()
-    return [{"skill": s, "links": {a: link_mark(a, s) for a in agents}} for s in source_skills()]
+    return [{"skill": s, "desc": skill_desc(s),
+             "links": {a: link_mark(a, s) for a in agents}} for s in source_skills()]
 
 def ignore_set():
     path = os.path.join(BASE, "migrate.ignore")
