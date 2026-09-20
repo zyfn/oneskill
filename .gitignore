@@ -2,5 +2,8 @@
 skills/*
 !skills/.gitkeep
 
+# 构建依赖不入库；web/dist 入库（运行时零依赖的前提）
+web/node_modules
+
 # macOS
 .DS_Store

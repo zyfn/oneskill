@@ -98,4 +98,10 @@ sunfire-cli  ✓         ✗
 
 ## 维护
 
-单文件 python3，无第三方依赖（macOS、Linux 自带解释器）。数据文件三个：`agents.registry`（Agent 名单）、`migrate.ignore`（保护名单）、`skills/`（源目录）。问题与改进直接改 `oneskill.py` 即可。
+单文件 python3 运行时，无第三方依赖（macOS、Linux 自带解释器）。页面是 React + Tailwind 源码（`web/`），构建产物 `web/dist` 随仓库分发——**使用不需要 node，改页面才需要**：
+
+```bash
+cd web && npm install && npm run build
+```
+
+开发时 `npm run dev` 起 vite（5173 端口，/api 代理到 8787 的服务）。数据文件三个：`agents.registry`（Agent 名单）、`migrate.ignore`（保护名单）、`skills/`（源目录）。

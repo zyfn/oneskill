@@ -24,6 +24,7 @@ from urllib.parse import urlparse, parse_qs
 BASE = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.join(BASE, "skills")
 REGISTRY = os.path.join(BASE, "agents.registry")
+DIST = os.path.join(BASE, "web", "dist")
 PORT0 = 8787
 
 # ── core ────────────────────────────────────────────────────────────────
@@ -244,244 +245,6 @@ def run_action(args):
 
 # ── web ─────────────────────────────────────────────────────────────────
 
-PAGE = r"""<!doctype html><html><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>oneskill</title>
-<style>
-:root{
- --win:#f5f5f7;--side:rgba(244,244,246,.82);--card:#ffffff;
- --text:#1d1d1f;--text2:#86868b;--hair:rgba(0,0,0,.08);
- --field:rgba(0,0,0,.055);--hover:rgba(0,0,0,.04);
- --accent:#0071e3;--accent-hi:#0077ed;--sel:#0a66ff;
- --green:#34c759;--red:#ff3b30;--orange:#ff9500;
- --green-t:rgba(52,199,89,.14);--red-t:rgba(255,59,48,.12);
- --track:#e9e9ea;--btn2:#e9e9eb;--btn2-hi:#dedee0;
- --edge:0 0 0 .5px rgba(0,0,0,.07);
- --ease:cubic-bezier(.25,.46,.45,.94);
-}
-@media (prefers-color-scheme:dark){:root{
- --win:#000;--side:rgba(28,28,30,.82);--card:#1c1c1e;
- --text:#f5f5f7;--text2:#98989d;--hair:rgba(255,255,255,.10);
- --field:rgba(255,255,255,.08);--hover:rgba(255,255,255,.06);
- --sel:#0a84ff;--track:#39393d;--btn2:#323236;--btn2-hi:#3a3a3e;
- --edge:0 0 0 .5px rgba(255,255,255,.09);
-}}
-*{box-sizing:border-box}
-html{background:var(--win)}
-body{margin:0;color:var(--text);font:13px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-::selection{background:rgba(10,102,255,.3)}
-.app{display:flex;min-height:100vh}
-aside{width:236px;flex:none;position:sticky;top:0;height:100vh;padding:16px 10px 12px;
- background:var(--side);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
- border-right:1px solid var(--hair);display:flex;flex-direction:column;user-select:none}
-.brandrow{display:flex;align-items:center;gap:8px;padding:0 8px 14px}
-.mark{flex:none;border-radius:6px;box-shadow:inset 0 .5px 0 rgba(255,255,255,.28),0 1px 2px rgba(0,0,0,.25)}
-.bname{font-size:14px;font-weight:600;letter-spacing:-.01em}
-.nav-item{display:flex;align-items:center;gap:10px;height:32px;padding:0 9px;margin:1px 0;border-radius:7px;cursor:default;font-size:13px;font-weight:400;color:var(--text);transition:background .12s var(--ease)}
-.nav-item svg{width:18px;height:18px;flex:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
-.nav-item:hover{background:var(--hover)}
-.nav-item.active{background:var(--sel);color:#fff;font-weight:500}
-.nav-item.active svg{opacity:1}
-.badge{margin-left:auto;min-width:18px;height:17px;padding:0 5px;border-radius:9px;background:rgba(0,0,0,.08);color:var(--text2);font-size:10.5px;font-weight:600;line-height:17px;text-align:center}
-.badge.red{background:var(--red);color:#fff}
-.nav-item.active .badge{background:rgba(255,255,255,.25);color:#fff}
-.content{flex:1;min-width:0;display:flex;flex-direction:column}
-.toolbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:flex-end;gap:8px;height:44px;padding:0 22px;
- background:var(--side);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
- border-bottom:1px solid var(--hair)}
-.iconbtn{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.iconbtn:hover{background:var(--hover)}
-.iconbtn svg{width:14px;height:14px;stroke-width:1.6}
-main{flex:1;padding:22px 26px 64px;max-width:920px;width:100%;margin:0 auto}
-#errbar{display:none;background:var(--red-t);color:var(--red);border-radius:9px;padding:9px 13px;margin:0 0 18px;font-size:12.5px;font-weight:500}
-.glabel{font-size:11px;color:var(--text2);margin:0 2px 5px}
-.group{background:var(--card);border-radius:10px;box-shadow:var(--edge);overflow:hidden}
-.group.pad{padding:10px 12px}
-.group+.glabel{margin-top:22px}
-table{width:100%;border-collapse:collapse}
-th{font-size:11px;font-weight:400;color:var(--text2);text-align:left;padding:8px 14px 5px}
-td{padding:0 14px;height:42px;text-align:left;font-size:13px}
-td.c,th.c{text-align:center}
-tbody tr+tr{background-image:linear-gradient(var(--hair),var(--hair));background-size:calc(100% - 14px) .5px;background-position:14px 0;background-repeat:no-repeat}
-tbody tr:hover{background-color:var(--hover)}
-.dim{color:var(--text2)}
-.mono{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:12px}
-.pill{display:inline-flex;align-items:center;height:19px;padding:0 9px;border-radius:980px;font-size:11px;font-weight:500}
-.pill.ok{background:var(--green-t);color:var(--green)}
-.pill.bad{background:var(--red-t);color:var(--red)}
-.sw{position:relative;display:inline-block;width:42px;height:26px;vertical-align:middle}
-.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.sw .tr{position:absolute;inset:0;background:var(--track);border-radius:13px;transition:background .16s var(--ease);pointer-events:none}
-.sw .tr:before{content:"";position:absolute;width:22px;height:22px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.22),0 0 0 .5px rgba(0,0,0,.04);transition:transform .16s var(--ease)}
-.sw input:checked+.tr{background:var(--green)}
-.sw input:checked+.tr:before{transform:translateX(16px)}
-.sw.warn input:checked+.tr{background:var(--orange)}
-.btn{border:0;border-radius:8px;height:29px;padding:0 13px;font:inherit;font-size:12.5px;font-weight:500;cursor:pointer;background:var(--accent);color:#fff;transition:background .12s var(--ease),transform .1s ease-out}
-.btn:hover{background:var(--accent-hi)}
-.btn:active{transform:scale(.97)}
-.btn.ghost{background:var(--btn2);color:var(--text)}
-.btn.ghost:hover{background:var(--btn2-hi)}
-.btn:disabled{opacity:.45;cursor:default}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:2px 0}
-select,input.txt{font:inherit;font-size:12.5px;color:var(--text);background:var(--btn2);border:0;border-radius:7px;height:28px;padding:0 9px;outline:0}
-select:hover,input.txt:hover{background:var(--btn2-hi)}
-input.txt:focus{box-shadow:0 0 0 3px rgba(10,102,255,.35)}
-input[type=checkbox].ck{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
-.empty{color:var(--text2);padding:14px;font-size:12.5px}
-.note{font-size:11px;color:var(--text2);padding:7px 2px 0}
-.view{display:none}.view.active{display:block}
-#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,10px);opacity:0;pointer-events:none;
- background:rgba(30,30,32,.92);color:#f5f5f7;border-radius:12px;padding:10px 14px;max-width:560px;
- font:11.5px/1.55 "SF Mono",ui-monospace,Menlo,monospace;white-space:pre-wrap;
- box-shadow:0 6px 24px rgba(0,0,0,.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
- transition:opacity .18s var(--ease),transform .18s var(--ease);z-index:20}
-#toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;cursor:pointer}
-@media (prefers-reduced-transparency:reduce){aside,.toolbar{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--win)}}
-</style></head><body>
-<div class=app>
-<aside>
- <div class=brandrow><svg class=mark width=22 height=22 viewBox="0 0 32 32"><defs><linearGradient id=lg x1=0 y1=0 x2=1 y2=1><stop offset=0 stop-color="#3d9bff"/><stop offset=1 stop-color="#0055d6"/></linearGradient></defs><rect width=32 height=32 rx=7.5 fill="url(#lg)"/><g fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M13 19l6-6"/><path d="M14.6 10.6l2.2-2.2a4.4 4.4 0 0 1 6.2 6.2l-2.2 2.2"/><path d="M17.4 21.4l-2.2 2.2a4.4 4.4 0 0 1-6.2-6.2l2.2-2.2"/></g></svg><span class=bname>oneskill</span></div>
- <a class="nav-item active" data-view=agents data-title=Agents><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg>Agents<span class=badge id=b-agents></span></a>
- <a class=nav-item data-view=skills data-title=Skills><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=1.5"/><path d="M7 3v10M2 8h12"/></svg>Skills<span class=badge id=b-skills></span></a>
- <a class=nav-item data-view=migrate data-title=Migrate><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M2.5 8h8"/><path d="M8 5.2 10.8 8 8 10.8"/><path d="M13.5 3v10"/></svg>Migrate<span class=badge id=b-migrate></span></a>
-</aside>
-<div class=content>
- <div class=toolbar>
-  <button class=iconbtn onclick="run(['validate'])" title="Validate & repair"><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M9.6 2.6a3.6 3.6 0 0 0-4.5 4.6L2.4 9.9a1.5 1.5 0 0 0 2.1 2.1l2.7-2.7a3.6 3.6 0 0 0 4.6-4.5L9.7 6.9 8.4 6.6l-.3-1.3z"/><path d="M10.8 10.8l2.6 2.6"/></svg></button>
-  <button class=iconbtn onclick=load() title=Refresh><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M13.2 8a5.2 5.2 0 1 1-1.6-3.8"/><path d="M13.4 2.6v2.8h-2.8"/></svg></button>
- </div>
- <main>
-  <div id=errbar></div>
-  <section id=view-agents class="view active">
-   <div class=glabel>Known agents</div>
-   <div class=group><table id=ag-table></table></div>
-   <div class=glabel>Add agent</div>
-   <div class="group pad"><div class=row><input class=txt id=add-name placeholder=name><input class=txt id=add-dir placeholder="~/path/to/skills" style="width:260px"><button class=btn onclick=addAgent()>Add</button></div></div>
-  </section>
-  <section id=view-skills class=view>
-   <div class=glabel>Link matrix</div>
-   <div class=group><table id=matrix></table></div>
-   <div class=note>Orange = link exists but its source is missing; repair with the wrench.</div>
-  </section>
-  <section id=view-migrate class=view>
-   <div class=glabel>Unmanaged skills found in agent directories</div>
-   <div class=group><table id=mig-table></table></div>
-   <div class=note id=mig-note>Selected dirs move into the source; a symlink is left where they were, so that agent keeps working.</div>
-   <div class="group pad" style="margin-top:10px"><div class=row>
-    <button class=btn id=mig-btn onclick=migrateSel() disabled>Migrate selected</button>
-    <span class=dim id=mig-count></span>
-   </div></div>
-  </section>
- </main>
-</div>
-<div id=toast onclick="this.classList.remove('show')"></div>
-</div>
-<script>
-const tok=new URLSearchParams(location.search).get('t')||'';
-const api=p=>fetch(p+(p.includes('?')?'&':'?')+'t='+encodeURIComponent(tok));
-let state={agents:[],rows:[],scan:[]};
-const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const inst=()=>state.agents.filter(a=>a.installed);
-async function load(){
-  const [d,l,s]=await Promise.all([api('/api/detect'),api('/api/list'),api('/api/scan')]);
-  if(!d.ok||!l.ok||!s.ok){
-    $('errbar').style.display='block';
-    $('errbar').textContent='Session token 已失效（服务重启过）。回终端看启动时打印的链接，用新地址重开本页。';
-    return;
-  }
-  const a=await d.json(), r=await l.json(), sc=await s.json();
-  if(!Array.isArray(a)||!Array.isArray(r)||!Array.isArray(sc)){
-    $('errbar').style.display='block';
-    $('errbar').textContent='接口返回了意外数据，刷新重试。';
-    return;
-  }
-  $('errbar').style.display='none';
-  state.agents=a; state.rows=r; state.scan=sc;
-  draw();
-}
-const pill=ok=>ok?'<span class="pill ok">Installed</span>':'<span class="pill bad">Not installed</span>';
-function draw(){
-  const A=inst(); let links=0,broken=0;
-  state.rows.forEach(r=>A.forEach(a=>{const m=r.links[a.name]; if(m==='✓')links++; if(m==='!')broken++;}));
-  const bl=$('b-skills'); bl.textContent=links; bl.className='badge'+(broken?' red':'');
-  $('b-agents').textContent=A.length;
-  const head='<thead><tr><th>Agent</th><th>Skill dir</th><th>Status</th></tr></thead>';
-  $('ag-table').innerHTML=head+'<tbody>'+state.agents.map(a=>'<tr><td>'+esc(a.name)+'</td><td class="dim mono">'+esc(a.dir)+'</td><td>'+pill(a.installed)+'</td></tr>').join('')+'</tbody>';
-  $('matrix').innerHTML=A.length
-    ? '<thead><tr><th>Skill</th>'+A.map(a=>'<th class=c>'+esc(a.name)+'</th>').join('')+'</tr></thead><tbody>'+
-      state.rows.map(r=>'<tr><td class=mono>'+esc(r.skill)+'</td>'+A.map(a=>{
-        const m=r.links[a.name]; const on=(m==='✓'||m==='!');
-        return '<td class=c><label class="sw'+(m==='!'?' warn':'')+'"><input type=checkbox '+(on?'checked':'')+
-          ' data-skill="'+esc(r.skill)+'" data-agent="'+esc(a.name)+'"><span class=tr></span></label></td>';
-      }).join('')+'</tr>').join('')+'</tbody>'
-    : '<tbody><tr><td class=empty>No installed agents yet.</td></tr></tbody>';
-  const stray=state.scan.map(g=>({agent:g.agent,hidden:g.hidden||0,items:g.items.filter(i=>i.kind==='dir')})).filter(g=>g.items.length||g.hidden);
-  let hid=0; stray.forEach(g=>hid+=g.hidden);
-  let n=0; stray.forEach(g=>n+=g.items.length);
-  $('b-migrate').textContent=n; $('b-migrate').className='badge'+(n?' red':'');
-  $('mig-note').textContent='Selected dirs move into the source; a symlink is left where they were, so that agent keeps working.'+(hid?' '+hid+' protected entries hidden (migrate.ignore).':'');
-  $('mig-table').innerHTML=stray.length
-    ? '<thead><tr><th style="width:34px"></th><th>Agent</th><th>Skill dir</th></tr></thead><tbody>'+
-      stray.map(g=>g.items.map(i=>'<tr><td class=c><input type=checkbox class=ck data-agent="'+esc(g.agent)+'" data-name="'+esc(i.name)+'" '+(i.in_source?'disabled title="name already in source"':'')+' onchange=migCount()></td><td>'+esc(g.agent)+'</td><td class=mono>'+esc(i.name)+(i.in_source?' <span class=dim>(name clash)</span>':'')+'</td></tr>').join('')).join('')+'</tbody>'
-    : '<tbody><tr><td class=empty>Nothing to migrate — every skill dir is already managed.</td></tr></tbody>';
-  migCount();
-}
-function migCount(){
-  const c=document.querySelectorAll('#mig-table .ck:checked').length;
-  $('mig-count').textContent=c?c+' selected':'';
-  $('mig-btn').disabled=!c;
-}
-async function migrateSel(){
-  const boxes=[...document.querySelectorAll('#mig-table .ck:checked')];
-  for(const b of boxes){
-    await run(['migrate',b.dataset.agent,b.dataset.name],true);
-  }
-  await load();
-}
-let toastTimer=0;
-function say(t,quiet){
-  if(quiet) return;
-  const el=$('toast');
-  el.textContent=t;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>el.classList.remove('show'),6000);
-}
-async function run(args,quiet){
-  say('$ oneskill '+args.join(' ')+'\\n…');
-  const r=await fetch('/api/action?t='+encodeURIComponent(tok),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({args})});
-  if(!r.ok){
-    say('$ oneskill '+args.join(' ')+'\\n✗ 请求失败（HTTP '+r.status+'）。403 表示 token 失效，用终端打印的新链接重开本页。');
-    return;
-  }
-  const j=await r.json();
-  say('$ oneskill '+args.join(' ')+'\\n'+j.output,quiet);
-  if(!quiet) await load();
-}
-function toggle(skill,agent){
-  const row=state.rows.find(r=>r.skill===skill);
-  const m=row.links[agent];
-  run([(m==='✓'||m==='!')?'unlink':'link',agent,skill]);
-}
-$('matrix').addEventListener('change',e=>{
-  const t=e.target;
-  if(t.dataset && t.dataset.skill) toggle(t.dataset.skill,t.dataset.agent);
-});
-function addAgent(){run(['agent','add',$('add-name').value.trim(),$('add-dir').value.trim()]);$('add-name').value='';$('add-dir').value='';}
-document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>{
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active',s.id==='view-'+el.dataset.view));
-  document.title='oneskill — '+el.dataset.title;
-}));
-(function(){
-  const h=location.hash.replace('#','');
-  const el=h&&document.querySelector('.nav-item[data-view="'+h+'"]');
-  if(el) el.click();
-})();
-load();
-</script></body></html>
-"""
 
 class H(BaseHTTPRequestHandler):
     token = ""
@@ -497,14 +260,30 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(b)
     def do_GET(self):
         p = urlparse(self.path).path
-        if p in ("/", "/index.html"):
-            self._send(200, PAGE, "text/html"); return
-        if not self._ok(None):
-            self._send(403, json.dumps({"error": "bad token"})); return
-        if p == "/api/detect": self._send(200, json.dumps(detect_data())); return
-        if p == "/api/list":   self._send(200, json.dumps(list_data())); return
-        if p == "/api/scan":   self._send(200, json.dumps(scan_data())); return
-        self._send(404, json.dumps({"error": "not found"}))
+        if p.startswith("/api/"):
+            if not self._ok(None):
+                self._send(403, json.dumps({"error": "bad token"})); return
+            if p == "/api/detect": self._send(200, json.dumps(detect_data())); return
+            if p == "/api/list":   self._send(200, json.dumps(list_data())); return
+            if p == "/api/scan":   self._send(200, json.dumps(scan_data())); return
+            self._send(404, json.dumps({"error": "not found"})); return
+        # static files from web/dist (no token: the page itself is public,
+        # every /api call still requires the session token)
+        rel = "index.html" if p in ("/", "/index.html") else p.lstrip("/")
+        full = os.path.normpath(os.path.join(DIST, rel))
+        if not full.startswith(DIST + os.sep) or not os.path.isfile(full):
+            self._send(404, json.dumps({"error": "not found"})); return
+        ctype = "text/html" if full.endswith(".html") else \
+                "text/css" if full.endswith(".css") else \
+                "application/javascript" if full.endswith(".js") else "application/octet-stream"
+        with open(full, "rb") as f:
+            body = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type", ctype + "; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
     def do_POST(self):
         if not self._ok(None) or urlparse(self.path).path != "/api/action":
             self._send(403 if not self._ok(None) else 404, json.dumps({"error": "denied"})); return
