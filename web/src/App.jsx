@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { get, action } from './api.js'
-import { Mark, Switch, Pill, Btn, IconBtn, GroupLabel, Card, Table, Td } from './ui.jsx'
+import { Mark, Switch, Pill, Btn, IconBtn, GroupLabel, Card, Table, Td, PaneHead } from './ui.jsx'
 
 const VIEWS = [
   { id: 'agents', title: 'Agents', icon: <><rect x="2" y="3" width="12" height="10" rx="2" /><path d="M5 7l2 2-2 2M9.5 11H11" /></> },
@@ -77,27 +77,31 @@ export default function App() {
             </span>
           </a>
         ))}
+        <div className="mt-auto pt-[10px] px-[8px] border-t border-hair">
+          <div className="text-[10.5px] text-ink2 leading-[1.5]">
+            source<br /><span className="font-mono text-[10px]">~/oneskill/skills</span>
+          </div>
+        </div>
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="glass sticky top-0 z-[6] flex items-center justify-end gap-[8px] h-[44px] px-[22px] border-b border-hair">
-          <IconBtn title="Validate & repair" onClick={() => run(['validate'])}>
-            <path d="M9.6 2.6a3.6 3.6 0 0 0-4.5 4.6L2.4 9.9a1.5 1.5 0 0 0 2.1 2.1l2.7-2.7a3.6 3.6 0 0 0 4.6-4.5L9.7 6.9 8.4 6.6l-.3-1.3z" />
-            <path d="M10.8 10.8l2.6 2.6" />
-          </IconBtn>
-          <IconBtn title="Refresh" onClick={load}>
-            <path d="M13.2 8a5.2 5.2 0 1 1-1.6-3.8" /><path d="M13.4 2.6v2.8h-2.8" />
-          </IconBtn>
-        </div>
-
-        <main className="flex-1 pt-[22px] px-[26px] pb-[64px] w-full max-w-[920px] mx-auto">
+        <main className="flex-1 pt-[26px] px-[28px] pb-[64px] w-full max-w-[960px] mx-auto">
           {err && <div className="rounded-[9px] px-[13px] py-[9px] mb-[18px] text-[12.5px] font-medium" style={{ background: 'var(--red-t)', color: 'var(--red)' }}>{err}</div>}
+          <PaneHead title={VIEWS.find(v => v.id === view).title}>
+            <IconBtn title="Validate & repair" onClick={() => run(['validate'])}>
+              <path d="M9.6 2.6a3.6 3.6 0 0 0-4.5 4.6L2.4 9.9a1.5 1.5 0 0 0 2.1 2.1l2.7-2.7a3.6 3.6 0 0 0 4.6-4.5L9.7 6.9 8.4 6.6l-.3-1.3z" />
+              <path d="M10.8 10.8l2.6 2.6" />
+            </IconBtn>
+            <IconBtn title="Refresh" onClick={load}>
+              <path d="M13.2 8a5.2 5.2 0 1 1-1.6-3.8" /><path d="M13.4 2.6v2.8h-2.8" />
+            </IconBtn>
+          </PaneHead>
 
           {view === 'agents' && (
             <>
               <GroupLabel>Known agents</GroupLabel>
               <Card>
-                <Table head={[{ t: 'Agent' }, { t: 'Skill dir' }, { t: 'Status' }]}>
+                <Table head={[{ t: 'Agent', w: '22%' }, { t: 'Skill dir' }, { t: 'Status', w: '130px' }]}>
                   {agents.map(a => (
                     <tr key={a.name}>
                       <Td>{a.name}</Td>
@@ -111,8 +115,8 @@ export default function App() {
               <GroupLabel>Add agent</GroupLabel>
               <Card pad>
                 <div className="flex gap-[8px] items-center flex-wrap py-[2px]">
-                  <input className="font-sans text-[12.5px] text-ink bg-btn2 border-0 rounded-field h-[28px] px-[9px] outline-none hover:bg-btn2h focus:shadow-[0_0_0_3px_rgba(10,102,255,.35)]" value={name} onChange={e => setName(e.target.value)} placeholder="name" />
-                  <input className="font-sans text-[12.5px] text-ink bg-btn2 border-0 rounded-field h-[28px] px-[9px] outline-none hover:bg-btn2h focus:shadow-[0_0_0_3px_rgba(10,102,255,.35)] w-[260px]" value={dir} onChange={e => setDir(e.target.value)} placeholder="~/path/to/skills" />
+                  <input className="font-sans text-[12.5px] text-ink bg-btn2 border-0 rounded-field h-[28px] px-[9px] outline-none hover:bg-btn2h focus:shadow-[0_0_0_3px_rgba(10,102,255,.35)] flex-1 min-w-[120px]" value={name} onChange={e => setName(e.target.value)} placeholder="name" />
+                  <input className="font-sans text-[12.5px] text-ink bg-btn2 border-0 rounded-field h-[28px] px-[9px] outline-none hover:bg-btn2h focus:shadow-[0_0_0_3px_rgba(10,102,255,.35)] flex-[3] min-w-[200px]" value={dir} onChange={e => setDir(e.target.value)} placeholder="~/path/to/skills" />
                   <Btn onClick={() => { run(['agent', 'add', name.trim(), dir.trim()]); setName(''); setDir('') }}>Add</Btn>
                 </div>
               </Card>
@@ -124,7 +128,7 @@ export default function App() {
               <GroupLabel>Link matrix</GroupLabel>
               <Card>
                 {inst.length ? (
-                  <Table head={[{ t: 'Skill' }, ...inst.map(a => ({ t: a.name, c: true }))]} >
+                  <Table head={[{ t: 'Skill', w: '30%' }, ...inst.map(a => ({ t: a.name, c: true }))]} >
                     {rows.map(r => (
                       <tr key={r.skill}>
                         <Td mono>{r.skill}</Td>
@@ -147,7 +151,7 @@ export default function App() {
               <GroupLabel>Unmanaged skills found in agent directories</GroupLabel>
               <Card>
                 {stray.length ? (
-                  <Table head={[{ t: '', w: '34px' }, { t: 'Agent' }, { t: 'Skill dir' }]}>
+                  <Table head={[{ t: '', w: '40px' }, { t: 'Agent', w: '26%' }, { t: 'Skill dir' }]}>
                     {stray.map(g => g.items.map(i => (
                       <tr key={g.agent + '/' + i.name}>
                         <Td c>

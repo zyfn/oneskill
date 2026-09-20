@@ -22,7 +22,8 @@
   --track: #e9e9ea;
   --btn2: #e9e9eb;
   --btn2-hi: #dedee0;
-  --edge: 0 0 0 .5px rgba(0, 0, 0, .07);
+  --edge: 0 0 0 .5px rgba(0, 0, 0, .14);
+  --card-sh: 0 1px 3px rgba(0, 0, 0, .05);
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -38,7 +39,8 @@
     --track: #39393d;
     --btn2: #323236;
     --btn2-hi: #3a3a3e;
-    --edge: 0 0 0 .5px rgba(255, 255, 255, .09);
+    --edge: 0 0 0 .5px rgba(255, 255, 255, .16);
+    --card-sh: 0 1px 3px rgba(0, 0, 0, .4);
   }
 }
 
@@ -54,15 +56,16 @@ body { -webkit-font-smoothing: antialiased; }
 @media (prefers-reduced-transparency: reduce) {
   .glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--win); }
 }
-.edge { box-shadow: var(--edge); }
+.edge { box-shadow: var(--edge), var(--card-sh); }
 
 /* inset hairline between table rows, like native grouped lists */
 .hairline tbody tr + tr {
   background-image: linear-gradient(var(--hair), var(--hair));
-  background-size: calc(100% - 28px) .5px;
-  background-position: 14px 0;
+  background-size: calc(100% - 32px) .5px;
+  background-position: 16px 0;
   background-repeat: no-repeat;
 }
+.hairline thead th { border-bottom: .5px solid var(--hair); }
 
 /* iOS switch, measured geometry */
 .sw { position: relative; display: inline-block; width: 42px; height: 26px; vertical-align: middle; }

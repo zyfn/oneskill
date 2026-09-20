@@ -57,8 +57,17 @@ export function IconBtn({ title, onClick, children }) {
   )
 }
 
+export function PaneHead({ title, children }) {
+  return (
+    <div className="flex items-center justify-between mb-[14px]">
+      <h1 className="text-[20px] font-semibold tracking-[-0.015em] m-0">{title}</h1>
+      <div className="flex items-center gap-[6px]">{children}</div>
+    </div>
+  )
+}
+
 export function GroupLabel({ children }) {
-  return <div className="text-[11px] text-ink2 mb-[5px] mx-[2px]">{children}</div>
+  return <div className="text-[11px] font-medium text-ink2 mb-[6px] mx-[2px]">{children}</div>
 }
 
 export function Card({ pad, children }) {
@@ -67,10 +76,10 @@ export function Card({ pad, children }) {
 
 export function Table({ head, children }) {
   return (
-    <table className="w-full border-collapse hairline">
+    <table className="w-full border-collapse hairline table-fixed">
       <thead>
         <tr>{head.map((h, i) => (
-          <th key={i} className={'text-[11px] font-normal text-ink2 text-left pt-[8px] pb-[5px] px-[14px]' + (h.c ? ' text-center' : '')} style={h.w ? { width: h.w } : null}>{h.c ? null : h.t}{h.c ? h.t : null}</th>
+          <th key={i} className={'text-[11px] font-normal text-ink2 text-left py-[7px] px-[16px]' + (h.c ? ' text-center' : '')} style={h.w ? { width: h.w } : null}>{h.t}</th>
         ))}</tr>
       </thead>
       <tbody>{children}</tbody>
@@ -79,5 +88,5 @@ export function Table({ head, children }) {
 }
 
 export function Td({ c, mono, dim, children }) {
-  return <td className={'h-[42px] px-[14px] text-left text-[13px] hover:bg-hov' + (c ? ' text-center' : '') + (mono ? ' font-mono text-[12px]' : '') + (dim ? ' text-ink2' : '')}>{children}</td>
+  return <td className={'h-[40px] px-[16px] text-left text-[13px] hover:bg-hov' + (c ? ' text-center' : '') + (mono ? ' font-mono text-[12px]' : '') + (dim ? ' text-ink2' : '')}>{children}</td>
 }
