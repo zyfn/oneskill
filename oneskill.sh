@@ -398,6 +398,7 @@ pre#out{background:var(--console);border-radius:10px;padding:12px 14px;font-fami
 </aside>
 <main>
  <div class=topbar><h1 id=vtitle>Overview</h1><div class=sub>one source, linked everywhere</div></div>
+ <div id=errbar style="display:none;background:var(--red-t);color:var(--red);border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:13px"></div>
  <section id=view-overview class="view active">
   <div class=stats id=stats></div>
   <div class=card><h3>Agents</h3><table id=ov-agents></table></div>
@@ -430,7 +431,19 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const inst=()=>state.agents.filter(a=>a.installed);
 async function load(){
   const [d,l]=await Promise.all([api('/api/detect'),api('/api/list')]);
-  state.agents=await d.json(); state.rows=await l.json();
+  if(!d.ok||!l.ok){
+    $('errbar').style.display='block';
+    $('errbar').textContent='Session token 已失效（服务重启过）。回到终端看 oneskill.sh serve 打印的链接，用新地址重新打开本页。';
+    return;
+  }
+  const a=await d.json(), r=await l.json();
+  if(!Array.isArray(a)||!Array.isArray(r)){
+    $('errbar').style.display='block';
+    $('errbar').textContent='接口返回了意外数据，刷新页面重试。';
+    return;
+  }
+  $('errbar').style.display='none';
+  state.agents=a; state.rows=r;
   draw();
 }
 const pill=ok=>ok?'<span class="pill ok">Installed</span>':'<span class="pill bad">Not installed</span>';
@@ -448,7 +461,7 @@ function draw(){
       state.rows.map(r=>'<tr><td class=mono>'+esc(r.skill)+'</td>'+A.map(a=>{
         const m=r.links[a.name]; const on=(m==='✓'||m==='!');
         return '<td class=c><label class="sw'+(m==='!'?' warn':'')+'"><input type=checkbox '+(on?'checked':'')+
-          " onchange=\"toggle('"+esc(r.skill)+"','"+esc(a.name)+"')\"><span class=tr></span></label></td>";
+          ' data-skill="'+esc(r.skill)+'" data-agent="'+esc(a.name)+'"><span class=tr></span></label></td>';
       }).join('')+'</tr>').join('')
     : '<tr><td class=empty>No installed agents yet.</td></tr>';
   $('ag-sel').innerHTML=A.map(a=>'<option value="'+esc(a.name)+'">'+esc(a.name)+'</option>').join('');
@@ -457,6 +470,10 @@ function say(t){$('out').textContent=t}
 async function run(args){
   say('$ oneskill.sh '+args.join(' ')+'\\n…');
   const r=await fetch('/api/action?t='+encodeURIComponent(tok),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({args})});
+  if(!r.ok){
+    say('$ oneskill.sh '+args.join(' ')+'\\n✗ 请求失败（HTTP '+r.status+'）。若为 403，token 已失效，用终端打印的新链接重开本页。');
+    return;
+  }
   const j=await r.json();
   say('$ oneskill.sh '+args.join(' ')+'\\n'+j.output);
   await load();
@@ -466,6 +483,10 @@ function toggle(skill,agent){
   const m=row.links[agent];
   run([(m==='✓'||m==='!')?'unlink':'link',agent,skill]);
 }
+$('matrix').addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset && t.dataset.skill) toggle(t.dataset.skill,t.dataset.agent);
+});
 function runAll(){const s=$('ag-sel').value; if(s) run(['link-all',s]);}
 function addAgent(){run(['agent','add',$('add-name').value.trim(),$('add-dir').value.trim()]);$('add-name').value='';$('add-dir').value='';}
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>{
