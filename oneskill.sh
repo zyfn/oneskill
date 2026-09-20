@@ -442,9 +442,8 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
 <aside>
  <div class=brandrow><span class=bname>oneskill</span></div>
  <label class=search><svg viewBox="0 0 16 16" fill=none stroke=currentColor stroke-width=1.6><circle cx=7 cy=7 r=4.2/><path d="M10.2 10.2 13.5 13.5"/></svg><input id=q placeholder=Search></label>
- <a class="nav-item active" data-view=overview data-title=Overview><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=2 width=5 height=5 rx=1.3/><rect x=9 y=2 width=5 height=5 rx=1.3/><rect x=2 y=9 width=5 height=5 rx=1.3/><rect x=9 y=9 width=5 height=5 rx=1.3/></svg>Overview</a>
+ <a class="nav-item active" data-view=agents data-title=Agents><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg>Agents<span class=badge id=b-agents></span></a>
  <a class=nav-item data-view=links data-title=Links><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M6.7 9.3 9.3 6.7"/><path d="M7.8 4.6 9.2 3.2a2.7 2.7 0 0 1 3.8 3.8l-1.4 1.4"/><path d="M8.2 11.4 6.8 12.8a2.7 2.7 0 0 1-3.8-3.8l1.4-1.4"/></svg>Links<span class=badge id=b-links></span></a>
- <a class=nav-item data-view=agents data-title=Agents><svg viewBox="0 0 16 16" fill=none stroke=currentColor><rect x=2 y=3 width=12 height=10 rx=2/><path d="M5 7l2 2-2 2M9.5 11H11"/></svg>Agents<span class=badge id=b-agents></span></a>
  <div class=nav-label>Tools</div>
  <a class=nav-item data-view=actions data-title=Actions><svg viewBox="0 0 16 16" fill=none stroke=currentColor><path d="M2.5 5h11M2.5 11h11"/><circle cx=6 cy=5 r=1.7/><circle cx=10 cy=11 r=1.7/></svg>Actions</a>
  <div class=acct><div class=ava>f</div><div><div class=acct-name>finn</div><div class=acct-sub>localhost · session</div></div></div>
@@ -455,20 +454,15 @@ pre#out::-webkit-scrollbar-thumb{background:rgba(120,120,128,.4);border-radius:4
  </div>
  <main>
   <div id=errbar></div>
-  <section id=view-overview class="view active">
-   <div class=phead><h1>Overview</h1><p>One source of truth for your skills, symlinked into every agent that needs them.</p></div>
-   <div class=stats id=stats></div>
-   <div class=glabel>Agents on this machine</div>
-   <div class=group><table id=ov-agents></table></div>
-  </section>
   <section id=view-links class=view>
    <div class=phead><h1>Links</h1><p>Which agent can see which skill. Toggle to link or unlink.</p></div>
    <div class=glabel>Link matrix</div>
    <div class=group><table id=matrix></table></div>
    <div class=note>Orange means the link exists but its source is missing — run Validate in Actions.</div>
   </section>
-  <section id=view-agents class=view>
-   <div class=phead><h1>Agents</h1><p>The known-agent registry. Add one and it becomes linkable immediately.</p></div>
+  <section id=view-agents class="view active">
+   <div class=phead><h1>Agents</h1><p>Every agent oneskill knows about — installed or not. Add one and it becomes linkable immediately.</p></div>
+   <div class=stats id=stats></div>
    <div class=glabel>Known agents</div>
    <div class=group><table id=ag-table></table></div>
    <div class=glabel>Add agent</div>
@@ -525,7 +519,6 @@ function draw(){
   const agF=state.agents.filter(a=>a.name.toLowerCase().includes(q));
   const head='<thead><tr><th>Agent</th><th>Skill dir</th><th>Status</th></tr></thead>';
   const agRows='<tbody>'+agF.map(a=>'<tr><td>'+esc(a.name)+'</td><td class="dim mono">'+esc(a.dir)+'</td><td>'+pill(a.installed)+'</td></tr>').join('')+'</tbody>';
-  $('ov-agents').innerHTML=head+agRows;
   $('ag-table').innerHTML=head+agRows;
   const R=state.rows.filter(r=>r.skill.toLowerCase().includes(q));
   $('matrix').innerHTML=A.length
