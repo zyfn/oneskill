@@ -1,0 +1,19 @@
+[
+  {
+    "name": "my-agent",
+    "commands": [
+      "my-agent-cli"
+    ],
+    "configDir": {
+      "macos": "~/.my-agent",
+      "windows": "${USERPROFILE}/.my-agent"
+    },
+    "skillDir": "skills",
+    "mcp": [
+      {
+        "file": "config.toml",
+        "key": "mcp_servers"
+      }
+    ]
+  }
+]

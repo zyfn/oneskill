@@ -1,17 +1,12 @@
-# agents.registry — known agents and their standard skill dirs
+# agents.registry — legacy Skill target overrides
 #
-# Curated list of agents whose skill-loading convention has been confirmed.
-# detect reads this file only; it performs no filesystem guessing or discovery,
-# because the presence of a skills/ dir or SKILL.md files does not prove that a
-# directory belongs to an agent that loads skills from there.
+# Preset agents live in agents.catalog.json. Entries here override a preset path
+# with the same name or add a custom command with a skill directory. The web UI does not add
+# entries to this file. Use agents.local.json for new definitions and complete resource rules.
 #
 # Format:  <name> | <skill dir>      (dir may use ~, expanded at runtime)
-# Manage entries with:  oneskill.sh agent add|update <name> <dir>
+# Edit this file directly when a Skill target needs a local override. Preset configuration roots remain independent.
 # Lines starting with # and blank lines are ignored.
 
-qwenwork | ~/.qwenworkcn/skills
-codex    | ~/.codex/skills
-claude   | ~/.claude/skills
-qoder    | ~/.qoder/skills
-cursor   | ~/.cursor/skills
-gemini   | ~/.gemini/skills
+# Official configuration environment variables remain independent of Skill target overrides.
+# Example: claude | /absolute/path/to/claude/skills

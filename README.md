@@ -1,110 +1,135 @@
+<img src="logo.svg" alt="oneskill" width="56" height="56">
+
 # oneskill
 
-**Agent skill 的统一管理：一份真身，按需链接分发。**
+**One skill library, connected to your Agents.**
 
-同一台机器上跑多个 Agent（Codex、Claude Code、Gemini CLI……）时，它们各有各的 skills 目录。想让几个 Agent 共用同一个 skill，只能复制几份分别放进去；skill 一更新，其余副本立刻过期，改哪份、漏哪份全靠自己记。
+**English** · [简体中文](README.zh-CN.md)
 
-oneskill 把 skill 的真实内容只存放一处（源目录），各 Agent 的 skills 目录里放指向它的符号链接。改源目录，所有 Agent 同时生效；删掉某条链接，就收回那个 Agent 的使用权，真实内容不受影响。
+oneskill is a local-first skill manager for coding Agents. Keep your skills in one library, organize them with ordinary folders, and choose which Agents can use each one.
 
-## 优势
+## Why oneskill
 
-- **单一副本，不会过期** — 真实内容只有一份，更新即全员生效，不需要同步任何副本
-- **零配置** — 没有注册、启用之类的步骤；Agent 目录从名单自动解析，文件夹拷到任何位置即可用
-- **只增删链接** — 不覆盖、不删除任何真实内容；批量移除必须显式确认
+Working with several Agents often means maintaining several skill directories. A useful skill gets copied into Codex, Claude Code, or another tool; its next revision leaves those copies out of step. Switching Agents means finding and arranging the same material again.
 
-## 工作原理
+oneskill gives those skills a shared home. Each Agent connects to the same source through a symbolic link, so changes stay in one place. You can see the connections, add or remove them individually, and keep Agent-specific packages where they belong.
 
-名单（agents.registry）记录每个 Agent 的标准 skills 目录，脚本据此解析路径，在对应目录创建符号链接：
+The desktop Web UI and CLI share the same filesystem state. No cloud account or database is required; the interface supports English and Simplified Chinese.
 
+## A library you control
+
+- **Files are the library.** A folder containing `SKILL.md` is a skill package. Edit it with your usual tools; its scripts, references, and other assets stay alongside it.
+- **One source, visible connections.** Update the shared package once. Each linked Agent reads those files, and unlinking an Agent leaves the source intact.
+- **Folders define collections.** Group related skills in parent folders, including nested collections. Your organization lives in the filesystem rather than separate tags.
+- **Adopt what is useful.** Bring existing packages into the library with backups and conflict checks. Ignore packages that should remain local to an Agent, and restore them to the list when needed.
+
+```text
+oneskill/skills/code-review/            shared source
+    ▲
+    ├── ~/.agents/skills/code-review     symbolic link
+    └── ~/.claude/skills/code-review    symbolic link
 ```
-                          ┌─ symlink ▶ ~/.claude/skills/my-skill
-oneskill/skills/my-skill ─┤
-                          └─ symlink ─▶ ~/.codex/skills/my-skill
-```
 
-三个查看命令各读一层状态：`detect` 读名单与文件系统，报安装状态；`list` 读源目录与各 Agent 目录，报链接状态；`validate` 读链接指向，报悬空状态。
+Connections point to the source package. oneskill manages those connections without maintaining a separate copy for every Agent.
 
-## 运行环境
+## Preview
 
-| 项 | 要求 |
-| --- | --- |
-| 系统 | macOS / Linux / WSL2，bash 3.2 及以上（macOS 系统自带 bash 即可） |
-| 依赖 | 无，单文件脚本 |
+**A shared library with visible connections.** Browse a collection, inspect a skill, and choose its Agents from the same workspace.
 
-## 快速开始
+![Skills library with folder collections and Agent links](docs/screenshots/skills.png)
 
-以下示例使用一个名为 `my-skill` 的 skill，机器上装着 Codex 和 Claude Code。
+**An overview of your local Agents.** See discovered skills, library links, native plugins, and MCP configuration together.
 
-**1. 安装**
+![Agents overview with local capability counts](docs/screenshots/agents.png)
 
-oneskill 是单文件脚本、没有依赖，clone 到任意位置即可（脚本按自身所在目录定位源目录和名单）。下面以 clone 进家目录为例：
+Screenshots use the included sample workspace. Explore it with `npm run demo`.
+
+## Quick start
+
+Requires **Node.js 20+**, npm, and a desktop browser.
 
 ```bash
-git clone https://github.com/zyfn/oneskill.git ~/oneskill
-cd ~/oneskill
+git clone https://github.com/zyfn/oneskill.git
+cd oneskill
+npm ci
+npm start
 ```
 
-**2. 打开管理页面**
+## From scattered skills to a shared library
 
-macOS 上双击 `oneskill.command` 即可：起一个只监听 127.0.0.1 的本地服务并自动开浏览器，地址里带一次性 token。其它系统或终端里：
+### 1. Bring skills together
+
+Add a package containing `SKILL.md` to `skills/`, or open **Skills → Unmanaged** to review packages already present in your Agent directories. **Manage here** imports the complete package and links it back to its original Agent, so that Agent can continue using it.
+
+The original package is backed up before its location becomes a link. If a destination contains different content, oneskill reports the conflict instead of overwriting it.
+
+### 2. Organize by folder
+
+Use the same structure you would use for any collection of files:
+
+```text
+skills/
+├── engineering/
+│   ├── code-review/SKILL.md
+│   └── backend/query-plan/SKILL.md
+├── writing/
+│   └── technical-docs/SKILL.md
+└── workspace-notes/SKILL.md
+```
+
+The collection tree follows these folders. Expand branches as needed, select a parent to include its descendants, or collapse the navigation to give the library more room. **All skills** includes every package, including those directly under `skills/`.
+
+After adding or reorganizing folders, **Rescan** the workspace. Unlink a package before changing its path, then reconnect it at the new location.
+
+### 3. Connect the Agents you use
+
+The library's Agent columns show **Linked** and **Not linked**. Select a connection to change it. A skill can be available to several Agents, one Agent, or none; it stays in the library in every case.
+
+Linking creates a symbolic link in the selected Agent's skill directory. Unlinking removes that link and preserves the shared package.
+
+### 4. Keep the library intentional
+
+Update a shared skill in place so its linked Agents read the same revision. Use search and collections to focus on the skills you need, and inspect a package's details or open its folder when editing.
+
+Unmanaged packages do not all need to be adopted. **Ignore** keeps a package out of the review list without changing its files or Agent access. This choice persists across scans and restarts; **Ignored → Restore** brings it back.
+
+## Beyond the skill library
+
+The **Agents** view brings the detected local environment into one overview. **Plugins** and **MCP** provide searchable, read-only inventories, with an Agent filter and source details. These views help you understand what each Agent has alongside the skills you share.
+
+## Compatibility
+
+The catalog records command names, official configuration conventions, and compatibility locations for Codex, Claude Code, Cursor, Gemini CLI, Qwen Code, and other Agents. Shared rules are declared once, with explicit macOS and Windows configuration roots. Add custom Agents or override presets in `agents.local.json`; see the [local definition example](agents.local.example.json). Changes take effect on rescan. Legacy Skill target overrides in `agents.registry` remain supported, and shared skill directories may be read by several Agents.
+
+CLI entries are detected only when `--version` exits successfully with a recognized version. Failed checks remain visible with their error code. Desktop and extension entries confirm installation metadata only; they do not establish runtime health. Qoder desktop and Qoder CLI are separate entries. Configuration directories are scanned independently and never prove installation. Skill loading follows each Agent's own rules. See [Agent discovery](docs/agent-discovery.md) for detection methods and limits, or the [reference](docs/reference.md) for skill directories and scan coverage.
+
+## CLI
+
+Use the same library and link operations from a terminal:
 
 ```bash
-python3 oneskill.py serve --open
+npm run cli -- skills --json
+npm run cli -- link codex engineering/code-review
+npm run cli -- unlink codex engineering/code-review
+npm run cli -- validate
 ```
 
-页面有三个视图：**Agents**（名单与安装状态、加 Agent）、**Skills**（skill × agent 链接矩阵，开关即 link/unlink）、**Migrate**（扫描各 Agent 目录里散落的真实 skill 目录，勾选后一键收编）。
+Run `npm run cli -- help` for available commands, or see the [CLI reference](docs/reference.md#cli).
 
-**3. 收编散落的 skill**
-
-Migrate 视图列出每个已安装 Agent 目录下「不是符号链接」的 skill 目录。勾选、点 Migrate selected：真实目录移进源目录，原位置留下符号链接——该 Agent 继续可用，真身从此只有一份。
-
-各 Agent **自带的** skill 不要收编（会随官方更新被覆盖或重建）。它们默认被 `migrate.ignore` 保护名单隐藏（每行 `agent:skill名`），扫描不会列出来，误点不到。
-
-**4. 链接与验证**
-
-Skills 视图里拨开关即可；扳手图标跑 validate（修悬空链接，源已不存在的只报告不删）。终端里同样能做，子命令与页面同源：
-
-```
-$ python3 oneskill.py list
-SKILL        qwenwork  codex
-a1           ✓         ✓
-sunfire-cli  ✓         ✗
-
-✓ linked   ! broken   ✗ not linked
-```
-
-## 命令一览
-
-| 命令 | 作用 |
-| --- | --- |
-| `serve [--open]` | 起管理页面；只监听 127.0.0.1，打印一次性 token |
-| `detect [--json]` | 报告本机已知 Agent 的安装状态 |
-| `list [--json]` | 源目录各 skill × 各 Agent 的链接状态（✓ 已链 / ! 悬空 / ✗ 未链） |
-| `scan [--json]` | 列出各 Agent 目录下未收编的真实 skill 目录（保护名单内的隐藏） |
-| `link <agent> <skill>` | 创建一个 skill 的链接 |
-| `unlink <agent> <skill>` | 移除一个链接 |
-| `link-all <agent>` | 链接源目录中全部 skill |
-| `unlink-all <agent> --yes` | 移除某 Agent 的全部链接，需确认 |
-| `migrate <agent> <skill>` | 把散落的 skill 目录移进源目录，原位置回链 |
-| `validate [agent]` | 修复悬空链接；源已不存在的只报告、不删除 |
-| `agent add <name> <dir>` | 向名单添加一个 Agent |
-| `agent update <name> <dir>` | 修改名单中已有条目 |
-
-注意：链接只对采用「一个含 SKILL.md 的目录」这套约定的 Agent 生效（Codex、Claude Code 等）。Cursor、Qoder 未必从这些目录加载，链之前先确认。
-
-## 安全边界
-
-只创建和删除符号链接、只移动你勾选的目录。目标位置若已存在同名的真实文件或目录，报错停手，不覆盖；批量移除必须带 `--yes`；迁移前校验原路径不是符号链接、源目录无同名冲突，迁移后回读验证链接可用。保护名单 `migrate.ignore` 里的条目扫描不列、迁移不动。
-
-## 维护
-
-运行时是单文件 python3，无第三方依赖。页面是 React + Tailwind 源码（`web/`），构建产物不入库：`serve` 启动时若发现 `web/dist` 缺失或比源码旧，会自动 `npm install && npm run build`（npm 从 PATH 或 mise 里找）。所以**首次启动需要 node**，之后构建产物缓存在本地。
-
-手动构建或开发：
+## Development
 
 ```bash
-cd web && npm install && npm run build   # 手动构建
-npm run dev                              # vite dev server，/api 代理到 8787
+npm --prefix web ci
+npm run dev          # API and built UI
+npm run dev:web      # Vite development server, in another terminal
+npm run check        # Syntax checks, tests, and production build
 ```
 
-数据文件三个：`agents.registry`（Agent 名单）、`migrate.ignore`（保护名单）、`skills/`（源目录）。
+The frontend uses React, Vite, and Tailwind CSS. The scanner, filesystem operations, HTTP API, and CLI live in `src/`; the interface lives in `web/src/`.
+
+Contributions are welcome, especially Agent discovery improvements, platform verification, and focused interaction refinements. Include sanitized fixtures for scanner changes, verify both interface languages for UI changes, and run `npm run check` before submitting a pull request.
+
+## Documentation
+
+- [Configuration, storage, and import recovery](docs/reference.md)
+- [Design conventions](docs/design.md)

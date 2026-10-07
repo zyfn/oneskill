@@ -3,8 +3,20 @@ skills/*
 !skills/.gitkeep
 
 # 构建产物与依赖都不入库；serve 启动时按需自动构建
+node_modules
 web/node_modules
 web/dist
+
+# Local drafts and private environment files
+design/
+coverage/
+agents.local.json
+migrate.ignore
+.env
+.env.*
+!.env.example
+*.log
+migrate.ignore.*.tmp
 
 # macOS
 .DS_Store

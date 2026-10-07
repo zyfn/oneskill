@@ -1,0 +1,868 @@
+[
+  {
+    "name": "qwenwork",
+    "logo": "/agent-logos/qwen.svg",
+    "appNames": {
+      "macos": [
+        "千问办公.app",
+        "QwenWork.app",
+        "QwenWorkCN.app"
+      ],
+      "windows": [
+        "千问办公",
+        "QwenWork",
+        "QwenWorkCN"
+      ]
+    },
+    "configDir": {
+      "macos": "~/.qwenworkcn",
+      "windows": "${USERPROFILE}/.qwenworkcn"
+    },
+    "skillDir": {
+      "macos": "skills",
+      "windows": null
+    },
+    "mcp": [
+      {
+        "file": "mcp.json",
+        "key": "mcpServers",
+        "compatibility": true,
+        "platforms": [
+          "macos"
+        ]
+      },
+      {
+        "file": "bin/computer-use/mcp.json",
+        "key": "mcpServers",
+        "compatibility": true,
+        "platforms": [
+          "macos"
+        ]
+      },
+      {
+        "file": "bin/computer-use/.mcp.json",
+        "key": "mcpServers",
+        "compatibility": true,
+        "platforms": [
+          "macos"
+        ]
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://docs.qwenwork.cn/install/macos",
+        "https://docs.qwenwork.cn/install/windows"
+      ],
+      "notes": [
+        "The macOS Skill target and computer-use MCP files are locally observed compatibility locations, not a published vendor filesystem contract. Windows resource subdirectories remain unconfigured."
+      ]
+    }
+  },
+  {
+    "name": "qwen-code",
+    "logo": "/agent-logos/qwen.svg",
+    "commands": [
+      "qwen"
+    ],
+    "configDir": {
+      "macos": "~/.qwen",
+      "windows": "${USERPROFILE}/.qwen"
+    },
+    "configDirEnv": "QWEN_HOME",
+    "skillDir": "skills",
+    "mcp": [
+      {
+        "file": "settings.json",
+        "key": "mcpServers",
+        "format": "jsonc"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://qwenlm.github.io/qwen-code-docs/en/users/configuration/settings/",
+        "https://qwenlm.github.io/qwen-code-docs/en/users/features/skills/"
+      ],
+      "notes": [
+        "Extension inventory is not enumerated by the JSON plugin-manifest reader."
+      ]
+    }
+  },
+  {
+    "name": "codex",
+    "logo": "/agent-logos/codex.svg",
+    "commands": [
+      "codex"
+    ],
+    "appNames": {
+      "macos": [
+        "Codex.app"
+      ],
+      "windows": [
+        "Codex"
+      ]
+    },
+    "executablePaths": {
+      "macos": [
+        "~/.local/bin/codex"
+      ],
+      "windows": [
+        "${LOCALAPPDATA}/Programs/OpenAI/Codex/bin/codex.exe"
+      ]
+    },
+    "executableDirEnv": {
+      "name": "CODEX_INSTALL_DIR",
+      "relative": {
+        "macos": "codex",
+        "windows": "codex.exe"
+      }
+    },
+    "configDir": {
+      "macos": "~/.codex",
+      "windows": "${USERPROFILE}/.codex"
+    },
+    "configDirEnv": "CODEX_HOME",
+    "skillDir": "~/.agents/skills",
+    "extraSkillDirs": [
+      {
+        "id": "legacy",
+        "scope": "compatibility",
+        "ignorePrefix": "",
+        "path": "skills"
+      }
+    ],
+    "skillLinkIgnorePrefix": "@shared/",
+    "pluginDirs": [
+      "plugins/cache"
+    ],
+    "mcp": [
+      {
+        "file": "config.toml",
+        "key": "mcp_servers"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://learn.chatgpt.com/docs/config-file/environment-variables",
+        "https://learn.chatgpt.com/docs/build-skills",
+        "https://learn.chatgpt.com/docs/extend/mcp?surface=cli"
+      ],
+      "notes": [
+        "CODEX_HOME/skills and plugins/cache are retained for existing local installations."
+      ]
+    }
+  },
+  {
+    "name": "claude",
+    "logo": "/agent-logos/claude.svg",
+    "commands": [
+      "claude"
+    ],
+    "executablePaths": {
+      "macos": [
+        "~/.local/bin/claude",
+        "~/.claude/local/claude"
+      ],
+      "windows": [
+        "${USERPROFILE}/.local/bin/claude.exe"
+      ]
+    },
+    "configDir": {
+      "macos": "~/.claude",
+      "windows": "${USERPROFILE}/.claude"
+    },
+    "configDirEnv": "CLAUDE_CONFIG_DIR",
+    "skillDir": "skills",
+    "pluginDirs": [
+      "plugins/cache"
+    ],
+    "mcp": [
+      {
+        "file": "~/.claude.json",
+        "key": "mcpServers"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://code.claude.com/docs/en/settings",
+        "https://code.claude.com/docs/en/skills",
+        "https://code.claude.com/docs/en/mcp",
+        "https://code.claude.com/docs/en/setup"
+      ]
+    }
+  },
+  {
+    "name": "qoder",
+    "logo": "/agent-logos/qoder.svg",
+    "appNames": {
+      "macos": [
+        "Qoder IDE.app",
+        "Qoder.app"
+      ],
+      "windows": [
+        "Qoder IDE",
+        "Qoder"
+      ]
+    },
+    "configDir": {
+      "macos": "~/.qoder",
+      "windows": "${USERPROFILE}/.qoder"
+    },
+    "skillDir": "skills",
+    "pluginDirs": [
+      "plugins"
+    ],
+    "mcp": [
+      {
+        "file": "settings.json",
+        "key": "mcpServers",
+        "format": "jsonc"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://docs.qoder.com/qoder/connectors",
+        "https://docs.qoder.com/cli/installation",
+        "https://docs.qoder.com/cli/settings",
+        "https://docs.qoder.com/cli/Skills"
+      ],
+      "notes": [
+        "Desktop client, checked only through application installation metadata. The CLI is registered separately as qoder-cli. These clients share the documented user configuration and Skill directories."
+      ]
+    }
+  },
+  {
+    "name": "qoder-cli",
+    "logo": "/agent-logos/qoder.svg",
+    "commands": [
+      "qodercli",
+      "qoder"
+    ],
+    "configDir": {
+      "macos": "~/.qoder",
+      "windows": "${USERPROFILE}/.qoder"
+    },
+    "configDirEnv": "QODER_CONFIG_DIR",
+    "skillDir": "skills",
+    "pluginDirs": [
+      "plugins"
+    ],
+    "mcp": [
+      {
+        "file": "settings.json",
+        "key": "mcpServers",
+        "format": "jsonc"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://docs.qoder.com/cli/installation",
+        "https://docs.qoder.com/cli/settings",
+        "https://docs.qoder.com/cli/Skills"
+      ],
+      "notes": [
+        "CLI version checks use qodercli for legacy standalone installs and qoder for current installers. A found command must pass --version; desktop metadata is not a CLI fallback."
+      ]
+    },
+    "executablePaths": {
+      "macos": [
+        "~/.local/bin/qodercli",
+        "~/.qoder/entry/qoder"
+      ],
+      "windows": []
+    }
+  },
+  {
+    "name": "qoder-cn",
+    "logo": "/agent-logos/qoder.svg",
+    "commands": [
+      "qodercn"
+    ],
+    "configDir": {
+      "macos": "~/.qoder-cn",
+      "windows": "${USERPROFILE}/.qoder-cn"
+    },
+    "configDirEnv": "QODERCN_CONFIG_DIR",
+    "skillDir": "skills",
+    "pluginDirs": [
+      "plugins"
+    ],
+    "mcp": [
+      {
+        "file": "settings.json",
+        "key": "mcpServers",
+        "format": "jsonc"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://docs.qoder.cn/en/cli/installation",
+        "https://docs.qoder.cn/cli/settings-reference",
+        "https://docs.qoder.cn/cli/mcp-reference"
+      ],
+      "notes": [
+        "Separate CN distribution: qodercn, .qoder-cn, QODERCN_CONFIG_DIR."
+      ]
+    }
+  },
+  {
+    "name": "cursor",
+    "logo": "/agent-logos/cursor.svg",
+    "commands": [
+      "cursor-agent",
+      "cursor"
+    ],
+    "appNames": {
+      "macos": [
+        "Cursor.app"
+      ],
+      "windows": [
+        "Cursor"
+      ]
+    },
+    "executablePaths": {
+      "macos": [
+        "~/.local/bin/cursor-agent"
+      ],
+      "windows": []
+    },
+    "configDir": {
+      "macos": "~/.cursor",
+      "windows": "${USERPROFILE}/.cursor"
+    },
+    "skillDir": "skills",
+    "extraSkillDirs": [
+      {
+        "id": "shared",
+        "scope": "user",
+        "path": "~/.agents/skills"
+      }
+    ],
+    "mcp": [
+      {
+        "file": "mcp.json",
+        "key": "mcpServers"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://cursor.com/docs/context/skills",
+        "https://cursor.com/docs/mcp",
+        "https://cursor.com/docs/reference/plugins"
+      ],
+      "notes": [
+        "Plugin package formats are public; the managed installation/cache location is not configured without a verified filesystem reference."
+      ]
+    }
+  },
+  {
+    "name": "gemini",
+    "logo": "/agent-logos/gemini.png",
+    "commands": [
+      "gemini"
+    ],
+    "configDir": {
+      "macos": "~/.gemini",
+      "windows": "${USERPROFILE}/.gemini"
+    },
+    "configDirEnv": "GEMINI_CLI_HOME",
+    "configDirEnvSuffix": ".gemini",
+    "skillDir": "skills",
+    "extraSkillDirs": [
+      {
+        "id": "shared",
+        "scope": "user",
+        "path": "~/.agents/skills"
+      }
+    ],
+    "mcp": [
+      {
+        "file": "settings.json",
+        "key": "mcpServers"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://geminicli.com/docs/reference/configuration/",
+        "https://geminicli.com/docs/cli/skills/"
+      ],
+      "notes": [
+        "GEMINI_CLI_HOME replaces the parent home directory; .gemini is appended. Extension packages are not enumerated by the plugin-manifest reader."
+      ]
+    }
+  },
+  {
+    "name": "antigravity",
+    "logo": "/agent-logos/antigravity.png",
+    "commands": [
+      "agy"
+    ],
+    "executablePaths": {
+      "macos": [
+        "~/.local/bin/agy"
+      ],
+      "windows": [
+        "${LOCALAPPDATA}/agy/bin/agy.exe"
+      ]
+    },
+    "configDir": {
+      "macos": "~/.gemini/config",
+      "windows": "${USERPROFILE}/.gemini/config"
+    },
+    "skillDir": "skills",
+    "extraSkillDirs": [
+      {
+        "id": "cli-user",
+        "scope": "user",
+        "path": "~/.gemini/antigravity-cli/skills"
+      },
+      {
+        "id": "legacy",
+        "scope": "compatibility",
+        "path": "~/.gemini/antigravity/skills"
+      }
+    ],
+    "pluginDirs": [
+      "plugins",
+      "~/.gemini/antigravity-cli/plugins"
+    ],
+    "mcp": [
+      {
+        "file": "mcp_config.json",
+        "key": "mcpServers"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://antigravity.google/docs/skills",
+        "https://antigravity.google/docs/cli/gcli-migration/",
+        "https://antigravity.google/docs/plugins?tab=cli",
+        "https://antigravity.google/docs/cli/troubleshooting/"
+      ]
+    }
+  },
+  {
+    "name": "github-copilot",
+    "logo": "/agent-logos/github-copilot.png",
+    "commands": [
+      "copilot"
+    ],
+    "configDir": {
+      "macos": "~/.copilot",
+      "windows": "${USERPROFILE}/.copilot"
+    },
+    "configDirEnv": "COPILOT_HOME",
+    "skillDir": "skills",
+    "pluginDirs": [
+      "installed-plugins"
+    ],
+    "mcp": [
+      {
+        "file": "mcp-config.json",
+        "key": "mcpServers"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference"
+      ]
+    }
+  },
+  {
+    "name": "opencode",
+    "logo": "/agent-logos/opencode.svg",
+    "commands": [
+      "opencode"
+    ],
+    "executablePaths": {
+      "macos": [
+        "~/.opencode/bin/opencode"
+      ],
+      "windows": []
+    },
+    "configDir": {
+      "macos": "~/.config/opencode",
+      "windows": "${USERPROFILE}/.config/opencode"
+    },
+    "configDirEnv": "XDG_CONFIG_HOME",
+    "configDirEnvSuffix": "opencode",
+    "skillDir": "skills",
+    "extraSkillDirs": [
+      {
+        "id": "shared",
+        "scope": "user",
+        "path": "~/.agents/skills"
+      },
+      {
+        "id": "claude-compatible",
+        "scope": "user",
+        "path": "~/.claude/skills"
+      }
+    ],
+    "mcp": [
+      {
+        "file": "opencode.jsonc",
+        "key": "mcp"
+      },
+      {
+        "file": "opencode.json",
+        "key": "mcp"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://opencode.ai/docs/config/",
+        "https://opencode.ai/docs/skills/",
+        "https://opencode.ai/docs/mcp-servers/"
+      ],
+      "notes": [
+        "JavaScript/TypeScript plugins are not enumerated by the JSON plugin-manifest reader. Project and explicit runtime config-file overrides are outside this user-root inventory."
+      ]
+    }
+  },
+  {
+    "name": "openclaw",
+    "logo": "/agent-logos/openclaw.svg",
+    "commands": [
+      "openclaw"
+    ],
+    "configDir": {
+      "macos": "~/.openclaw",
+      "windows": "${USERPROFILE}/.openclaw"
+    },
+    "configDirEnv": "OPENCLAW_STATE_DIR",
+    "skillDir": "skills",
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://docs.openclaw.ai/gateway/configuration",
+        "https://docs.openclaw.ai/skills",
+        "https://docs.openclaw.ai/plugins"
+      ],
+      "notes": [
+        "The public root config is openclaw.json (JSON5). No generic mcpServers JSON file or plugin-cache path is assumed. Workspace, workshop and dynamically configured skill directories are outside this declared-root inventory."
+      ]
+    }
+  },
+  {
+    "name": "pi",
+    "logo": "/agent-logos/pi.svg",
+    "commands": [
+      "pi"
+    ],
+    "packages": [
+      "@earendil-works/pi-coding-agent",
+      "@mariozechner/pi-coding-agent"
+    ],
+    "configDir": {
+      "macos": "~/.pi/agent",
+      "windows": "${USERPROFILE}/.pi/agent"
+    },
+    "configDirEnv": "PI_CODING_AGENT_DIR",
+    "skillDir": "skills",
+    "extraSkillDirs": [
+      {
+        "id": "shared",
+        "scope": "user",
+        "path": "~/.agents/skills"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/config.ts",
+        "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md"
+      ],
+      "notes": [
+        "Pi extensions and package settings are not JSON plugin manifests. No native MCP config file is assumed."
+      ]
+    }
+  },
+  {
+    "name": "deepseek",
+    "logo": "/agent-logos/deepseek.svg",
+    "commands": [
+      "dsh"
+    ],
+    "packages": [
+      "@deepseek-ai/dsh"
+    ],
+    "configDir": {
+      "macos": "~/.dsh",
+      "windows": "${USERPROFILE}/.dsh"
+    },
+    "configDirEnv": "DSH_HOME",
+    "skillDir": "skills",
+    "extraSkillDirs": [
+      {
+        "id": "shared",
+        "scope": "user",
+        "path": "~/.agents/skills"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/skill/skill-filesystem/README.md",
+        "https://github.com/deepseek-ai/deepseek-harness/blob/master/README.md"
+      ],
+      "notes": [
+        "DSH uses a plugin-oriented configuration system; no undocumented mcpServers JSON file is assumed. Dynamically configured providers are outside this filesystem inventory."
+      ]
+    }
+  },
+  {
+    "name": "cline",
+    "logo": "/agent-logos/cline.svg",
+    "commands": [
+      "cline"
+    ],
+    "extensions": [
+      "saoudrizwan.claude-dev"
+    ],
+    "extensionDirs": [
+      "~/.vscode/extensions",
+      "~/.vscode-insiders/extensions",
+      "~/.cursor/extensions",
+      "~/.windsurf/extensions",
+      "~/.devin/extensions"
+    ],
+    "configDir": {
+      "macos": "~/.cline/data",
+      "windows": "${USERPROFILE}/.cline/data"
+    },
+    "configDirEnv": "CLINE_DATA_DIR",
+    "skillDir": "settings/skills",
+    "extraSkillDirs": [
+      {
+        "id": "legacy",
+        "scope": "compatibility",
+        "path": "~/.cline/skills"
+      }
+    ],
+    "pluginDirs": [
+      "~/.cline/plugins/_installed"
+    ],
+    "mcp": [
+      {
+        "file": "settings/cline_mcp_settings.json",
+        "key": "mcpServers",
+        "fileEnv": "CLINE_MCP_SETTINGS_PATH"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://github.com/cline/cline/blob/main/docs/cli/cli-reference.mdx",
+        "https://github.com/cline/cline/blob/main/apps/vscode/package.json"
+      ],
+      "notes": [
+        "The primary Skill and MCP paths follow the current CLI application data layout. The older personal .cline/skills root remains a compatibility read location. Editor extension directories are declared discovery candidates."
+      ]
+    }
+  },
+  {
+    "name": "windsurf",
+    "logo": "/agent-logos/windsurf.svg",
+    "commands": [
+      "windsurf",
+      "devin-desktop"
+    ],
+    "appNames": {
+      "macos": [
+        "Windsurf.app",
+        "Devin.app"
+      ],
+      "windows": [
+        "Windsurf",
+        "Devin"
+      ]
+    },
+    "executablePaths": {
+      "macos": [
+        "~/.codeium/windsurf/bin/windsurf",
+        "~/.codeium/windsurf/bin/devin-desktop",
+        "~/.codeium/windsurf/bin/surf"
+      ],
+      "windows": []
+    },
+    "configDir": {
+      "macos": "${XDG_CONFIG_HOME:-~/.config}/devin",
+      "windows": "${APPDATA}/devin"
+    },
+    "skillDir": "~/.codeium/windsurf/skills",
+    "extraSkillDirs": [
+      {
+        "id": "devin",
+        "scope": "user",
+        "path": "skills"
+      }
+    ],
+    "mcp": [
+      {
+        "file": "mcp_config.json",
+        "key": "mcpServers"
+      },
+      {
+        "file": "~/.codeium/windsurf/mcp_config.json",
+        "key": "mcpServers",
+        "scope": "compatibility"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://docs.devin.ai/desktop/cascade/skills",
+        "https://docs.devin.ai/desktop/cascade/mcp"
+      ],
+      "notes": [
+        "Current documentation redirects Windsurf/Cascade to Devin Desktop. Its Windows MCP config is under APPDATA/devin; the legacy .codeium location remains read-only compatibility."
+      ]
+    }
+  },
+  {
+    "name": "kiro",
+    "logo": "/agent-logos/kiro.svg",
+    "commands": [
+      "kiro-cli",
+      "kiro"
+    ],
+    "appNames": {
+      "macos": [
+        "Kiro.app"
+      ],
+      "windows": [
+        "Kiro"
+      ]
+    },
+    "configDir": {
+      "macos": "~/.kiro",
+      "windows": "${USERPROFILE}/.kiro"
+    },
+    "skillDir": "skills",
+    "mcp": [
+      {
+        "file": "settings/mcp.json",
+        "key": "mcpServers"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://kiro.dev/docs/skills/",
+        "https://kiro.dev/docs/mcp/configuration/",
+        "https://kiro.dev/docs/cli/quick-start/"
+      ]
+    }
+  },
+  {
+    "name": "trae",
+    "logo": "/agent-logos/trae.png",
+    "commands": [
+      "traecli"
+    ],
+    "appNames": {
+      "macos": [
+        "TRAE.app",
+        "TraeCode.app",
+        "TRAE CN.app",
+        "TraeCode CN.app"
+      ],
+      "windows": [
+        "TRAE",
+        "TraeCode",
+        "TRAE CN",
+        "TraeCode CN"
+      ]
+    },
+    "configDir": {
+      "macos": "~/.trae",
+      "windows": "${USERPROFILE}/.trae"
+    },
+    "mcp": [
+      {
+        "file": "traecli.toml",
+        "key": "mcp_servers"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://docs.trae.cn/cli_config-file",
+        "https://docs.trae.cn/cli_environment-variables",
+        "https://docs.trae.cn/cli_tools-and-extensions"
+      ],
+      "notes": [
+        "The public CLI config file is traecli.toml. Unpublished Skill/plugin installation paths remain unconfigured."
+      ]
+    }
+  },
+  {
+    "name": "kimi-code",
+    "logo": "/agent-logos/kimi-code.png",
+    "commands": [
+      "kimi"
+    ],
+    "packages": [
+      "@moonshot-ai/kimi-code"
+    ],
+    "executablePaths": {
+      "macos": [
+        "~/.kimi-code/bin/kimi"
+      ],
+      "windows": [
+        "${USERPROFILE}/.kimi-code/bin/kimi.exe"
+      ]
+    },
+    "executableDirEnv": {
+      "name": "KIMI_INSTALL_DIR",
+      "relative": {
+        "macos": "bin/kimi",
+        "windows": "bin/kimi.exe"
+      }
+    },
+    "configDir": {
+      "macos": "~/.kimi-code",
+      "windows": "${USERPROFILE}/.kimi-code"
+    },
+    "configDirEnv": "KIMI_CODE_HOME",
+    "skillDir": "skills",
+    "extraSkillDirs": [
+      {
+        "id": "shared",
+        "scope": "user",
+        "path": "~/.agents/skills"
+      }
+    ],
+    "pluginDirs": [
+      "plugins/managed"
+    ],
+    "mcp": [
+      {
+        "file": "mcp.json",
+        "key": "mcpServers"
+      }
+    ],
+    "references": {
+      "reviewed": "2026-10-07",
+      "urls": [
+        "https://moonshotai.github.io/kimi-code/en/configuration/data-locations.html",
+        "https://moonshotai.github.io/kimi-code/en/customization/mcp.html",
+        "https://moonshotai.github.io/kimi-code/en/customization/skills.html",
+        "https://code.kimi.com/kimi-code/install.sh",
+        "https://code.kimi.com/kimi-code/install.ps1"
+      ]
+    }
+  }
+]
