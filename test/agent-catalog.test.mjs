@@ -141,8 +141,19 @@ test('a null platform root stays disabled despite legacy targets and can be expl
 
 test('platform paths are selected before expanding foreign environment variables or scanning', async t => {
   const f = await fixture(t, [{ name: 'platform-agent', commands: ['platform-cli'], configDir: { macos: '~/.mac', windows: '${APPDATA}/WindowsAgent' }, skillDir: 'skills', appNames: { macos: [], windows: ['WindowsAgent'] } }])
-  await f.executable('platform-cli')
+  const executable = await f.executable('platform-cli')
+  const definitions = JSON.parse(await fs.readFile(path.join(f.root, 'agents.catalog.json'), 'utf8'))
+  definitions[0].executable = executable
+  await fs.writeFile(path.join(f.root, 'agents.catalog.json'), JSON.stringify(definitions))
   const context = createDiscoveryContext({ platform: 'darwin', home: f.root, env: { PATH: f.bin }, standardBinDirs: [], applicationRoots: [], extensionRoots: [] })
+  // Select foreign-host rules while keeping file I/O native to the test runner.
+  context.paths = path
+  context.binDirs = [f.bin]
+  context.runVersionCommand = async (file, args) => {
+    assert.equal(file, executable)
+    assert.deepEqual(args, ['--version'])
+    return { stdout: 'fixture-cli 1.7.0', stderr: '' }
+  }
   const [mac] = await f.core.loadAgents({ discoveryContext: context })
   assert.equal(mac.runnable, true)
   assert.equal(mac.absoluteRoot, path.join(f.root, '.mac'))

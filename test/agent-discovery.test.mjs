@@ -7,7 +7,7 @@ import { resolveAgentPlatform } from '../src/agent-catalog.mjs'
 import { createDiscoveryContext, prepareDiscoveryContext, prepareApplicationContext, configuredSkillDirectory, commandCandidates, discoverAgent, runVersionCommand } from '../src/agent-discovery.mjs'
 
 const presets = new Map(JSON.parse(await fs.readFile(new URL('../agents.catalog.json', import.meta.url), 'utf8')).map((entry) => [entry.name, entry]))
-const preset = (name, overrides = {}, platform = process.platform) => ({ ...resolveAgentPlatform(presets.get(name), platform === 'linux' ? 'darwin' : platform), ...overrides })
+const preset = (name, overrides = {}, platform = 'darwin') => ({ ...resolveAgentPlatform(presets.get(name), platform), ...overrides })
 
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-discovery-'))

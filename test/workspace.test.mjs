@@ -46,6 +46,6 @@ test('CLI workspace selection uses application presets without copying source or
   assert.deepEqual((await fs.readdir(root)).sort(), ['agents.catalog.json', 'agents.local.json'])
   await assert.rejects(run(process.execPath, [path.join(PROJECT_ROOT, 'src/cli.mjs'), 'agents', '--workspace']), error => /requires a directory/.test(error.stderr))
   await fs.unlink(path.join(root, 'agents.catalog.json'))
-  const discoveryContext = createDiscoveryContext({ home: root, env: {}, standardBinDirs: [], applicationRoots: [], extensionRoots: [] })
+  const discoveryContext = createDiscoveryContext({ home: root, env: { APPDATA: path.join(root, 'roaming'), LOCALAPPDATA: path.join(root, 'local') }, standardBinDirs: [], applicationRoots: [], extensionRoots: [] })
   assert.ok((await createWorkspace({ root, discoveryContext }).loadAgents()).some(agent => agent.name === 'fixture'))
 })
