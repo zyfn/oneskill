@@ -23,6 +23,7 @@ export function WorkspaceHeader({ route, approximate = false, query, onQueryChan
     <header className="workspace-header">
       <div className="workspace-title-line">
         <h1>{t(titleKey)}</h1>
+        {route === 'skills' ? <p className="workspace-description">{t('skills.introduction')}</p> : null}
         {approximate && ['plugins', 'mcp'].includes(route) ? <span className="workspace-scan-note" role="status" title={t('common.incompleteScan')}>{t('common.incompleteScan')}</span> : null}
       </div>
       <div className="header-actions flex items-center gap-2.5">
@@ -36,7 +37,6 @@ export function WorkspaceHeader({ route, approximate = false, query, onQueryChan
           <ScopeTab value="zh" title="中文">中文</ScopeTab>
         </ScopeTabs>
       </div>
-      {route === 'skills' ? <p className="workspace-description">{t('skills.introduction')}</p> : null}
       {refreshing ? <div className="scan-progress w-full" role="status"><span>{t('scanning')}</span><div /></div> : null}
     </header>
   )

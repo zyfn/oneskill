@@ -8,6 +8,7 @@ oneskill is a local capability workspace. The primary task is to keep one skill 
 - Agents has two installation views, **Installed** and **Not installed**. Failed CLI checks belong to Not installed; the interface does not add a separate diagnostic group.
 - Skills has two views: **Library** for everyday use and **Unmanaged** for review. Ignored items are a recoverable state inside Unmanaged.
 - Collections navigate real directory structure. Selecting a parent includes descendants; root packages appear in All skills. The collection rail can be hidden completely and remembers that preference. Nested branches expand on demand, with bounded indentation; collapsing a branch preserves the current selection.
+- The page introduction sits beside the title when space allows. A collapsed collection toggle, the active collection path, and link legend share the first matrix header. Keep column semantics accessible without repeating a visible Skill label. On mobile, collection navigation defaults closed; an expanded navigation sits above the matrix.
 - Skill names and descriptions are primary. Agent link controls are aligned secondary actions. Agent names sit below their icons.
 - A detail panel belongs to the selected item. Repeating the selection or pressing Escape closes it. Avoid repeating information already evident from the selected scope.
 
