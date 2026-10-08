@@ -2,6 +2,7 @@
   "name": "oneskill",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "description": "Local-first Agent capability workspace",
   "engines": {
@@ -18,8 +19,8 @@
     "demo": "node scripts/demo.mjs",
     "build": "npm --prefix web run build",
     "cli": "node src/cli.mjs",
-    "check": "node --check src/core.mjs && node --check src/agent-discovery.mjs && node --check src/agent-catalog.mjs && node --check src/configuration.mjs && node --check src/migration.mjs && node --check src/server.mjs && node --check src/cli.mjs && npm test && npm run build",
-    "test": "node --test test/*.test.mjs"
+    "check": "node scripts/check-syntax.mjs && npm test && npm run build",
+    "test": "node scripts/run-tests.mjs"
   },
   "dependencies": {
     "jsonc-parser": "^3.3.1",

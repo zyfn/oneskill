@@ -3,28 +3,24 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
-import { copyWorkspaceRuntime } from '../scripts/workspace-runtime.mjs'
+import { createWorkspace } from '../src/core.mjs'
 
 async function fixture(t, ignoreText = '# Existing preferences\n') {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-ignore-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
-  await fs.mkdir(path.join(root, 'src'))
-  await copyWorkspaceRuntime(root)
   const agents = ['first', 'second'].map((name) => ({ name, dir: path.join(root, name, 'skills') }))
   for (const agent of agents) await fs.mkdir(agent.dir, { recursive: true })
   await fs.writeFile(path.join(root, 'agents.catalog.json'), JSON.stringify(agents))
   const ignoreFile = path.join(root, 'migrate.ignore')
   await fs.writeFile(ignoreFile, ignoreText)
-  const moduleUrl = pathToFileURL(path.join(root, 'src/core.mjs')).href
-  const core = await import(moduleUrl)
+  const core = createWorkspace({ root })
   async function skill(agent, relative, name = 'same-name') {
     const dir = path.join(root, agent, 'skills', relative)
     await fs.mkdir(dir, { recursive: true })
     await fs.writeFile(path.join(dir, 'SKILL.md'), `---\nname: ${name}\ndescription: Test skill\n---\nOriginal content\n`)
     return dir
   }
-  return { root, ignoreFile, core, moduleUrl, skill }
+  return { root, ignoreFile, core, skill }
 }
 
 test('ignore persists by Agent and directory without hiding same-name siblings or touching packages', async (t) => {
@@ -34,7 +30,7 @@ test('ignore persists by Agent and directory without hiding same-name siblings o
   const otherAgent = await f.skill('second', '.system/review')
   const original = await fs.readFile(path.join(target, 'SKILL.md'), 'utf8')
   await f.core.setSkillIgnored('first', target, true)
-  const fresh = await import(`${f.moduleUrl}?fresh`)
+  const fresh = createWorkspace({ root: f.root })
   const data = await fresh.workspaceData()
   assert.deepEqual(data.migrations.map((item) => item.path).sort(), [sibling, otherAgent].sort())
   assert.equal(data.ignoredSkills[0].path, target)

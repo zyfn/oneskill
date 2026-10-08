@@ -3,8 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
-import { copyWorkspaceRuntime } from '../scripts/workspace-runtime.mjs'
+import { createWorkspace } from '../src/core.mjs'
 import { adoptLocalSkill } from '../src/migration.mjs'
 
 async function fixture(t) {
@@ -76,13 +75,12 @@ test('restores original folder when link creation fails; complete copy can be sa
 test('API core revalidates candidates, respects ignore list and omits backups on later scans', async (t) => {
   const f = await fixture(t)
   const repo = path.join(f.root, 'repository')
-  await fs.mkdir(path.join(repo, 'src'), { recursive: true })
-  await copyWorkspaceRuntime(repo)
+  await fs.mkdir(repo, { recursive: true })
   const input = await f.skill('first')
   const ignored = await f.skill('first', 'protected')
   await fs.writeFile(path.join(repo, 'agents.catalog.json'), JSON.stringify([{ name: 'first', dir: input.agentDir }]))
   await fs.writeFile(path.join(repo, 'migrate.ignore'), 'first:writing')
-  const core = await import(pathToFileURL(path.join(repo, 'src/core.mjs')).href)
+  const core = createWorkspace({ root: repo })
   assert.equal((await core.detectMigrations()).items.length, 0)
   await fs.writeFile(path.join(repo, 'migrate.ignore'), '')
   const result = await core.importLocalSkills([{ agent: 'first', path: input.source }, { agent: 'first', path: '/etc' }])

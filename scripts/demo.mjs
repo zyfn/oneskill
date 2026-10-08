@@ -1,5 +1,4 @@
-import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { startServer } from '../src/server.mjs'
 import { createDemoWorkspace } from './demo-workspace.mjs'
 
 const args = process.argv.slice(2)
@@ -17,7 +16,6 @@ async function cleanup() {
 }
 for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => cleanup().finally(() => process.exit()))
 try {
-  const { startServer } = await import(pathToFileURL(path.join(demo.root, 'src/server.mjs')).href)
   console.log('Demo workspace: sample data only. Changes are discarded when you stop it.')
-  ;({ server } = await startServer({ open: !args.includes('--no-open'), port }))
+  ;({ server } = await startServer({ open: !args.includes('--no-open'), port, workspace: demo.workspace }))
 } catch (error) { await cleanup(); throw error }

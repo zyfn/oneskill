@@ -3,21 +3,19 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
-import { pathToFileURL } from 'node:url'
 import { readAgentDefinitions, resolveAgentPlatform } from '../src/agent-catalog.mjs'
 import { createDiscoveryContext } from '../src/agent-discovery.mjs'
-import { copyWorkspaceRuntime } from '../scripts/workspace-runtime.mjs'
+import { createWorkspace } from '../src/core.mjs'
 
 async function fixture(t, presets = []) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-agents-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
-  await copyWorkspaceRuntime(root)
   await fs.writeFile(path.join(root, 'agents.catalog.json'), JSON.stringify(presets))
-  const core = await import(pathToFileURL(path.join(root, 'src/core.mjs')).href)
+  const core = createWorkspace({ root: root })
   const bin = path.join(root, 'bin')
   await fs.mkdir(bin)
   async function local(records) { await fs.writeFile(path.join(root, 'agents.local.json'), JSON.stringify(records)) }
-  const context = () => createDiscoveryContext({ home: root, env: { PATH: bin, SystemRoot: process.env.SystemRoot }, standardBinDirs: [], applicationRoots: [], extensionRoots: [] })
+  const context = () => createDiscoveryContext({ home: root, env: { PATH: bin, SystemRoot: process.env.SystemRoot }, standardBinDirs: [], applicationRoots: [], extensionRoots: [], versionTimeoutMs: 15000 })
   const scan = () => core.loadAgents({ discoveryContext: context() })
   async function executable(command, version = '1.7.0') {
     const source = path.join(bin, command + '.cjs')

@@ -11,6 +11,7 @@ web/dist
 design/
 coverage/
 agents.local.json
+agents.registry
 migrate.ignore
 .env
 .env.*

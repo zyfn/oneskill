@@ -2,13 +2,11 @@ import fs from 'node:fs'
 import http from 'node:http'
 import path from 'node:path'
 import { randomBytes } from 'node:crypto'
-import { spawn, spawnSync } from 'node:child_process'
-import { WEB_ROOT, importLocalSkills, setSkillIgnored, setSkillLink, workspaceData } from './core.mjs'
+import { spawn } from 'node:child_process'
+import { WEB_ROOT, createWorkspace } from './core.mjs'
+import { runNpm } from './npm-runtime.mjs'
 
 import { openFolder } from './local-folder.mjs'
-
-const DIST_ROOT = path.join(WEB_ROOT, 'dist')
-const SOURCE_ROOT = path.join(WEB_ROOT, 'src')
 
 function newestMtime(root) {
   let newest = 0
@@ -42,26 +40,24 @@ function newestMtime(root) {
   return newest
 }
 
-function ensureWebBuild() {
-  const index = path.join(DIST_ROOT, 'index.html')
+export function ensureWebBuild(webRoot = WEB_ROOT, { run = runNpm } = {}) {
+  const index = path.join(webRoot, 'dist/index.html')
   const buildInputs = [
-    SOURCE_ROOT,
-    path.join(WEB_ROOT, 'public'),
-    path.join(WEB_ROOT, 'index.html'),
-    path.join(WEB_ROOT, 'package.json'),
-    path.join(WEB_ROOT, 'package-lock.json'),
-    path.join(WEB_ROOT, 'vite.config.js'),
+    path.join(webRoot, 'src'),
+    path.join(webRoot, 'public'),
+    path.join(webRoot, 'index.html'),
+    path.join(webRoot, 'package.json'),
+    path.join(webRoot, 'package-lock.json'),
+    path.join(webRoot, 'vite.config.js'),
   ]
   const newestInput = Math.max(...buildInputs.map(newestMtime))
   const stale = !fs.existsSync(index) || newestInput > fs.statSync(index).mtimeMs
   if (!stale) return
-  if (!fs.existsSync(path.join(WEB_ROOT, 'node_modules'))) {
-    const installCommand = fs.existsSync(path.join(WEB_ROOT, 'package-lock.json')) ? 'ci' : 'install'
-    const install = spawnSync('npm', ['--prefix', WEB_ROOT, installCommand], { stdio: 'inherit' })
-    if (install.status !== 0) throw new Error('Web dependencies failed to install')
+  if (!fs.existsSync(path.join(webRoot, 'node_modules'))) {
+    const installCommand = fs.existsSync(path.join(webRoot, 'package-lock.json')) ? 'ci' : 'install'
+    run([installCommand], { cwd: webRoot })
   }
-  const result = spawnSync('npm', ['--prefix', WEB_ROOT, 'run', 'build'], { stdio: 'inherit' })
-  if (result.status !== 0) throw new Error('Web build failed')
+  run(['run', 'build'], { cwd: webRoot })
 }
 
 function mimeType(file) {
@@ -118,11 +114,11 @@ async function readBody(request) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'))
 }
 
-function safeStaticPath(urlPath) {
+function safeStaticPath(urlPath, distRoot) {
   const decoded = decodeURIComponent(urlPath)
   const relative = decoded === '/' ? 'index.html' : decoded.replace(/^\/+/, '')
-  const resolved = path.resolve(DIST_ROOT, relative)
-  if (resolved !== DIST_ROOT && !resolved.startsWith(`${DIST_ROOT}${path.sep}`)) return null
+  const resolved = path.resolve(distRoot, relative)
+  if (resolved !== distRoot && !resolved.startsWith(`${distRoot}${path.sep}`)) return null
   return resolved
 }
 
@@ -148,10 +144,12 @@ function openBrowser(url) {
   child.unref()
 }
 
-export async function startServer({ open = false, port: requestedPort } = {}) {
-  ensureWebBuild()
+export async function startServer({ open = false, port: requestedPort, workspace = createWorkspace(), webRoot = WEB_ROOT } = {}) {
+  ensureWebBuild(webRoot)
+  const distRoot = path.join(webRoot, 'dist')
+  const { workspaceData, importLocalSkills, setSkillIgnored, setSkillLink } = workspace
   const token = randomBytes(18).toString('hex')
-  const port = requestedPort || await getPort()
+  const port = requestedPort ?? await getPort()
   let cache = null
   let cacheTime = 0
 
@@ -216,12 +214,12 @@ export async function startServer({ open = false, port: requestedPort } = {}) {
         return sendJson(response, 404, { error: 'API route not found' })
       }
 
-      let file = safeStaticPath(url.pathname)
+      let file = safeStaticPath(url.pathname, distRoot)
       if (!file) {
         response.writeHead(403)
         return response.end('Forbidden')
       }
-      if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(DIST_ROOT, 'index.html')
+      if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(distRoot, 'index.html')
       response.writeHead(200, {
         'Content-Type': mimeType(file),
         'Cache-Control': 'no-store',
@@ -237,8 +235,9 @@ export async function startServer({ open = false, port: requestedPort } = {}) {
     server.once('error', reject)
     server.listen(port, '127.0.0.1', resolve)
   })
-  const url = `http://127.0.0.1:${port}/?t=${token}`
+  const actualPort = server.address().port
+  const url = `http://127.0.0.1:${actualPort}/?t=${token}`
   process.stdout.write(`oneskill is running at ${url}\n`)
   if (open) openBrowser(url)
-  return { server, url, token, port }
+  return { server, url, token, port: actualPort }
 }

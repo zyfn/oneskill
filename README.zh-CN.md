@@ -114,7 +114,7 @@ npm run cli -- validate
 
 ## Agent 适配与检测
 
-Agent 清单集中记录 Codex、Claude Code、Cursor、Gemini CLI、Qwen Code 等工具的命令、官方配置约定和兼容位置。共用规则只写一次，macOS 与 Windows 的配置根目录明确列出。通过 `agents.local.json` 新增 Agent 或覆盖预设，重新扫描即可生效，见[本地定义示例](agents.local.example.json)。`agents.registry` 的旧目录覆盖方式仍受支持，共享 Skill 目录可能被多个 Agent 读取。
+Agent 清单集中记录 Codex、Claude Code、Cursor、Gemini CLI、Qwen Code 等工具的命令、官方配置约定和兼容位置。共用规则只写一次，macOS 与 Windows 的配置根目录明确列出。通过 `agents.local.json` 新增 Agent 或覆盖预设，重新扫描即可生效，见[本地定义示例](agents.local.example.json)。共享 Skill 目录可能被多个 Agent 读取。
 
 CLI 只有在 `--version` 成功退出并返回可识别的版本时才算检测通过；失败记录会显示真实错误码。桌面应用与扩展仅确认安装信息，不代表运行健康。Qoder 桌面版与 Qoder CLI 分别登记。配置目录独立扫描，不能证明 Agent 已安装。Skill 的加载方式遵循各 Agent 自身的规则。检测方式与边界见 [Agent 扫描说明](docs/agent-discovery.md)，目录预设与能力扫描范围见[参考文档](docs/reference.zh-CN.md)。
 
@@ -130,3 +130,7 @@ npm run check        # 语法检查、测试与生产构建
 前端使用 React、Vite 和 Tailwind CSS。扫描器、文件操作、HTTP API 与 CLI 位于 `src/`，界面位于 `web/src/`。
 
 欢迎贡献 Agent 扫描适配、平台验证与具体的交互改进。修改扫描器时附上脱敏的测试样例；修改界面时检查中英文两种语言；提交 PR 前运行 `npm run check`。
+
+## 许可证
+
+[MIT](LICENSE)。Agent 名称和图标归各自所有者所有。

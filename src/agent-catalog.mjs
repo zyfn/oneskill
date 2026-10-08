@@ -173,8 +173,8 @@ function mergeFlat(base, local, host) {
   if (local.configDir !== undefined && Object.hasOwn(local.configDir, host) && local.configDirEnv === undefined) { delete merged.configDirEnv; delete merged.configDirEnvSuffix }
   return merged
 }
-export async function readAgentDefinitions(root, { platform = process.platform } = {}) {
-  const presets = await readRecords(path.join(root, 'agents.catalog.json'))
+export async function readAgentDefinitions(root, { platform = process.platform, catalogFile = path.join(root, 'agents.catalog.json') } = {}) {
+  const presets = await readRecords(catalogFile)
   const local = await readRecords(path.join(root, 'agents.local.json'), true)
   const targets = await readLegacyTargets(path.join(root, 'agents.registry'))
   const presetByName = new Map(presets.map(entry => [entry.name, entry]))

@@ -29,19 +29,19 @@
 | TraeCode CLI | 暂未配置，公开资料未确认安装目录 |
 | Kimi Code | `~/.kimi-code/skills` |
 
-在 `agents.registry` 中覆盖路径，然后重新扫描：
+在 `agents.local.json` 中覆盖预设字段，然后重新扫描。Skill 目标可以独立于 Agent 配置根目录设置：
 
-```text
-codex|/absolute/path/to/codex/skills
+```json
+[{ "name": "codex", "skillDir": "/absolute/path/to/codex/skills" }]
 ```
 
-配置和原生插件根目录独立于 Skill 链接目标，按清单声明和支持的官方环境变量解析。`agents.registry` 只覆盖 Skill 链接目标。只提供目录的旧自定义记录仍兼容原有约定。安装检测独立于这些目录，oneskill 不负责安装 Agent。支持的覆盖规则、检测证据与平台边界见 [Agent 扫描说明](agent-discovery.md)。
+安装检测独立于这些目录，oneskill 不负责安装 Agent。支持的覆盖规则与平台边界见 [Agent 扫描说明](agent-discovery.md)。
 
 ## 新增 Agent
 
 安装已有预设对应的工具后，点击重新扫描。全新 Agent 可复制 `agents.local.example.json` 为 `agents.local.json`，填写命令名；需要统计资源时，再声明 Skill 目标、配置根目录与配置文件格式。名称和命令名可以不同，也支持直接指定可执行文件绝对路径。
 
-本地定义不随 Git 分发，新增、修改和删除后重新扫描即可生效。未配置的资源显示 `—`；不根据命令名猜测目录。`agents.registry` 的旧目录登记方式继续支持。
+本地定义不随 Git 分发，新增、修改和删除后重新扫描即可生效。未配置的资源显示 `—`；不根据命令名猜测目录。
 
 命令、图标、资源子目录和 MCP 读取规则共用。`configDir.macos` 与 `configDir.windows` 明确列出根目录，程序先识别系统，再展开路径；相对的 `skillDir`、`pluginDirs` 和 MCP 文件使用所选根目录。覆盖已有预设时可省略未修改的字段。详见[扫描说明](agent-discovery.md)和[官方目录核验记录](agent-paths.md)。
 
@@ -89,7 +89,6 @@ codex|/absolute/path/to/codex/skills
 | --- | --- |
 | `skills/` | 统一管理库；除 `.gitkeep` 外，内容不进入 Git。 |
 | `agents.catalog.json` | Agent 命令、图标、独立配置根目录、资源声明和官方来源。 |
-| `agents.registry` | 旧格式的本地 Skill 目标覆盖。 |
 | `agents.local.json` | 本地 Agent 定义与预设覆盖，不随 Git 分发。 |
 | `migrate.ignore` | 本地导入保护与持久化忽略规则，不随 Git 分发。 |
 | Agent 的 `.oneskill-backups/` | 原包与导入恢复记录。 |
@@ -129,10 +128,12 @@ Agent JSON 中，`installed` 与 `detected` 表示程序安装证据，`configur
 
 需要 Node.js 20+、npm 与桌面浏览器。macOS 已进行人工验证；Linux、Windows 桌面流程仍待平台验收。Windows 可能需要开发者模式或相应的符号链接权限，Linux 打开目录需要桌面文件管理器。`oneskill.command` 是 macOS 启动器。
 
+`--workspace <目录>` 可为 CLI 和 Web 服务指定独立的管理库与偏好目录。内置 Agent 预设和 Web 资源仍由应用提供，工作区也可选用自己的 `agents.catalog.json`。
+
 前端开发时，在两个终端分别运行 `npm run dev` 和 `npm run dev:web`。默认 `/api` 代理指向 8787 端口。`npm run check` 执行语法检查、文件系统与 API 测试，以及前端生产构建。
 
 `npm run demo` 在隔离的临时工作区中使用样例文件与链接，运行同一套应用，不读取或修改个人 Agent 目录。
 
 ## 许可证与标识
 
-项目许可证尚未确定。Agent 名称与标识属于各自所有者。
+项目采用 [MIT 许可证](../LICENSE)。Agent 名称与标识属于各自所有者。

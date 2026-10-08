@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 
-import { detectCapabilities, detectPlugins, detectSkills, loadAgents, publicAgent, setSkillLink, workspaceData } from './core.mjs'
+import { createWorkspace, publicAgent } from './core.mjs'
 import { startServer } from './server.mjs'
 
-const args = process.argv.slice(2)
+const rawArgs = process.argv.slice(2)
+const workspaceIndex = rawArgs.indexOf('--workspace')
+const workspaceRoot = workspaceIndex < 0 ? undefined : rawArgs[workspaceIndex + 1]
+const args = rawArgs.filter((_argument, index) => workspaceIndex < 0 || (index !== workspaceIndex && index !== workspaceIndex + 1))
 const command = args[0] || 'help'
 const json = args.includes('--json')
 
@@ -27,6 +30,7 @@ Usage:
   npm run cli -- validate
 
 The CLI and Web UI share installation discovery and bounded capability scans.
+Use --workspace <directory> to keep library and local preferences elsewhere.
 CLI discovery executes --version; JSON records version, runnable, and errors.
 Configuration directories locate resources and do not establish installation.
 `)
@@ -46,8 +50,11 @@ function table(items, columns) {
 }
 
 async function main() {
+  if (workspaceIndex >= 0 && (!workspaceRoot || workspaceRoot.startsWith('--'))) throw new Error('--workspace requires a directory.')
+  const workspace = createWorkspace({ root: workspaceRoot })
+  const { detectCapabilities, detectPlugins, detectSkills, loadAgents, setSkillLink, workspaceData } = workspace
   if (command === 'serve') {
-    await startServer({ open: args.includes('--open') })
+    await startServer({ open: args.includes('--open'), workspace })
     return
   }
   if (command === 'detect' || command === 'scan' || command === 'overview') {

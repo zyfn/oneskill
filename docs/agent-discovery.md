@@ -77,7 +77,7 @@ The macOS root and shared resource rules stay intact. Relative `skillDir`, `plug
 
 New full definitions with a `configDir` table must specify both `macos` and `windows`. An additional explicit `linux` path is allowed. A local override can omit unchanged fields. Native Windows and WSL are different host environments.
 
-`agents.registry` still supports legacy Skill-target overrides (`name|directory`). A local `skillDir` overrides that target. Explicit registry targets remain independent of an Agent's configuration root. Previous flat runtime declarations remain readable for existing workspaces; the new documented configuration uses the format above. Experimental nested `common` and platform-wide override declarations are not part of the final schema.
+Existing `agents.registry` files and older runtime declarations are read only for backward compatibility. New workspaces use `agents.local.json`; no registry template is distributed. To migrate a preset target, declare `[{"name":"codex","skillDir":"/your/skills"}]` in that file. Local `skillDir` takes precedence over the old target. The final public schema does not use nested `common` or platform-wide override objects.
 
 Invalid JSON, duplicate identifiers, unknown fields, invalid commands, incomplete full path tables, and unsupported file formats produce explicit errors.
 

@@ -29,19 +29,19 @@ The catalog provides default search paths. A preset does not imply that every ve
 | TraeCode CLI | Unconfigured; public installation path not established |
 | Kimi Code | `~/.kimi-code/skills` |
 
-Override a location in `agents.registry`, then rescan:
+Override preset fields in `agents.local.json`, then rescan. For example, a Skill target can be changed without changing the Agent's configuration root:
 
-```text
-codex|/absolute/path/to/codex/skills
+```json
+[{ "name": "codex", "skillDir": "/absolute/path/to/codex/skills" }]
 ```
 
-Configuration and native-plugin roots are resolved independently of skill targets from catalog declarations and supported official environment variables. `agents.registry` overrides only skill targets. Directory-only custom records retain their legacy convention. Installation discovery is independent of those directories; oneskill does not install Agents. See [Agent discovery](agent-discovery.md) for supported overrides, evidence, and platform limits.
+Installation discovery is independent of these directories; oneskill does not install Agents. See [Agent discovery](agent-discovery.md) for supported overrides and platform limits.
 
 ## Adding an Agent
 
 Install a supported preset and rescan. For a new Agent, copy `agents.local.example.json` to `agents.local.json` and declare its command name. Add a Skill target, independent configuration root, and file format/key when resource inventory is needed. The identifier and executable name may differ; an absolute executable path is supported.
 
-Local definitions are excluded from Git. Additions, changes, and removals take effect on rescan. Undeclared resources display `—`; command names do not imply storage locations. Legacy `agents.registry` targets remain supported.
+Local definitions are excluded from Git. Additions, changes, and removals take effect on rescan. Undeclared resources display `—`; command names do not imply storage locations.
 
 Commands, icons, resource subdirectories, and MCP reading rules are shared. `configDir.macos` and `configDir.windows` explicitly list the roots; relative `skillDir`, `pluginDirs`, and MCP files use the selected root. Local overrides may omit unchanged fields. See the [discovery reference](agent-discovery.md) and [official path audit](agent-paths.md).
 
@@ -89,7 +89,6 @@ Imports save original packages in the source Agent's `.oneskill-backups/import-*
 | --- | --- |
 | `skills/` | Canonical library; excluded from Git except for `.gitkeep`. |
 | `agents.catalog.json` | Agent commands, logos, independent configuration roots, resource declarations, and primary references. |
-| `agents.registry` | Legacy local Skill target overrides. |
 | `agents.local.json` | Local Agent definitions and preset overrides, excluded from Git. |
 | `migrate.ignore` | Local import protection and persistent ignore rules, excluded from Git. |
 | Agent `.oneskill-backups/` | Original packages and import restore records. |
@@ -129,10 +128,12 @@ Agent JSON uses `installed` and `detected` for program installation evidence, an
 
 Requires Node.js 20+, npm, and a desktop browser. macOS has been manually tested. Linux and Windows desktop workflows still require platform verification; Windows may need Developer Mode or additional symlink permissions, and Linux folder opening requires a desktop file manager. `oneskill.command` is a macOS launcher.
 
+`--workspace <directory>` selects a separate library and preference directory for both CLI commands and `serve`. Built-in presets and Web assets remain in the application; a workspace can optionally provide its own `agents.catalog.json`.
+
 For frontend development, run the API with `npm run dev` and Vite with `npm run dev:web` in separate terminals. The default `/api` proxy targets port 8787. `npm run check` runs syntax checks, filesystem/API tests, and a production web build.
 
 `npm run demo` runs the same application with sample files and links in an isolated temporary workspace. It does not read or modify personal Agent folders.
 
 ## License and attribution
 
-A project license has not yet been selected. Agent names and logos belong to their respective owners.
+The project is licensed under [MIT](../LICENSE). Agent names and logos belong to their respective owners.

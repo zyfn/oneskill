@@ -3,20 +3,17 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
-import { pathToFileURL } from 'node:url'
-import { copyWorkspaceRuntime } from '../scripts/workspace-runtime.mjs'
+import { createWorkspace } from '../src/core.mjs'
 import { skillCollections, belongsToCollection } from '../web/src/skill-folders.mjs'
 
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-folders-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
-  await fs.mkdir(path.join(root, 'src'))
-  await copyWorkspaceRuntime(root)
   const agentDir = path.join(root, 'agent/skills')
   await fs.mkdir(agentDir, { recursive: true })
   await fs.mkdir(path.join(root, 'agent/plugins'), { recursive: true })
   await fs.writeFile(path.join(root, 'agents.catalog.json'), JSON.stringify([{ name: 'test-agent', dir: agentDir }]))
-  const core = await import(pathToFileURL(path.join(root, 'src/core.mjs')).href)
+  const core = createWorkspace({ root: root })
   async function skill(relative) {
     const dir = path.join(root, relative)
     await fs.mkdir(dir, { recursive: true })

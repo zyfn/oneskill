@@ -3,8 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
-import { pathToFileURL } from 'node:url'
-import { copyWorkspaceRuntime } from '../scripts/workspace-runtime.mjs'
+import { createWorkspace } from '../src/core.mjs'
 import { configurationEntries, parseConfiguration, readConfiguration } from '../src/configuration.mjs'
 import { configuredAgentLocations, createDiscoveryContext } from '../src/agent-discovery.mjs'
 import { resolveAgentPlatform } from '../src/agent-catalog.mjs'
@@ -12,10 +11,8 @@ import { resolveAgentPlatform } from '../src/agent-catalog.mjs'
 async function fixture(t, definitions) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-config-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
-  await fs.mkdir(path.join(root, 'src'))
-  await copyWorkspaceRuntime(root)
   await fs.writeFile(path.join(root, 'agents.catalog.json'), JSON.stringify(definitions(root)))
-  const core = await import(pathToFileURL(path.join(root, 'src/core.mjs')).href)
+  const core = createWorkspace({ root: root })
   async function write(relative, text) {
     const file = path.join(root, relative)
     await fs.mkdir(path.dirname(file), { recursive: true })

@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
-import { fileURLToPath, pathToFileURL } from 'node:url'
-import { copyWorkspaceRuntime } from './workspace-runtime.mjs'
+import { fileURLToPath } from 'node:url'
+import { createWorkspace } from '../src/core.mjs'
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -10,7 +10,6 @@ const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 export async function createDemoWorkspace() {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-demo-'))
   try {
-    await copyWorkspaceRuntime(root, { web: true })
     const catalog = JSON.parse(await fs.readFile(path.join(repo, 'agents.catalog.json'), 'utf8'))
     const detected = ['codex', 'claude', 'cursor', 'gemini']
     const bin = path.join(root, 'bin')
@@ -59,7 +58,7 @@ export async function createDemoWorkspace() {
     await writeSkill(path.join(root, 'agents/cursor/skills/project-tools'), 'project-tools', 'Project-specific tools intentionally kept outside the library.')
     await fs.writeFile(path.join(root, 'migrate.ignore'), '# Demo preferences\n{"agent":"cursor","relative":"project-tools","ignored":true}\n')
 
-    const core = await import(pathToFileURL(path.join(root, 'src/core.mjs')).href)
+    const core = createWorkspace({ root })
     const links = {
       codex: ['engineering/api-contracts', 'engineering/backend/query-plan', 'engineering/code-review', 'writing/technical-docs', 'workspace-notes'],
       claude: ['design/accessibility-audit', 'design/interface-review', 'writing/release-notes', 'writing/technical-docs'],
@@ -79,7 +78,7 @@ export async function createDemoWorkspace() {
     for (const [agent, names] of [['codex', ['filesystem', 'documentation']], ['claude', ['browser', 'filesystem']], ['cursor', ['filesystem']], ['gemini', ['documentation']]]) {
       await fs.writeFile(path.join(root, 'agents', agent, 'mcp.json'), JSON.stringify({ mcpServers: Object.fromEntries(names.map((name) => [name, { command: 'sample-server' }])) }))
     }
-    return { root, cleanup: () => fs.rm(root, { recursive: true, force: true }) }
+    return { root, workspace: core, cleanup: () => fs.rm(root, { recursive: true, force: true }) }
   } catch (error) {
     await fs.rm(root, { recursive: true, force: true })
     throw error
