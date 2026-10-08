@@ -18,7 +18,7 @@ export function AppSidebar({ route, onNavigate, onRefresh, refreshing }) {
   const navigate = (key) => { onNavigate(key); setOpenMobile(false) }
   return (
     <Sidebar collapsible="offcanvas" variant="floating" className="notebook-sidebar">
-      <SidebarHeader className="px-4 pb-8 pt-7">
+      <SidebarHeader className="px-4 pb-3 pt-7">
         <button type="button" onClick={() => navigate('agents')} className="brand flex items-center gap-2.5 text-left" aria-label={t('brandHome')}>
           <img className="brand-mark" src="/logo.svg" alt="" width="32" height="32" />
           <span className="brand-wordmark"><span>one</span><span>skill</span></span>

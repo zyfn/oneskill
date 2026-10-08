@@ -432,13 +432,14 @@ button:active:not(:disabled) { transform: scale(.985); }
 .collection-select:focus-visible { outline-offset:-2px; }
 .collection-row[data-trail="true"] .collection-label { color:#3f6086; }
 .library-main { display:flex; flex-direction:column; min-width:0; min-height:0; }
-.library-heading-row { display:flex; align-items:center; gap:10px; min-width:0; min-height:32px; }
+.library-heading-row { display:flex; align-items:center; gap:10px; min-width:0; min-height:36px; }
 .library-heading-row .matrix-legend { flex-shrink:0; margin:0; gap:14px; }
 .library-icon-actions { display:inline-flex; align-items:center; gap:2px; flex-shrink:0; }
 .library-scope-path { min-width:0; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted-foreground); font-size:var(--type-meta); font-weight:400; }
 .skills-library .matrix-scroll { flex:1; min-height:0; overflow:auto; padding:0 1px 3px; scrollbar-color:rgba(77,92,115,.2) transparent; overscroll-behavior:contain; border-radius:16px; }
-.library-matrix { border-spacing:0 8px; }
-.library-matrix thead th { position:sticky; top:0; z-index:1; height:64px; background:transparent; }
+.library-matrix { --matrix-row-gap:8px; border-spacing:0 var(--matrix-row-gap); margin-top:calc(-1 * var(--matrix-row-gap)); }
+.library-matrix thead th { position:sticky; top:0; z-index:1; height:72px; background:transparent; }
+.library-matrix thead .skill-name-column { vertical-align:top; padding-top:0; }
 .skills-library .matrix-scroll[data-scrolled="true"] thead th { background:rgba(236,240,246,.9); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 .library-matrix .skill-name-column { width:46%; padding-inline:16px; }
 .library-matrix tbody .skill-name-column { padding-block:0; }
@@ -494,6 +495,7 @@ button:active:not(:disabled) { transform: scale(.985); }
   .skills-library[data-collections="open"] { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); gap:12px; }
   .collection-rail { max-height:154px; padding:0 0 12px; border-right:0; border-bottom:1px solid var(--border); }
   .collection-rail-heading { min-height:32px; margin-bottom:4px; }
+  .library-heading-row { min-height:32px; }
   .collection-folders { margin-top:4px; }
   .inventory-group-toggle { padding-right:8px; }
   .inventory-group-controls { gap:8px; padding-right:14px; }
