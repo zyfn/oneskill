@@ -34,9 +34,7 @@ oneskill/skills/code-review/            共享源文件
 
 ![Agent 概览与本地能力统计](docs/screenshots/agents.png)
 
-截图来自项目提供的样例工作区，可通过 `npm run demo` 体验。
-
-## 快速开始
+## 安装
 
 需要 **Node.js 20+**、npm 和桌面浏览器。
 
@@ -44,18 +42,27 @@ oneskill/skills/code-review/            共享源文件
 git clone https://github.com/zyfn/oneskill.git
 cd oneskill
 npm ci
+```
+
+## 使用方式
+
+### Web 界面
+
+启动浏览器管理界面：
+
+```bash
 npm start
 ```
 
-## 使用说明
+macOS 也可以双击项目目录中的 `oneskill.command` 启动。
 
-### 1. 添加与导入 Skill
+#### 1. 添加与导入 Skill
 
 将包含 `SKILL.md` 的包放入 `skills/`，或打开 **Skills → 未管理**，查看各 Agent 目录中已有的包。选择 **纳入管理** 后，完整包会导入管理库，并链接回来源 Agent，该 Agent 可以继续使用。
 
 原位置改为链接前会备份原包。目标位置存在不同内容时，oneskill 会报告冲突，不覆盖已有文件。
 
-### 2. 用文件夹组织内容
+#### 2. 用文件夹组织内容
 
 在 `skills/` 下建立父文件夹，将相关的 Skill 放在一起：
 
@@ -73,40 +80,43 @@ skills/
 
 添加或调整目录后，点击 **重新扫描**。已链接的包需先取消链接，移动后再接入新位置。
 
-### 3. 链接与取消链接
+#### 3. 链接与取消链接
 
 管理库中的 Agent 列显示 **已链接** 与 **未链接**，点击即可调整。一个 Skill 可以接入多个 Agent、只接入一个，或暂不接入任何 Agent；它始终保留在管理库中。
 
 链接操作在所选 Agent 的 Skill 目录中创建符号链接。取消链接只移除该链接，保留共享包。
 
-### 4. 编辑与忽略
+#### 4. 编辑与忽略
 
 直接修改共享 Skill，让已链接的 Agent 读取同一版本。通过搜索和目录聚焦需要的内容，查看包的详情，或打开文件夹继续编辑。
 
 选择 **忽略**，即可从未管理列表中隐藏该包，不改变文件或 Agent 的使用方式。忽略选择会在重新扫描和重启后保留；通过 **已忽略 → 恢复** 可以重新显示。
 
-## Agent、插件与 MCP
+#### Agent、插件与 MCP
 
 **Agent** 页面展示检测结果和本地资源数量。**插件** 与 **MCP** 提供可搜索的只读清单，支持按 Agent 筛选和查看来源。
+
+### CLI
+
+将包含 `SKILL.md` 的包放入 `skills/`，然后在项目目录中执行命令。CLI 与 Web 界面操作同一套文件，使用 CLI 无需启动 Web 服务。
+
+```bash
+npm run cli -- agents --json
+npm run cli -- skills --json
+npm run cli -- plugins --json
+npm run cli -- mcp --json
+npm run cli -- link codex engineering/code-review
+npm run cli -- unlink codex engineering/code-review
+npm run cli -- validate
+```
+
+运行 `npm run cli -- help` 查看完整命令。
 
 ## Agent 适配与检测
 
 Agent 清单集中记录 Codex、Claude Code、Cursor、Gemini CLI、Qwen Code 等工具的命令、官方配置约定和兼容位置。共用规则只写一次，macOS 与 Windows 的配置根目录明确列出。通过 `agents.local.json` 新增 Agent 或覆盖预设，重新扫描即可生效，见[本地定义示例](agents.local.example.json)。`agents.registry` 的旧目录覆盖方式仍受支持，共享 Skill 目录可能被多个 Agent 读取。
 
 CLI 只有在 `--version` 成功退出并返回可识别的版本时才算检测通过；失败记录会显示真实错误码。桌面应用与扩展仅确认安装信息，不代表运行健康。Qoder 桌面版与 Qoder CLI 分别登记。配置目录独立扫描，不能证明 Agent 已安装。Skill 的加载方式遵循各 Agent 自身的规则。检测方式与边界见 [Agent 扫描说明](docs/agent-discovery.md)，目录预设与能力扫描范围见[参考文档](docs/reference.zh-CN.md)。
-
-## CLI
-
-在终端中操作同一份管理库与接入关系：
-
-```bash
-npm run cli -- skills --json
-npm run cli -- link codex engineering/code-review
-npm run cli -- unlink codex engineering/code-review
-npm run cli -- validate
-```
-
-运行 `npm run cli -- help` 查看可用命令，或阅读 [CLI 参考](docs/reference.zh-CN.md#cli)。
 
 ## 开发与贡献
 
@@ -120,8 +130,3 @@ npm run check        # 语法检查、测试与生产构建
 前端使用 React、Vite 和 Tailwind CSS。扫描器、文件操作、HTTP API 与 CLI 位于 `src/`，界面位于 `web/src/`。
 
 欢迎贡献 Agent 扫描适配、平台验证与具体的交互改进。修改扫描器时附上脱敏的测试样例；修改界面时检查中英文两种语言；提交 PR 前运行 `npm run check`。
-
-## 文档
-
-- [配置、存储与导入恢复](docs/reference.zh-CN.md)
-- [设计规范](docs/design.md)
