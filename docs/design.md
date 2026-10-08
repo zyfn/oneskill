@@ -18,7 +18,7 @@ The source of truth is `web/src/index.css`. Use Geist and the semantic size vari
 
 | Role | Variable | Size |
 | --- | --- | --- |
-| Wordmark | `--type-brand` | 28 px, accompanied by a 32 px mark |
+| Wordmark | `--type-brand` | Shares the 30 px page-title size, accompanied by a 32 px mark |
 | Page title | `--type-page` | 30 px |
 | Detail title | `--type-detail` | 22 px |
 | Section title | `--type-section` | 16 px |

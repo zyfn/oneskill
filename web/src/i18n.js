@@ -14,6 +14,7 @@ const messages = {
     languageChinese: '中文',
     languageSwitch: 'Switch language',
     agent: {
+      introduction: 'View Agent installation status, skills, plugins, and MCP configuration.',
       installed: 'Installed',
       notInstalled: 'Not installed',
       views: 'Agent installation',
@@ -182,6 +183,7 @@ const messages = {
     languageChinese: '中文',
     languageSwitch: '切换语言',
     agent: {
+      introduction: '查看 Agent 安装状态与 Skills、插件、MCP 配置。',
       installed: '已安装',
       notInstalled: '未安装',
       views: 'Agent 安装状态',
