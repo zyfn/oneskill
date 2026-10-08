@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ArrowUpRightIcon, MagnifyingGlassIcon } from '@phosphor-icons/react'
-import { RadioGroup } from 'radix-ui'
+import { ScopeTabs, ScopeTab } from '@/scope-tabs'
 import { SkillsLibrary } from '@/skills-library'
 import { ImportSkills } from '@/import-skills'
 import { UnmanagedSkills } from '@/unmanaged-skills'
@@ -85,13 +85,16 @@ export function CapabilityView({ route, data, loading, refreshing, hasError, sel
   const [query, setQuery] = useState('')
   const [agent, setAgent] = useState('all')
   const [skillView, setSkillView] = useState('library')
+  const [agentView, setAgentView] = useState('installed')
   const showAgentFilter = ['plugins', 'mcp'].includes(route)
   const wide = useWideLayout()
   const agents = data?.agents || EMPTY
   const skills = data?.skills || EMPTY
   const unmanaged = data?.migrations || EMPTY
   const ignored = data?.ignoredSkills || EMPTY
-  const source = (route === 'migrate' || (route === 'skills' && skillView === 'unmanaged') ? unmanaged : data?.[route]) || EMPTY
+  const installedAgents = agents.filter((entry) => entry.detected ?? entry.installed)
+  const uninstalledAgents = agents.filter((entry) => !(entry.detected ?? entry.installed))
+  const source = (route === 'migrate' || (route === 'skills' && skillView === 'unmanaged') ? unmanaged : route === 'agents' ? agentView === 'installed' ? installedAgents : uninstalledAgents : data?.[route]) || EMPTY
   const rows = useMemo(() => source.filter((item) => (agent === 'all' || item.agent === agent) && matchesSearch(item, query)), [source, query, agent])
   const ignoredRows = useMemo(() => ignored.filter((item) => matchesSearch(item, query)), [ignored, query])
   const changeSkillView = (next) => { setSkillView(next); onClose(false) }
@@ -103,10 +106,14 @@ export function CapabilityView({ route, data, loading, refreshing, hasError, sel
     <div className="workspace flex min-h-0 flex-1 flex-col">
       <WorkspaceHeader route={route} approximate={Boolean(data?.scan?.[route]?.truncated)} query={query} onQueryChange={(value) => { setQuery(value); if (selected) onClose(false) }}
         refreshing={refreshing} />
-      {route === 'skills' && !loading ? <RadioGroup.Root className="skills-scope" aria-label={t('skills.views')} value={skillView} onValueChange={changeSkillView} orientation="horizontal">
-        <RadioGroup.Item value="library">{t('skills.libraryTab')}<span title={data?.scan?.skills?.truncated ? t('common.incompleteScan') : undefined}>{skills.length}{data?.scan?.skills?.truncated ? '+' : ''}</span></RadioGroup.Item>
-        <RadioGroup.Item value="unmanaged">{t('skills.inboxTab')}<span title={data?.scan?.migrations?.truncated ? t('common.incompleteScan') : undefined}>{unmanaged.length}{data?.scan?.migrations?.truncated ? '+' : ''}</span></RadioGroup.Item>
-      </RadioGroup.Root> : null}
+      {route === 'skills' && !loading ? <ScopeTabs label={t('skills.views')} value={skillView} onChange={changeSkillView}>
+        <ScopeTab value="library" count={`${skills.length}${data?.scan?.skills?.truncated ? '+' : ''}`} countHint={data?.scan?.skills?.truncated ? t('common.incompleteScan') : undefined}>{t('skills.libraryTab')}</ScopeTab>
+        <ScopeTab value="unmanaged" count={`${unmanaged.length}${data?.scan?.migrations?.truncated ? '+' : ''}`} countHint={data?.scan?.migrations?.truncated ? t('common.incompleteScan') : undefined}>{t('skills.inboxTab')}</ScopeTab>
+      </ScopeTabs> : null}
+      {route === 'agents' && !loading ? <ScopeTabs label={t('agent.views')} value={agentView} onChange={setAgentView}>
+        <ScopeTab value="installed" count={installedAgents.length}>{t('agent.installed')}</ScopeTab>
+        <ScopeTab value="not-installed" count={uninstalledAgents.length}>{t('agent.notInstalled')}</ScopeTab>
+      </ScopeTabs> : null}
       {showAgentFilter && !loading ? <AgentFilter agents={agents} source={source} selected={agent} onChange={(next) => { setAgent(next); onClose(false) }} /> : null}
       <div className="workspace-content" data-route={route} data-detail={wide && Boolean(selected) || undefined}>
         <div id="workspace-main" role="region" className="catalog-scroll min-w-0" aria-label={`${t(route === 'migrate' ? 'page.skills' : `page.${route}`)} · ${t('common.workspace')}`} aria-busy={loading}>
@@ -116,8 +123,8 @@ export function CapabilityView({ route, data, loading, refreshing, hasError, sel
             : route === 'skills' ? skillView === 'library'
               ? <SkillsLibrary rows={rows} skills={skills} agents={agents} selected={selected} onSelect={onSelect} onLinkChange={onLinkChange} onClose={onClose} source={data?.source} onOpenFolder={onOpenFolder} query={query} onClearSearch={resetFilters} onReviewUnmanaged={() => changeSkillView('unmanaged')} approximate={Boolean(data?.scan?.skills?.truncated)} />
               : <UnmanagedSkills defaultOpen items={rows} ignoredItems={ignoredRows} ignoredCount={ignored.length} agents={agents} selected={selected} onSelect={onSelect} onClose={onClose} onNavigate={onNavigate} onRefresh={onRefresh} />
+            : route === 'agents' ? <AgentTable rows={rows} view={agentView} data={data} onOpenFolder={onOpenFolder} />
             : !rows.length ? <EmptyState query={query} filtered={filtered} onReset={resetFilters} route={route} agent={agent} />
-            : route === 'agents' ? <AgentTable rows={rows} data={data} onOpenFolder={onOpenFolder} />
             : <Inventory route={route} rows={rows} agents={agents} selected={selected} selectedAgent={agent} onSelect={onSelect} />}
 
         </div>

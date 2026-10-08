@@ -37,7 +37,7 @@ npm run cli -- skills --workspace /path/to/workspace --json
 npm run cli -- serve --workspace /path/to/workspace --open
 ```
 
-Demo and tests construct temporary data directories and use these same modules. They do not copy runtime source or substitute a different scanner. Demo executable responses are synthetic sample data.
+Tests construct temporary data directories and use these same modules. They do not copy runtime source or substitute a different scanner.
 
 ## Scan and mutation flow
 

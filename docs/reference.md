@@ -49,7 +49,7 @@ Commands, icons, resource subdirectories, and MCP reading rules are shared. `con
 
 | Area | Behavior and limitations |
 | --- | --- |
-| Agents | **Detected** requires a matching command, supported macOS application bundle, or supported extension identity. CLI commands run `--version`; success records the version, while failures remain distinct. Configuration directories do not determine detection. Login and session health are not tested. |
+| Agents | **Installed** requires a matching command, supported macOS application bundle, or supported extension identity. CLI commands run `--version`; success records the version, while failures remain distinct. Configuration directories do not determine detection. Login and session health are not tested. |
 | Skills | Recursively discovers `SKILL.md` packages in the shared library and configured personal skill directories. Project skills and plugin-bundled skills are not comprehensively included. |
 | Plugins | Reads recognized native manifests, including `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json`, `plugin.json`, and qualifying `package.json` files. Cached versions may be inactive. Generic VS Code extensions are excluded. |
 | MCP | Reads declared JSON, JSONC, and TOML files through one parser interface; unreadable or malformed files produce diagnostics. Configuration discovery does not verify server health. |
@@ -132,7 +132,6 @@ Requires Node.js 20+, npm, and a desktop browser. macOS has been manually tested
 
 For frontend development, run the API with `npm run dev` and Vite with `npm run dev:web` in separate terminals. The default `/api` proxy targets port 8787. `npm run check` runs syntax checks, filesystem/API tests, and a production web build.
 
-`npm run demo` runs the same application with sample files and links in an isolated temporary workspace. It does not read or modify personal Agent folders.
 
 ## License and attribution
 

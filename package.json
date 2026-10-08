@@ -16,7 +16,6 @@
     "web": "node src/cli.mjs serve --open",
     "dev": "node src/cli.mjs serve",
     "dev:web": "npm --prefix web run dev",
-    "demo": "node scripts/demo.mjs",
     "build": "npm --prefix web run build",
     "cli": "node src/cli.mjs",
     "check": "node scripts/check-syntax.mjs && npm test && npm run build",

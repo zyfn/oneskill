@@ -5,6 +5,7 @@ oneskill is a local capability workspace. The primary task is to keep one skill 
 ## Hierarchy
 
 - The application sidebar changes the capability type: Agents, Skills, Plugins, or MCP.
+- Agents has two installation views, **Installed** and **Not installed**. Failed CLI checks belong to Not installed; the interface does not add a separate diagnostic group.
 - Skills has two views: **Library** for everyday use and **Unmanaged** for review. Ignored items are a recoverable state inside Unmanaged.
 - Collections navigate real directory structure. Selecting a parent includes descendants; root packages appear in All skills. The collection rail can be hidden completely and remembers that preference. Nested branches expand on demand, with bounded indentation; collapsing a branch preserves the current selection.
 - Skill names and descriptions are primary. Agent link controls are aligned secondary actions. Agent names sit below their icons.
@@ -33,7 +34,7 @@ Skill, plugin, and MCP item names share 14 px, weight 580, line-height 1.5, and 
 
 The canvas moves from neutral gray at the top into a muted blue-gray lower area. It is a fixed background; scrolling content must not introduce a separate bottom stripe.
 
-Outer groups use a translucent surface and a restrained blur. Inner rows use a soft, gray-white surface with more opacity. Do not apply the same material depth to search, language switching, and every small button. Do not add decorative left accent bars, rainbow optics, or bright white selection outlines.
+Outer groups use a translucent surface and a restrained blur. Inner rows use a soft, gray-white surface with more opacity. Do not apply the same material depth to search, language switching, and every small button. Top-level scope and language choices share rounded capsules, a soft pale surface, and a muted blue selected label and border. Do not add decorative left accent bars, rainbow optics, or bright white selection outlines.
 
 Plugins and MCP place their item cards directly on the canvas; Agent labels and spacing provide grouping without another card around them. Page titles do not display aggregate counts.
 
@@ -47,6 +48,6 @@ The official mark is **Confluence**, rendered in muted slate blue `#5B78A4` on a
 
 ## Product copy and acceptance
 
-Describe the action and its actual scope. “Detected” requires program, desktop app, or extension installation evidence. CLI commands are checked with `--version`; failures remain separate from missing commands. Configuration folders only locate resources. Version success does not prove sign-in or session health. See [Agent discovery](agent-discovery.md). “Linked” refers to a filesystem symlink, not a network connection. Unmanaged rows show the source Agent; internal directory names belong in path details. A directory name does not establish that a skill is Agent-provided.
+Describe the action and its actual scope. “Installed” requires program, desktop app, or extension installation evidence. CLI commands are checked with `--version`; failed checks appear under Not installed, with diagnostics retained in CLI JSON. Configuration folders only locate resources. Version success does not prove sign-in or session health. See [Agent discovery](agent-discovery.md). “Linked” refers to a filesystem symlink, not a network connection. Unmanaged rows show the source Agent; internal directory names belong in path details. A directory name does not establish that a skill is Agent-provided.
 
-Check English and Chinese, desktop widths of 1280–1920 px, long names, empty collections, search with no results, selected details, inline failures, and real link/import/ignore/restore behavior. Use `npm run demo` for public examples. README screenshots should come from that sample workspace and remain in English.
+Check English and Chinese, desktop widths of 1280–1920 px, long names, empty collections, search with no results, selected details, inline failures, and real link/import/ignore/restore behavior. README screenshots remain in English.

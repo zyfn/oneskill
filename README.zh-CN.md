@@ -116,7 +116,7 @@ npm run cli -- validate
 
 Agent 清单集中记录 Codex、Claude Code、Cursor、Gemini CLI、Qwen Code 等工具的命令、官方配置约定和兼容位置。共用规则只写一次，macOS 与 Windows 的配置根目录明确列出。通过 `agents.local.json` 新增 Agent 或覆盖预设，重新扫描即可生效，见[本地定义示例](agents.local.example.json)。共享 Skill 目录可能被多个 Agent 读取。
 
-CLI 只有在 `--version` 成功退出并返回可识别的版本时才算检测通过；失败记录会显示真实错误码。桌面应用与扩展仅确认安装信息，不代表运行健康。Qoder 桌面版与 Qoder CLI 分别登记。配置目录独立扫描，不能证明 Agent 已安装。Skill 的加载方式遵循各 Agent 自身的规则。检测方式与边界见 [Agent 扫描说明](docs/agent-discovery.md)，目录预设与能力扫描范围见[参考文档](docs/reference.zh-CN.md)。
+CLI 只有在 `--version` 成功退出并返回可识别的版本时才算检测通过；失败记录归入“未安装”，具体错误保留在 CLI JSON 中。桌面应用与扩展仅确认安装信息，不代表运行健康。Qoder 桌面版与 Qoder CLI 分别登记。配置目录独立扫描，不能证明 Agent 已安装。Skill 的加载方式遵循各 Agent 自身的规则。检测方式与边界见 [Agent 扫描说明](docs/agent-discovery.md)，目录预设与能力扫描范围见[参考文档](docs/reference.zh-CN.md)。
 
 ## 开发与贡献
 

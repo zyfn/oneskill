@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react'
-import { RadioGroup } from 'radix-ui'
+import { ScopeTabs, ScopeTab } from '@/scope-tabs'
 import { useLocale } from '@/i18n'
 
 export function WorkspaceHeader({ route, approximate = false, query, onQueryChange, refreshing }) {
@@ -31,11 +31,10 @@ export function WorkspaceHeader({ route, approximate = false, query, onQueryChan
           <input aria-label={t(searchKey)} ref={input} value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder={t(searchKey)} type="search" className="h-11 w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground/80" />
           {query ? <button type="button" className="search-clear" aria-label={t('common.clearSearch')} onClick={() => { onQueryChange(''); input.current?.focus() }}><XIcon size={14} /></button> : null}
         </div>
-        <RadioGroup.Root className="language-toggle" data-locale={locale} aria-label={t('languageSwitch')} value={locale} onValueChange={setLocale} orientation="horizontal">
-          <span className="language-lens" aria-hidden="true" />
-          <RadioGroup.Item value="en" title="English">EN</RadioGroup.Item>
-          <RadioGroup.Item value="zh" title="中文">中文</RadioGroup.Item>
-        </RadioGroup.Root>
+        <ScopeTabs className="language-toggle" label={t('languageSwitch')} value={locale} onChange={setLocale}>
+          <ScopeTab value="en" title="English">EN</ScopeTab>
+          <ScopeTab value="zh" title="中文">中文</ScopeTab>
+        </ScopeTabs>
       </div>
       {route === 'skills' ? <p className="workspace-description">{t('skills.introduction')}</p> : null}
       {refreshing ? <div className="scan-progress w-full" role="status"><span>{t('scanning')}</span><div /></div> : null}

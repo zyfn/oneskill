@@ -49,7 +49,7 @@
 
 | 类别 | 行为与边界 |
 | --- | --- |
-| Agent | **已检测到**需匹配命令、支持的 macOS 应用包或扩展身份。CLI 执行 `--version`，记录版本或独立的失败结果；配置目录不参与安装判定。不检查登录和会话状态。 |
+| Agent | **已安装**需匹配命令、支持的 macOS 应用包或扩展身份。CLI 执行 `--version`，记录版本或独立的失败结果；配置目录不参与安装判定。不检查登录和会话状态。 |
 | Skills | 递归发现管理库与个人 Skill 目录中的 `SKILL.md` 包，不完整覆盖项目级与插件内的 Skill。 |
 | 插件 | 读取支持的原生清单，包括 `.codex-plugin/plugin.json`、`.claude-plugin/plugin.json`、`plugin.json` 及符合插件字段的 `package.json`。缓存版本可能未启用，普通 VS Code 扩展不计入。 |
 | MCP | 统一读取声明的 JSON、JSONC、TOML 配置与字段，保留读取失败的诊断；发现配置不代表服务器健康检查通过。 |
@@ -132,7 +132,6 @@ Agent JSON 中，`installed` 与 `detected` 表示程序安装证据，`configur
 
 前端开发时，在两个终端分别运行 `npm run dev` 和 `npm run dev:web`。默认 `/api` 代理指向 8787 端口。`npm run check` 执行语法检查、文件系统与 API 测试，以及前端生产构建。
 
-`npm run demo` 在隔离的临时工作区中使用样例文件与链接，运行同一套应用，不读取或修改个人 Agent 目录。
 
 ## 许可证与标识
 
