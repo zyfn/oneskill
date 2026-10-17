@@ -89,12 +89,13 @@ export function CapabilityView({ route, data, loading, refreshing, hasError, sel
   const showAgentFilter = ['plugins', 'mcp'].includes(route)
   const wide = useWideLayout()
   const agents = data?.agents || EMPTY
-  const skills = data?.skills || EMPTY
-  const unmanaged = data?.migrations || EMPTY
-  const ignored = data?.ignoredSkills || EMPTY
-  const installedAgents = agents.filter((entry) => entry.detected ?? entry.installed)
-  const uninstalledAgents = agents.filter((entry) => !(entry.detected ?? entry.installed))
-  const source = (route === 'migrate' || (route === 'skills' && skillView === 'unmanaged') ? unmanaged : route === 'agents' ? agentView === 'installed' ? installedAgents : uninstalledAgents : data?.[route]) || EMPTY
+  const allSkills = data?.skills || EMPTY
+  const skills = useMemo(() => allSkills.filter(item => item.managed), [allSkills])
+  const unmanaged = useMemo(() => allSkills.filter(item => !item.managed && !item.ignored), [allSkills])
+  const ignored = useMemo(() => allSkills.filter(item => !item.managed && item.ignored), [allSkills])
+  const installedAgents = agents.filter((entry) => entry.installed)
+  const uninstalledAgents = agents.filter((entry) => !entry.installed)
+  const source = (route === 'import' ? unmanaged : route === 'skills' ? skillView === 'unmanaged' ? unmanaged : skills : route === 'agents' ? agentView === 'installed' ? installedAgents : uninstalledAgents : data?.[route]) || EMPTY
   const rows = useMemo(() => source.filter((item) => (agent === 'all' || item.agent === agent) && matchesSearch(item, query)), [source, query, agent])
   const ignoredRows = useMemo(() => ignored.filter((item) => matchesSearch(item, query)), [ignored, query])
   const changeSkillView = (next) => { setSkillView(next); onClose(false) }
@@ -104,11 +105,11 @@ export function CapabilityView({ route, data, loading, refreshing, hasError, sel
 
   return (
     <div className="workspace flex min-h-0 flex-1 flex-col">
-      <WorkspaceHeader route={route} approximate={Boolean(data?.scan?.[route]?.truncated)} query={query} onQueryChange={(value) => { setQuery(value); if (selected) onClose(false) }}
+      <WorkspaceHeader route={route} approximate={data?.scan?.[route]?.complete === false} query={query} onQueryChange={(value) => { setQuery(value); if (selected) onClose(false) }}
         refreshing={refreshing} />
       {route === 'skills' && !loading ? <ScopeTabs label={t('skills.views')} value={skillView} onChange={changeSkillView}>
         <ScopeTab value="library" count={`${skills.length}${data?.scan?.skills?.truncated ? '+' : ''}`} countHint={data?.scan?.skills?.truncated ? t('common.incompleteScan') : undefined}>{t('skills.libraryTab')}</ScopeTab>
-        <ScopeTab value="unmanaged" count={`${unmanaged.length}${data?.scan?.migrations?.truncated ? '+' : ''}`} countHint={data?.scan?.migrations?.truncated ? t('common.incompleteScan') : undefined}>{t('skills.inboxTab')}</ScopeTab>
+        <ScopeTab value="unmanaged" count={`${unmanaged.length}${data?.scan?.skills?.unmanaged?.truncated ? '+' : ''}`} countHint={data?.scan?.skills?.unmanaged?.truncated ? t('common.incompleteScan') : undefined}>{t('skills.inboxTab')}</ScopeTab>
       </ScopeTabs> : null}
       {route === 'agents' && !loading ? <ScopeTabs label={t('agent.views')} value={agentView} onChange={setAgentView}>
         <ScopeTab value="installed" count={installedAgents.length}>{t('agent.installed')}</ScopeTab>
@@ -116,15 +117,15 @@ export function CapabilityView({ route, data, loading, refreshing, hasError, sel
       </ScopeTabs> : null}
       {showAgentFilter && !loading ? <AgentFilter agents={agents} source={source} selected={agent} onChange={(next) => { setAgent(next); onClose(false) }} /> : null}
       <div className="workspace-content" data-route={route} data-detail={wide && Boolean(selected) || undefined}>
-        <div id="workspace-main" role="region" className="catalog-scroll min-w-0" aria-label={`${t(route === 'migrate' ? 'page.skills' : `page.${route}`)} · ${t('common.workspace')}`} aria-busy={loading}>
+        <div id="workspace-main" role="region" className="catalog-scroll min-w-0" aria-label={`${t(route === 'import' ? 'page.skills' : `page.${route}`)} · ${t('common.workspace')}`} aria-busy={loading}>
           {loading ? (route === 'agents' ? <AgentTableSkeleton /> : <LoadingCards />)
             : hasError && !data ? <EmptyState route={route} failed />
-            : route === 'migrate' ? <ImportSkills items={rows} hasHiddenItems={rows.length < source.length} agents={agents} source={data?.source} onBack={() => onNavigate('skills')} onImported={onRefresh} />
+            : route === 'import' ? <ImportSkills items={rows} hasHiddenItems={rows.length < source.length} agents={agents} source={data?.source} onBack={() => onNavigate('skills')} onImported={onRefresh} />
             : route === 'skills' ? skillView === 'library'
               ? <SkillsLibrary rows={rows} skills={skills} agents={agents} selected={selected} onSelect={onSelect} onLinkChange={onLinkChange} onClose={onClose} source={data?.source} onOpenFolder={onOpenFolder} query={query} onClearSearch={resetFilters} onReviewUnmanaged={() => changeSkillView('unmanaged')} approximate={Boolean(data?.scan?.skills?.truncated)} />
-              : <UnmanagedSkills defaultOpen items={rows} ignoredItems={ignoredRows} ignoredCount={ignored.length} agents={agents} selected={selected} onSelect={onSelect} onClose={onClose} onNavigate={onNavigate} onRefresh={onRefresh} />
+              : <UnmanagedSkills items={rows} ignoredItems={ignoredRows} ignoredCount={ignored.length} agents={agents} selected={selected} onSelect={onSelect} onClose={onClose} onNavigate={onNavigate} onRefresh={onRefresh} />
             : route === 'agents' ? <AgentTable rows={rows} view={agentView} data={data} onOpenFolder={onOpenFolder} />
-            : !rows.length ? <EmptyState query={query} filtered={filtered} onReset={resetFilters} route={route} agent={agent} />
+            : !rows.length ? <EmptyState query={query} filtered={filtered} failed={data?.scan?.[route]?.complete === false} onReset={resetFilters} route={route} agent={agent} />
             : <Inventory route={route} rows={rows} agents={agents} selected={selected} selectedAgent={agent} onSelect={onSelect} />}
 
         </div>

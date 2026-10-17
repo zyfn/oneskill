@@ -2,13 +2,14 @@
 skills/*
 !skills/.gitkeep
 
-# 构建产物与依赖都不入库；serve 启动时按需自动构建
+# 构建产物与依赖不入库；Web 启动时按需构建
 node_modules
 web/node_modules
 web/dist
 
 # Local drafts and private environment files
 design/
+specs/
 coverage/
 agents.local.json
 agents.registry
@@ -21,3 +22,7 @@ migrate.ignore.*.tmp
 
 # macOS
 .DS_Store
+
+# Generated local plugin packages and workspace preferences
+dist/
+skills.ignore.json

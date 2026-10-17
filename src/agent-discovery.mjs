@@ -117,9 +117,8 @@ export function createDiscoveryContext(options = {}) {
   return context
 }
 
-export function configuredSkillDirectory(entry, override, context = createDiscoveryContext()) {
+export function configuredSkillDirectory(entry, context = createDiscoveryContext()) {
   const definition = entry
-  if (override) return { path: expand(override, context.home, context.paths, context.env), source: 'registry' }
   const config = definition.configuration
   const declared = entry.dir
   if (!declared) return { path: null, source: 'not-configured' }
@@ -134,18 +133,16 @@ export function configuredSkillDirectory(entry, override, context = createDiscov
   return { path: expand(declared, context.home, context.paths, context.env), source: 'catalog' }
 }
 
-export function configuredAgentLocations(entry, override, context = createDiscoveryContext()) {
+export function configuredAgentLocations(entry, context = createDiscoveryContext()) {
   const definition = entry
-  const target = configuredSkillDirectory(entry, override, context)
+  const target = configuredSkillDirectory(entry, context)
   const config = definition.configuration
   const value = config?.env && environmentValue(context.env, config.env)?.trim()
-  // Legacy custom catalogs can still specify only a Skills directory. Official
-  // presets declare a configuration root independently of the link target.
   const configRoot = config?.dir
     ? value ? context.paths.join(expand(value, context.home, context.paths, context.env), config.suffix || '') : expand(config.dir, context.home, context.paths, context.env)
-    : target.path && context.paths.basename(target.path) === 'skills' ? context.paths.dirname(target.path) : target.path
-  const configSource = value ? config.env : config?.dir ? 'catalog' : 'legacy-custom'
-  const roots = target.path ? [{ id: 'target', path: target.path, target: true, ignorePrefix: override ? '' : definition.resources?.targetIgnorePrefix || '' }] : []
+    : null
+  const configSource = value ? config.env : config?.dir ? 'catalog' : 'not-configured'
+  const roots = target.path ? [{ id: 'target', path: target.path, target: true, ignorePrefix: definition.resources?.targetIgnorePrefix || '' }] : []
   for (const root of definition.resources?.skills || []) {
     if (root.base === 'config' && !configRoot) continue
     const directory = root.base === 'config' ? context.paths.join(configRoot, root.path) : expand(root.path, context.home, context.paths, context.env)

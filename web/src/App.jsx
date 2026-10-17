@@ -1,20 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { WarningCircleIcon, XIcon } from '@phosphor-icons/react'
 import { AppSidebar, routes } from '@/app-sidebar'
-import { getWorkspace, openFolder, updateSkillLink } from '@/api'
+import { getWorkspace, openFolder, updateSkillLink, workspaceHost, heartbeat } from '@/api'
 import { itemKey } from '@/capability-model'
 import { CapabilityView } from '@/capability-view'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { LocaleContext, translate } from '@/i18n'
 
-const validRoutes = new Set([...routes.map((route) => route.key), 'migrate'])
+const validRoutes = new Set([...routes.map((route) => route.key), 'import'])
 function routeFromLocation() {
   const hash = window.location.hash.replace(/^#\/?/, '')
-  return validRoutes.has(hash) ? hash : 'agents'
+  return validRoutes.has(hash) ? hash : workspaceHost().embedded ? 'skills' : 'agents'
 }
 
 export default function App() {
+  const host = workspaceHost()
   const [route, setRoute] = useState(routeFromLocation)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -22,14 +23,14 @@ export default function App() {
   const [error, setError] = useState('')
   const [selection, setSelection] = useState(null)
   const [locale, setLocale] = useState(() => {
+    if (host.locale) return host.locale.startsWith('zh') ? 'zh' : 'en'
     try { return window.localStorage.getItem('oneskill-locale') === 'zh' ? 'zh' : 'en' } catch { return 'en' }
   })
   const selectionTrigger = useRef(null)
   const t = useCallback((key, values) => translate(locale, key, values), [locale])
 
-  const load = useCallback(async (force = false) => {
-    force ? setRefreshing(true) : setLoading(true)
-    setError('')
+  const load = useCallback(async (force = false, quiet = false) => {
+    if (!quiet) { force ? setRefreshing(true) : setLoading(true); setError('') }
     try {
       setData(await getWorkspace(force))
       return true
@@ -37,27 +38,33 @@ export default function App() {
       setError(requestError instanceof Error ? requestError.message : String(requestError))
       return false
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      if (!quiet) { setLoading(false); setRefreshing(false) }
     }
   }, [])
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
+    const timer = setInterval(() => { heartbeat().catch(() => {}); load(false, true) }, 20000)
+    const visible = () => { if (document.visibilityState === 'visible') load(false, true) }
+    document.addEventListener('visibilitychange', visible)
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', visible) }
+  }, [load])
+  useEffect(() => {
     document.documentElement.lang = locale === 'zh' ? 'zh-CN' : 'en'
     try { window.localStorage.setItem('oneskill-locale', locale) } catch {}
   }, [locale])
   useEffect(() => {
+    if (host.embedded) return
     const onHashChange = () => { setRoute(routeFromLocation()); setSelection(null) }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
-  }, [])
+  }, [host.embedded])
 
   const navigate = (nextRoute) => {
     if (!validRoutes.has(nextRoute)) return
     setSelection(null)
     setRoute(nextRoute)
-    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#${nextRoute}`)
+    if (!host.embedded) window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#${nextRoute}`)
   }
   const closeSelection = useCallback((restoreFocus = true) => {
     setSelection(null)

@@ -1,17 +1,15 @@
 import { useState } from 'react'
 import { ArrowRightIcon, CheckCircleIcon, WarningCircleIcon } from '@phosphor-icons/react'
-import { InventoryGroup } from '@/inventory-group'
 import { AgentIcon } from '@/capability-icon'
-import { importLocalSkills, setSkillIgnored } from '@/api'
+import { importSkills, setSkillIgnored } from '@/api'
 import { itemKey } from '@/capability-model'
 import { useLocale } from '@/i18n'
 
-export function UnmanagedSkills({ items, ignoredItems, ignoredCount = ignoredItems.length, agents, selected, onSelect, onClose, onNavigate, onRefresh, defaultOpen = false }) {
+export function UnmanagedSkills({ items, ignoredItems, ignoredCount = ignoredItems.length, agents, selected, onSelect, onClose, onNavigate, onRefresh }) {
   const { t } = useLocale()
   const [busy, setBusy] = useState(null)
   const [feedback, setFeedback] = useState({})
   const [showIgnored, setShowIgnored] = useState(false)
-  const [expanded, setExpanded] = useState(defaultOpen)
   const [notice, setNotice] = useState('')
   const rows = showIgnored ? ignoredItems : items
 
@@ -21,7 +19,7 @@ export function UnmanagedSkills({ items, ignoredItems, ignoredCount = ignoredIte
     setNotice('')
     setFeedback((current) => ({ ...current, [key]: null }))
     try {
-      const response = await importLocalSkills([{ agent: item.agent, path: item.path }])
+      const response = await importSkills([item.id])
       const result = response.results?.[0]
       if (result?.ok) {
         setFeedback((current) => ({ ...current, [key]: { ok: true } }))
@@ -40,7 +38,7 @@ export function UnmanagedSkills({ items, ignoredItems, ignoredCount = ignoredIte
     setNotice('')
     setFeedback((current) => ({ ...current, [key]: null }))
     try {
-      await setSkillIgnored(item.agent, item.path, ignored)
+      await setSkillIgnored(item.id, ignored)
       await onRefresh()
       setNotice(t(ignored ? 'skills.ignoredNotice' : 'skills.restoredNotice', { name: item.name }))
     } catch {
@@ -48,20 +46,23 @@ export function UnmanagedSkills({ items, ignoredItems, ignoredCount = ignoredIte
     } finally { setBusy(null) }
   }
 
-  return <InventoryGroup title={t(showIgnored ? 'skills.ignoredTitle' : 'skills.unmanagedTitle')} count={rows.length} className="unmanaged-skills" open={expanded} onOpenChange={setExpanded} onCollapse={() => onClose(false)}
-    headerAction={ignoredCount || showIgnored ? <button type="button" className="unmanaged-view-toggle" aria-pressed={showIgnored} onClick={(event) => {
-      const group = event.currentTarget.closest('.inventory-group')
-      setShowIgnored(!showIgnored); setExpanded(true); setNotice(''); onClose(false)
-      requestAnimationFrame(() => { if (group?.isConnected) group.scrollIntoView({ block: 'start' }) })
-    }} disabled={Boolean(busy)}>{showIgnored ? t('skills.backToUnmanaged') : t('skills.viewIgnored', { count: ignoredCount })}</button> : null}>
-    <p className="inventory-group-description">{t(showIgnored ? 'skills.ignoredDescription' : 'skills.unmanagedDescription')}</p>
+  return <section className="skills-surface skills-inbox" aria-label={t(showIgnored ? 'skills.ignoredTitle' : 'skills.unmanagedTitle')}>
+    <div className="inbox-toolbar">
+      <p className="inbox-description">{t(showIgnored ? 'skills.ignoredDescription' : 'skills.unmanagedDescription')}</p>
+      <div className="inbox-tools">
+        {!showIgnored && items.length ? <button type="button" className="quiet-button" disabled={Boolean(busy)} onClick={() => onNavigate('import')}>{t('skills.importMultiple')}<ArrowRightIcon size={15} /></button> : null}
+        {ignoredCount || showIgnored ? <button type="button" className="unmanaged-view-toggle" aria-pressed={showIgnored} onClick={() => {
+          setShowIgnored(!showIgnored); setNotice(''); onClose(false)
+        }} disabled={Boolean(busy)}>{showIgnored ? t('skills.backToUnmanaged') : t('skills.viewIgnored', { count: ignoredCount })}</button> : null}
+      </div>
+    </div>
     <div className="unmanaged-list" data-ignored-view={showIgnored || undefined}>
       {!rows.length ? <p className="unmanaged-empty">{t(showIgnored ? 'skills.noIgnored' : 'skills.noUnmanaged')}</p> : null}
       {rows.map((item) => {
         const key = itemKey(item)
         const result = feedback[key]
-        const detailItem = { ...item, unmanaged: true }
-        const isSelected = selected?.unmanaged && itemKey(selected) === key
+        const detailItem = item
+        const isSelected = selected?.managed === false && itemKey(selected) === key
         return <div className="unmanaged-row" key={key} data-selected={isSelected || undefined} data-result={result?.ok ? 'success' : result?.ok === false ? 'error' : undefined}>
           <button type="button" className="unmanaged-skill-main" aria-label={t('skills.view', { name: item.name })} aria-expanded={isSelected} onClick={(event) => onSelect(detailItem, event.currentTarget)}>
             <span className="unmanaged-skill-copy"><strong>{item.name}</strong><span>{item.description}</span></span>
@@ -79,7 +80,6 @@ export function UnmanagedSkills({ items, ignoredItems, ignoredCount = ignoredIte
         </div>
       })}
       {notice ? <p className="unmanaged-notice" role="status">{notice}</p> : null}
-      {!showIgnored && items.length ? <div className="unmanaged-footer"><span>{t('skills.moveHint')}</span><button type="button" className="unmanaged-batch" onClick={() => onNavigate('migrate')}>{t('skills.importMultiple')}<ArrowRightIcon size={15} /></button></div> : null}
     </div>
-  </InventoryGroup>
+  </section>
 }

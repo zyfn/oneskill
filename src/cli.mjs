@@ -1,120 +1,73 @@
 #!/usr/bin/env node
+import { randomUUID } from 'node:crypto'
+import { spawn } from 'node:child_process'
+import { createWorkspace } from './core.mjs'
+import { connectWorkspace } from './runtime/connect.mjs'
+import { startWorkspaceServer } from './server.mjs'
+import { operations, errorResult, WorkspaceError } from './contracts/operations.mjs'
 
-import { createWorkspace, publicAgent } from './core.mjs'
-import { startServer } from './server.mjs'
-
-const rawArgs = process.argv.slice(2)
-const workspaceIndex = rawArgs.indexOf('--workspace')
-const workspaceRoot = workspaceIndex < 0 ? undefined : rawArgs[workspaceIndex + 1]
-const args = rawArgs.filter((_argument, index) => workspaceIndex < 0 || (index !== workspaceIndex && index !== workspaceIndex + 1))
-const command = args[0] || 'help'
-const json = args.includes('--json')
-
-function print(value) {
-  process.stdout.write(`${JSON.stringify(value, null, 2)}\n`)
+const args = process.argv.slice(2)
+function option(name) {
+  const index = args.indexOf(name)
+  if (index < 0) return undefined
+  if (!args[index + 1] || args[index + 1].startsWith('--')) throw new Error(`${name} requires a value.`)
+  return args[index + 1]
 }
-
-function help() {
-  process.stdout.write(`oneskill — local Agent capability workspace
-
-Usage:
-  npm start                         Start and open the Web workspace
-  npm run cli -- detect --json     Scan configured capability folders
-  npm run cli -- skills --json     List canonical skills and Agent links
-  npm run cli -- plugins --json    List detected Agent plugin manifests
-  npm run cli -- mcp --json        List detected MCP servers
-  npm run cli -- hooks --json      List detected hooks
-  npm run cli -- agents --json     List Agents and installation/configuration evidence
-  npm run cli -- link <agent> <skill>
-  npm run cli -- unlink <agent> <skill>
-  npm run cli -- validate
-
-The CLI and Web UI share installation discovery and bounded capability scans.
-Use --workspace <directory> to keep library and local preferences elsewhere.
-CLI discovery executes --version; JSON records version, runnable, and errors.
-Configuration directories locate resources and do not establish installation.
-`)
+function numberOption(name) {
+  const value = option(name)
+  if (value === undefined) return undefined
+  if (!/^\d+$/.test(value)) throw new Error(`${name} requires a nonnegative integer.`)
+  const parsed = Number(value)
+  if (!Number.isSafeInteger(parsed) || (name === '--port' && parsed > 65535) || (name === '--idle-timeout' && parsed < 500)) throw new WorkspaceError('INVALID_INPUT', `${name} is outside its supported range.`)
+  return parsed
 }
-
-function table(items, columns) {
-  if (!items.length) {
-    process.stdout.write('No items detected.\n')
-    return
-  }
-  const widths = columns.map(({ key, label }) => Math.max(label.length, ...items.map((item) => String(item[key] ?? '').length)))
-  process.stdout.write(`${columns.map(({ label }, index) => label.padEnd(widths[index])).join('  ')}\n`)
-  process.stdout.write(`${widths.map((width) => '─'.repeat(width)).join('  ')}\n`)
-  for (const item of items) {
-    process.stdout.write(`${columns.map(({ key }, index) => String(item[key] ?? '').padEnd(widths[index])).join('  ')}\n`)
-  }
+const print = value => process.stdout.write(`${JSON.stringify(value, null, 2)}\n`)
+function openBrowser(url) {
+  const [command, commandArgs] = process.platform === 'darwin' ? ['open', [url]] : process.platform === 'win32' ? ['rundll32.exe', ['url.dll,FileProtocolHandler', url]] : ['xdg-open', [url]]
+  const child = spawn(command, commandArgs, { detached: true, stdio: 'ignore', windowsHide: true })
+  child.on('error', error => process.stderr.write(`${error.message}\n`)); child.unref()
 }
-
 async function main() {
-  if (workspaceIndex >= 0 && (!workspaceRoot || workspaceRoot.startsWith('--'))) throw new Error('--workspace requires a directory.')
-  const workspace = createWorkspace({ root: workspaceRoot })
-  const { detectCapabilities, detectPlugins, detectSkills, loadAgents, setSkillLink, workspaceData } = workspace
-  if (command === 'serve') {
-    await startServer({ open: args.includes('--open'), workspace })
+  const command = args[0] || 'help'
+  if (command === 'help' || args.includes('--help')) {
+    process.stdout.write(`oneskill — one local Workspace, shared by Web, CLI and Codex\n\nUsage:\n  oneskill web [--open]\n  oneskill mcp\n  oneskill workspace [--refresh]\n  oneskill skills | agents | plugins | mcp-inventory\n  oneskill call <operation> '<JSON input>'\n\nAll commands accept --workspace <directory>. Default: ~/.oneskill.\nOperations: ${Object.keys(operations).join(', ')}\n`)
     return
   }
-  if (command === 'detect' || command === 'scan' || command === 'overview') {
-    const data = await workspaceData()
-    if (json) print(data)
-    else print({ checkedAt: data.checkedAt, source: data.source, stats: data.stats, scan: data.scan })
+  if (!['web','mcp','workspace','skills','agents','plugins','mcp-inventory','call','_runtime'].includes(command)) throw new WorkspaceError('UNKNOWN_OPERATION', `Unknown command: ${command}`, 404)
+  const valueOptions = new Set(['--workspace','--runtime-dir','--port','--idle-timeout'])
+  const flags = new Set(['--open','--refresh'])
+  for (let index = 1; index < args.length; index++) {
+    if (valueOptions.has(args[index])) { index++; continue }
+    if (args[index].startsWith('--') && !flags.has(args[index])) throw new WorkspaceError('INVALID_INPUT', `Unknown option: ${args[index]}`)
+  }
+  const options = { root: option('--workspace'), runtimeRoot: option('--runtime-dir'), port: numberOption('--port'), idleTimeout: numberOption('--idle-timeout') }
+  if (command === '_runtime') {
+    const runtime = await startWorkspaceServer({ workspace: createWorkspace({ root: options.root }), ...options })
+    for (const signal of ['SIGTERM','SIGINT']) process.once(signal, () => runtime.close().catch(error => { process.stderr.write(`${error.message}\n`); process.exitCode = 1 }))
     return
   }
-  if (command === 'skills' || command === 'list') {
-    const data = await detectSkills()
-    if (json) print(data.items)
-    else table(data.items.map((item) => ({ name: item.name, path: item.path, linked: `${item.linked}/${item.agentCount}`, status: item.status })), [
-      { key: 'name', label: 'Skill' }, { key: 'linked', label: 'Links' }, { key: 'status', label: 'Status' }, { key: 'path', label: 'Source' },
-    ])
+  if (command === 'web') {
+    const { ensureWebBuild } = await import('./web-assets.mjs')
+    ensureWebBuild()
+    const client = await connectWorkspace(options)
+    process.stdout.write(`oneskill is running at ${client.url}\n`)
+    if (args.includes('--open')) openBrowser(client.url)
     return
   }
-  if (command === 'plugins') {
-    const data = await detectPlugins()
-    if (json) print(data.items)
-    else table(data.items, [
-      { key: 'name', label: 'Plugin' }, { key: 'agent', label: 'Agent' }, { key: 'version', label: 'Version' }, { key: 'source', label: 'Source' },
-    ])
-    return
+  const client = await connectWorkspace(options)
+  if (command === 'mcp') {
+    const { runMcp } = await import('./adapters/mcp.mjs')
+    await runMcp(client); return
   }
-  if (command === 'mcp' || command === 'hooks') {
-    const data = await detectCapabilities(command === 'mcp' ? 'mcp' : 'hook')
-    if (json) print(data.items)
-    else table(data.items, [
-      { key: 'name', label: command === 'mcp' ? 'MCP server' : 'Hook' }, { key: 'agent', label: 'Agent' }, { key: 'path', label: 'Config' },
-    ])
-    return
+  if (command === 'call') {
+    const name = args[1]
+    const input = JSON.parse(args[2] || '{}')
+    if (operations[name]?.write && !input.requestId) input.requestId = randomUUID()
+    print(await client.call(name, input)); return
   }
-  if (command === 'agents') {
-    const agents = await loadAgents()
-    const safe = agents.map(publicAgent)
-    if (json) print(safe)
-    else table(safe, [
-      { key: 'name', label: 'Agent' }, { key: 'status', label: 'Status' }, { key: 'dir', label: 'Skill directory' },
-    ])
-    return
-  }
-  if (command === 'link' || command === 'unlink') {
-    const [agent, skill] = args.slice(1).filter((argument) => !argument.startsWith('--'))
-    if (!agent || !skill) throw new Error(`Usage: oneskill ${command} <agent> <skill>`)
-    print(await setSkillLink(agent, skill, command === 'link'))
-    return
-  }
-  if (command === 'validate') {
-    const data = await workspaceData()
-    const broken = data.skills.flatMap((skill) => skill.bindings
-      .filter((binding) => ['broken', 'conflict'].includes(binding.state))
-      .map((binding) => ({ skill: skill.relative, agent: binding.agent, state: binding.state, destination: binding.destination })))
-    print({ ok: broken.length === 0, broken, scanTruncated: Object.values(data.scan).some((scan) => scan.truncated) })
-    if (broken.length) process.exitCode = 1
-    return
-  }
-  help()
+  const data = await client.call(args.includes('--refresh') ? 'refreshWorkspace' : 'getWorkspace')
+  if (command === 'workspace') print(data)
+  else if (['skills','agents','plugins','mcp-inventory'].includes(command)) print(data[command === 'mcp-inventory' ? 'mcp' : command])
+  else throw new Error(`Unknown command: ${command}`)
 }
-
-main().catch((error) => {
-  process.stderr.write(`oneskill: ${error instanceof Error ? error.message : String(error)}\n`)
-  process.exitCode = 1
-})
+main().catch(error => { process.stderr.write(`${JSON.stringify(errorResult(error))}\n`); process.exitCode = 1 })

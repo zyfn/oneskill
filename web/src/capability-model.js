@@ -4,10 +4,11 @@ export const pageMeta = {
   mcp: { title: 'MCP', search: 'Search servers' },
   hooks: { title: 'Hooks', search: 'Search hooks' },
   agents: { title: 'Agents', search: 'Search agents' },
-  migrate: { title: 'Skills', search: 'Search local skills' },
+  import: { title: 'Skills', search: 'Search local skills' },
 }
 
 export function itemKey(item) {
+  if (item.id) return item.id
   return [item.agent, item.manifest || item.path || item.dir, item.name].filter(Boolean).join(':')
 }
 

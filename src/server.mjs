@@ -1,243 +1,96 @@
-import fs from 'node:fs'
+import fs from 'node:fs/promises'
 import http from 'node:http'
 import path from 'node:path'
-import { randomBytes } from 'node:crypto'
-import { spawn } from 'node:child_process'
+import { randomBytes, timingSafeEqual } from 'node:crypto'
 import { WEB_ROOT, createWorkspace } from './core.mjs'
-import { runNpm } from './npm-runtime.mjs'
+import { PROTOCOL_VERSION, errorResult, WorkspaceError } from './contracts/operations.mjs'
+import { workspaceLocation, atomicJson, readJson } from './runtime/paths.mjs'
+import { acquireLock } from './runtime/locks.mjs'
+import { createWorkspaceService } from './runtime/workspace-service.mjs'
 
-import { openFolder } from './local-folder.mjs'
-
-function newestMtime(root) {
-  let newest = 0
-  try {
-    const rootStat = fs.statSync(root)
-    if (!rootStat.isDirectory()) return rootStat.mtimeMs
-    newest = rootStat.mtimeMs
-  } catch {
-    return 0
-  }
-  const pending = [root]
-  while (pending.length) {
-    const current = pending.pop()
-    let entries = []
-    try {
-      entries = fs.readdirSync(current, { withFileTypes: true })
-    } catch {
-      continue
-    }
-    for (const entry of entries) {
-      if (entry.name === 'node_modules') continue
-      const fullPath = path.join(current, entry.name)
-      if (entry.isDirectory()) pending.push(fullPath)
-      else {
-        try {
-          newest = Math.max(newest, fs.statSync(fullPath).mtimeMs)
-        } catch {}
-      }
-    }
-  }
-  return newest
+function cookieValue(request, name) {
+  const part = (request.headers.cookie || '').split(';').map(value => value.trim()).find(value => value.startsWith(`${name}=`))
+  try { return part ? decodeURIComponent(part.slice(name.length + 1)) : '' } catch { return '' }
 }
-
-export function ensureWebBuild(webRoot = WEB_ROOT, { run = runNpm } = {}) {
-  const index = path.join(webRoot, 'dist/index.html')
-  const buildInputs = [
-    path.join(webRoot, 'src'),
-    path.join(webRoot, 'public'),
-    path.join(webRoot, 'index.html'),
-    path.join(webRoot, 'package.json'),
-    path.join(webRoot, 'package-lock.json'),
-    path.join(webRoot, 'vite.config.js'),
-  ]
-  const newestInput = Math.max(...buildInputs.map(newestMtime))
-  const stale = !fs.existsSync(index) || newestInput > fs.statSync(index).mtimeMs
-  if (!stale) return
-  if (!fs.existsSync(path.join(webRoot, 'node_modules'))) {
-    const installCommand = fs.existsSync(path.join(webRoot, 'package-lock.json')) ? 'ci' : 'install'
-    run([installCommand], { cwd: webRoot })
-  }
-  run(['run', 'build'], { cwd: webRoot })
+function authorized(request, token, cookieName) {
+  const value = request.headers.authorization?.replace(/^Bearer /, '') || cookieValue(request, cookieName)
+  return typeof value === 'string' && Buffer.byteLength(value) === Buffer.byteLength(token) && timingSafeEqual(Buffer.from(value), Buffer.from(token))
 }
-
-function mimeType(file) {
-  const extension = path.extname(file).toLowerCase()
-  return {
-    '.html': 'text/html; charset=utf-8',
-    '.js': 'text/javascript; charset=utf-8',
-    '.css': 'text/css; charset=utf-8',
-    '.json': 'application/json; charset=utf-8',
-    '.svg': 'image/svg+xml',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.ico': 'image/x-icon',
-  }[extension] || 'application/octet-stream'
+function sendJson(response, status, value) {
+  response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+  response.end(JSON.stringify(value))
 }
-
-function sendJson(response, status, body, headers = {}) {
-  response.writeHead(status, {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Cache-Control': 'no-store',
-    ...headers,
-  })
-  response.end(JSON.stringify(body))
-}
-
-function readCookie(request, name) {
-  const source = request.headers.cookie || ''
-  for (const part of source.split(';')) {
-    const separator = part.indexOf('=')
-    if (separator < 0 || part.slice(0, separator).trim() !== name) continue
-    return decodeURIComponent(part.slice(separator + 1).trim())
-  }
-  return ''
-}
-
-export function requestWriteToken(request, url) {
-  return request.headers['x-oneskill-token'] || url.searchParams.get('t') || readCookie(request, 'oneskill_token')
-}
-
-export function sessionCookieHeader(token) {
-  return `oneskill_token=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict`
-}
-
 async function readBody(request) {
-  const chunks = []
-  let size = 0
+  const chunks = []; let size = 0
   for await (const chunk of request) {
     size += chunk.length
-    if (size > 1_000_000) throw new Error('Request body is too large')
+    if (size > 1_000_000) throw new WorkspaceError('CONTENT_TOO_LARGE', 'Request body is too large.', 413)
     chunks.push(chunk)
   }
-  if (!chunks.length) return {}
-  return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+  try { return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}') }
+  catch { throw new WorkspaceError('INVALID_INPUT', 'Request body must be valid JSON.') }
 }
+const mime = file => ({ '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json' }[path.extname(file)] || 'application/octet-stream')
 
-function safeStaticPath(urlPath, distRoot) {
-  const decoded = decodeURIComponent(urlPath)
-  const relative = decoded === '/' ? 'index.html' : decoded.replace(/^\/+/, '')
-  const resolved = path.resolve(distRoot, relative)
-  if (resolved !== distRoot && !resolved.startsWith(`${distRoot}${path.sep}`)) return null
-  return resolved
-}
-
-async function getPort(start = 8787) {
-  for (let port = start; port < start + 30; port += 1) {
-    const available = await new Promise((resolve) => {
-      const tester = http.createServer()
-      tester.once('error', () => resolve(false))
-      tester.listen(port, '127.0.0.1', () => tester.close(() => resolve(true)))
-    })
-    if (available) return port
-  }
-  throw new Error('No available local port found')
-}
-
-function openBrowser(url) {
-  const command = process.platform === 'darwin'
-    ? ['open', [url]]
-    : process.platform === 'win32'
-      ? ['cmd', ['/c', 'start', '', url]]
-      : ['xdg-open', [url]]
-  const child = spawn(command[0], command[1], { detached: true, stdio: 'ignore' })
-  child.unref()
-}
-
-export async function startServer({ open = false, port: requestedPort, workspace = createWorkspace(), webRoot = WEB_ROOT } = {}) {
-  ensureWebBuild(webRoot)
+export async function startWorkspaceServer({ workspace = createWorkspace(), runtimeRoot, webRoot = WEB_ROOT, port = 0, idleTimeout = 120000, openFolder, onClose } = {}) {
+  const location = await workspaceLocation(workspace.root, runtimeRoot)
+  await fs.mkdir(location.directory, { recursive: true, mode: 0o700 })
+  const release = await acquireLock(path.join(location.directory, 'owner.lock'), { timeout: 1000 })
+  const service = createWorkspaceService({ workspace, location, openFolder })
+  const token = randomBytes(24).toString('hex')
+  const cookieName = `oneskill_access_${location.workspaceId}`
   const distRoot = path.join(webRoot, 'dist')
-  const { workspaceData, importLocalSkills, setSkillIgnored, setSkillLink } = workspace
-  const token = randomBytes(18).toString('hex')
-  const port = requestedPort ?? await getPort()
-  let cache = null
-  let cacheTime = 0
-
-  async function getWorkspace(force = false) {
-    if (!force && cache && Date.now() - cacheTime < 1500) return cache
-    cache = await workspaceData()
-    cacheTime = Date.now()
-    return cache
-  }
-
+  let endpoint
+  let lastActivity = Date.now()
+  let active = 0
+  const identity = { protocol: PROTOCOL_VERSION, workspaceId: location.workspaceId, sessionId: service.sessionId, pid: process.pid }
   const server = http.createServer(async (request, response) => {
+    active++
     try {
-      const url = new URL(request.url || '/', `http://${request.headers.host || '127.0.0.1'}`)
-      const sessionCookie = sessionCookieHeader(token)
-      const suppliedToken = () => requestWriteToken(request, url)
+      const url = new URL(request.url || '/', endpoint)
+      const origin = request.headers.origin
+      if ((origin && origin !== endpoint) || request.headers.host !== new URL(endpoint).host) throw new WorkspaceError('ORIGIN_REJECTED', 'This service accepts same-origin local requests only.', 403)
+      if (url.searchParams.has('access')) {
+        if (url.pathname !== '/' || request.method !== 'GET' || url.searchParams.get('access') !== token) throw new WorkspaceError('UNAUTHORIZED', 'Invalid workspace access.', 401)
+        lastActivity = Date.now()
+        response.writeHead(303, { location: `/${url.hash}`, 'set-cookie': `${cookieName}=${token}; Path=/; HttpOnly; SameSite=Strict`, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' })
+        response.end(); return
+      }
       if (url.pathname.startsWith('/api/')) {
-        if (request.method === 'GET' && url.pathname === '/api/session') {
-          return sendJson(response, 200, { ok: true }, { 'Set-Cookie': sessionCookie })
-        }
-        if (request.method === 'GET' && ['/api/workspace', '/api/detect', '/api/scan'].includes(url.pathname)) {
-          return sendJson(response, 200, await getWorkspace(url.pathname !== '/api/workspace'))
-        }
-        if (request.method === 'GET' && url.pathname === '/api/health') {
-          return sendJson(response, 200, { ok: true, runtime: 'node', now: new Date().toISOString() })
-        }
-        if (request.method === 'GET' && ['/api/skills', '/api/plugins', '/api/agents', '/api/migrations'].includes(url.pathname)) {
-          const data = await getWorkspace()
-          return sendJson(response, 200, data[url.pathname.slice(5)])
-        }
-        if (request.method === 'GET' && url.pathname === '/api/capabilities') {
-          const data = await getWorkspace()
-          const kind = url.searchParams.get('kind')
-          return sendJson(response, 200, kind === 'hook' ? data.hooks : data.mcp)
-        }
-        if (request.method === 'POST' && url.pathname === '/api/open-folder') {
-          if (suppliedToken() !== token) return sendJson(response, 403, { error: 'Invalid write token' })
-          const body = await readBody(request)
-          const folder = await openFolder(body.path)
-          return sendJson(response, 200, { ok: true, folder })
-        }
-        if (request.method === 'POST' && url.pathname === '/api/import') {
-          if (suppliedToken() !== token) return sendJson(response, 403, { error: 'Invalid write token' })
-          const body = await readBody(request)
-          const result = await importLocalSkills(body.items)
-          cache = null
-          return sendJson(response, 200, result)
-        }
-        if (request.method === 'POST' && url.pathname === '/api/ignore-skill') {
-          if (suppliedToken() !== token) return sendJson(response, 403, { error: 'Invalid write token' })
-          const body = await readBody(request)
-          const result = await setSkillIgnored(body.agent, body.path, body.ignored)
-          cache = null
-          return sendJson(response, 200, result)
-        }
-        if (request.method === 'POST' && url.pathname === '/api/link') {
-          if (suppliedToken() !== token) return sendJson(response, 403, { error: 'Invalid write token' })
-          const body = await readBody(request)
-          const result = await setSkillLink(body.agent, body.skill, Boolean(body.linked))
-          cache = null
-          return sendJson(response, 200, result)
-        }
-        return sendJson(response, 404, { error: 'API route not found' })
+        if (!authorized(request, token, cookieName)) throw new WorkspaceError('UNAUTHORIZED', 'Open the current access link from the oneskill terminal.', 401)
+        lastActivity = Date.now()
+        if (request.method === 'GET' && url.pathname === '/api/identity') return sendJson(response, 200, identity)
+        const operation = /^\/api\/operations\/([a-zA-Z]+)$/.exec(url.pathname)?.[1]
+        if (request.method !== 'POST' || !operation) throw new WorkspaceError('UNKNOWN_OPERATION', 'Unknown workspace operation.', 404)
+        return sendJson(response, 200, await service.call(operation, await readBody(request)))
       }
-
-      let file = safeStaticPath(url.pathname, distRoot)
-      if (!file) {
-        response.writeHead(403)
-        return response.end('Forbidden')
-      }
-      if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(distRoot, 'index.html')
-      response.writeHead(200, {
-        'Content-Type': mimeType(file),
-        'Cache-Control': 'no-store',
-        'Set-Cookie': sessionCookie,
-      })
-      fs.createReadStream(file).pipe(response)
-    } catch (error) {
-      sendJson(response, 500, { error: error instanceof Error ? error.message : String(error), code: error.code })
-    }
+      if (request.method !== 'GET') throw new WorkspaceError('METHOD_NOT_ALLOWED', 'Only GET is supported for assets.', 405)
+      let decoded
+      try { decoded = decodeURIComponent(url.pathname) } catch { throw new WorkspaceError('INVALID_PATH', 'Invalid asset path.') }
+      const file = path.resolve(distRoot, decoded.replace(/^\/+/, '') || 'index.html')
+      if (!file.startsWith(`${distRoot}${path.sep}`)) throw new WorkspaceError('INVALID_PATH', 'Invalid asset path.', 403)
+      const real = await fs.realpath(file).catch(() => null)
+      if (!real || !real.startsWith(`${await fs.realpath(distRoot)}${path.sep}`)) throw new WorkspaceError('ASSET_NOT_FOUND', 'Build the Web interface with npm run build.', 404)
+      response.writeHead(200, { 'content-type': mime(file), 'cache-control': 'no-store', 'referrer-policy': 'no-referrer', 'x-content-type-options': 'nosniff' })
+      response.end(await fs.readFile(real))
+      if (authorized(request, token, cookieName)) lastActivity = Date.now()
+    } catch (error) { if (!response.headersSent) sendJson(response, error.status || 500, errorResult(error)); else response.destroy() }
+    finally { active-- }
   })
-
-  await new Promise((resolve, reject) => {
-    server.once('error', reject)
-    server.listen(port, '127.0.0.1', resolve)
-  })
-  const actualPort = server.address().port
-  const url = `http://127.0.0.1:${actualPort}/?t=${token}`
-  process.stdout.write(`oneskill is running at ${url}\n`)
-  if (open) openBrowser(url)
-  return { server, url, token, port: actualPort }
+  try {
+    await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve) })
+    endpoint = `http://127.0.0.1:${server.address().port}`
+    await atomicJson(path.join(location.directory, 'service.json'), { ...identity, endpoint, token })
+  } catch (error) { await release(); server.close(); throw error }
+  let closing
+  const close = () => closing ||= (async () => {
+    clearInterval(timer)
+    server.closeAllConnections()
+    await new Promise(resolve => server.close(resolve))
+    const current = await readJson(path.join(location.directory, 'service.json'))
+    if (current?.sessionId === service.sessionId) await fs.rm(path.join(location.directory, 'service.json'), { force: true })
+    await release(); onClose?.()
+  })()
+  const timer = setInterval(() => { if (!active && Date.now() - lastActivity > idleTimeout) close().catch(() => {}) }, Math.min(1000, idleTimeout)).unref()
+  return { server, service, location, endpoint, token, identity, close, url: `${endpoint}/?access=${token}` }
 }

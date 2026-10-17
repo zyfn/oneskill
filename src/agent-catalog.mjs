@@ -4,14 +4,11 @@ import path from 'node:path'
 const hosts = { darwin: 'macos', win32: 'windows', linux: 'linux' }
 const formats = new Set(['json', 'jsonc', 'toml'])
 const flatKeys = new Set(['name', 'logo', 'references', 'commands', 'appNames', 'executablePaths', 'executableDirEnv', 'extensions', 'extensionDirs', 'packages', 'configDir', 'configDirEnv', 'configDirEnvSuffix', 'skillDir', 'extraSkillDirs', 'skillLinkIgnorePrefix', 'pluginDirs', 'mcp', 'executable', 'probeInstallation'])
-const legacyKeys = new Set(['name', 'logo', 'references', 'dir', 'discovery', 'configuration', 'resources', 'executable', 'probeInstallation'])
-const sharedKeys = new Set(['name', 'logo', 'references', 'executable', 'probeInstallation'])
 const mapFields = ['configDir', 'skillDir', 'appNames', 'executablePaths', 'executable']
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 const isText = value => typeof value === 'string' && Boolean(value.trim()) && !value.includes('\0')
 const isArray = value => Array.isArray(value) && value.every(isText)
 const isLocation = value => /^(~(?:[\\/]|$)|\$\{|[a-z]:[\\/]|\/|\\\\)/i.test(value)
-const isFlat = entry => Object.keys(entry).some(key => flatKeys.has(key) && !sharedKeys.has(key))
 
 function invalid(name, message) { throw new Error(`Agent definition ${name || '(unnamed)'}: ${message}`) }
 function checkKeys(value, keys, name, label) {
@@ -71,35 +68,12 @@ function validateFlat(entry, complete) {
 
 function validateRecord(entry, complete = false) {
   if (!isObject(entry) || !isText(entry.name) || !/^[a-z0-9][a-z0-9._-]*$/.test(entry.name)) invalid(entry?.name, 'name must be a lowercase command-style identifier')
-  if (isFlat(entry)) { validateFlat(entry, complete); return }
-  // Preserve existing flat runtime declarations and agents.registry targets.
-  // Experimental common/platform-overrides formats are not part of the schema.
-  checkKeys(entry, legacyKeys, entry.name, '')
-  for (const key of ['dir', 'logo', 'executable']) if (entry[key] !== undefined && !isText(entry[key])) invalid(entry.name, `${key} must be nonempty`)
-  if (entry.discovery !== undefined) {
-    if (!isObject(entry.discovery)) invalid(entry.name, 'discovery must be an object')
-    checkKeys(entry.discovery, new Set(['commands', 'applications', 'extensions', 'extensionRoots', 'native', 'nativeEnv', 'packages']), entry.name, 'discovery.')
-    for (const [key, value] of Object.entries(entry.discovery)) if (key !== 'nativeEnv' && !isArray(value)) invalid(entry.name, `discovery.${key} must be a string array`)
-    if (entry.discovery.commands?.some(command => !/^[a-z0-9][a-z0-9._-]*$/i.test(command))) invalid(entry.name, 'commands must be executable names, not shell expressions')
-  }
-  if (entry.configuration !== undefined) {
-    if (!isObject(entry.configuration)) invalid(entry.name, 'configuration must be an object')
-    checkKeys(entry.configuration, new Set(['dir', 'env', 'suffix']), entry.name, 'configuration.')
-    if (Object.values(entry.configuration).some(value => !isText(value))) invalid(entry.name, 'configuration fields must be nonempty')
-  }
-  if (entry.resources !== undefined) {
-    if (!isObject(entry.resources)) invalid(entry.name, 'resources must be an object')
-    checkKeys(entry.resources, new Set(['skills', 'plugins', 'mcp', 'targetIgnorePrefix']), entry.name, 'resources.')
-    if (entry.resources.plugins !== undefined && !isArray(entry.resources.plugins)) invalid(entry.name, 'plugins must be a string array')
-    if (entry.resources.mcp !== undefined && (!isObject(entry.resources.mcp) || !Array.isArray(entry.resources.mcp.files))) invalid(entry.name, 'mcp requires a files array')
-    for (const file of entry.resources.mcp?.files || []) if (!isText(file.path) || !isText(file.key) || (file.format && !formats.has(file.format))) invalid(entry.name, 'configuration files require a path, key, and supported format')
-  }
+  validateFlat(entry, complete)
 }
 
 export function resolveAgentPlatform(entry, platform = process.platform, { complete = true, fallback } = {}) {
   const host = hosts[platform]
   if (!host) return null
-  if (!isFlat(entry)) return { ...entry }
   const configDir = selected(entry.configDir, host)
   if (entry.configDir !== undefined && configDir == null) return null
   const root = configDir ?? fallback?.configuration?.dir
@@ -146,27 +120,6 @@ async function readRecords(file, optional = false) {
   }
   return records
 }
-async function readLegacyTargets(file) {
-  let text
-  try { text = await fs.readFile(file, 'utf8') } catch (error) { if (error.code === 'ENOENT') return new Map(); throw error }
-  const targets = new Map()
-  for (const line of text.split(/\r?\n/)) {
-    const clean = line.trim()
-    if (!clean || clean.startsWith('#')) continue
-    const split = clean.indexOf('|')
-    const entry = { name: clean.slice(0, split).trim(), dir: clean.slice(split + 1).trim() }
-    if (split < 1) throw new Error('agents.registry requires name | skill directory')
-    validateRecord(entry)
-    targets.set(entry.name, entry.dir)
-  }
-  return targets
-}
-function mergeRuntime(base, local) {
-  const merged = { ...base, ...local }
-  for (const key of ['discovery','configuration','resources']) if (base?.[key] || local[key]) merged[key] = { ...base?.[key], ...local[key] }
-  if (local.configuration?.dir && !Object.hasOwn(local.configuration, 'env')) delete merged.configuration.env
-  return merged
-}
 function mergeFlat(base, local, host) {
   const merged = { ...base, ...local }
   for (const key of mapFields) if (isObject(base[key]) && isObject(local[key])) merged[key] = { ...base[key], ...local[key] }
@@ -176,31 +129,27 @@ function mergeFlat(base, local, host) {
 export async function readAgentDefinitions(root, { platform = process.platform, catalogFile = path.join(root, 'agents.catalog.json') } = {}) {
   const presets = await readRecords(catalogFile)
   const local = await readRecords(path.join(root, 'agents.local.json'), true)
-  const targets = await readLegacyTargets(path.join(root, 'agents.registry'))
   const presetByName = new Map(presets.map(entry => [entry.name, entry]))
   const entries = new Map()
   for (const entry of presets) {
     const resolved = resolveAgentPlatform(entry, platform)
     if (resolved) entries.set(entry.name, { ...resolved, preset: true })
   }
-  for (const [name, dir] of targets) if (!presetByName.has(name)) entries.set(name, { name, dir, preset: false })
   for (const entry of local) {
     const preset = presetByName.get(entry.name)
     if (!preset) validateRecord(entry, true)
-    const combined = preset && isFlat(preset) && isFlat(entry) ? mergeFlat(preset, entry, hosts[platform]) : null
+    const combined = preset ? mergeFlat(preset, entry, hosts[platform]) : entry
     if (combined) validateRecord(combined, true)
     const base = entries.get(entry.name)
     const resolved = resolveAgentPlatform(combined || entry, platform, { complete: Boolean(combined || !preset), fallback: base })
     if (!resolved) { entries.delete(entry.name); continue }
-    entries.set(entry.name, { ...(combined ? resolved : mergeRuntime(base, resolved)), preset: Boolean(preset) })
-    if ((entry.skillDir !== undefined || entry.dir !== undefined) && resolved.dir) targets.set(entry.name, resolved.dir)
+    entries.set(entry.name, { ...resolved, preset: Boolean(preset) })
   }
   return [...entries.values()].map(entry => {
-    const targetOverride = targets.get(entry.name)
-    const hasRoot = Boolean(entry.configuration?.dir || entry.dir || targetOverride)
+    const hasRoot = Boolean(entry.configuration?.dir || entry.dir)
     if (!hasRoot && entry.resources?.plugins?.some(value => !isLocation(value))) invalid(entry.name, 'configDir is required for relative plugin directories')
     if (!hasRoot && entry.resources?.mcp?.files?.some(file => file.base !== 'home')) invalid(entry.name, 'configDir is required for relative MCP files')
     if (!hasRoot && entry.resources?.skills?.some(value => value.base === 'config')) invalid(entry.name, 'configDir is required for relative extra Skill directories')
-    return { ...entry, targetOverride, discovery: entry.discovery || { commands: [entry.name] }, resources: entry.resources || (hasRoot ? undefined : { skills: [], plugins: [], mcp: { files: [] } }) }
+    return { ...entry, discovery: entry.discovery || { commands: [entry.name] }, resources: entry.resources || (hasRoot ? undefined : { skills: [], plugins: [], mcp: { files: [] } }) }
   })
 }

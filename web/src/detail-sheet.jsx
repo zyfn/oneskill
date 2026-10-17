@@ -4,8 +4,9 @@ import { AgentIcon, CapabilityIcon } from '@/capability-icon'
 import { StatusPill } from '@/status-pill'
 import { describeItem, itemKey } from '@/capability-model'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { folderErrorKey } from '@/api'
+import { folderErrorKey, getSkill } from '@/api'
 import { skillCategory } from '@/skill-folders.mjs'
+import { skillTargets } from '@/skill-targets.mjs'
 import { useLocale } from '@/i18n'
 
 function DetailRow({ label, children }) {
@@ -52,7 +53,7 @@ function CopyPath({ label, value, displayValue, onOpenFolder }) {
         </button> : null}
       </span>
     </div>
-    <p className="path-value select-text break-all font-mono" title={value}>{displayValue || value}</p>
+    <p className="path-value select-text font-mono" title={value}>{displayValue || value}</p>
     {state ? <p className="mt-1 text-[10px] text-muted-foreground" role="status">{state}</p> : null}
     {openState ? <p className="mt-1 text-[10px] text-muted-foreground" role="status">
       {openState === 'opening' ? t('common.openingFolder') : openState === 'opened' ? t('common.folderOpened') : t(openState)}
@@ -74,20 +75,37 @@ function SkillBindings({ item, agents, onLinkChange }) {
   }
   return <section className="mt-6 border-t border-border pt-5">
     <h3 className="mb-2 text-[12px] font-medium">{t('skills.bindings')}</h3>
-    {item.bindings.map((binding) => {
+    {skillTargets(agents).map(group => {
+      const binding = item.bindings.find(entry => entry.agent === group.agent.name)
+      if (!binding) return null
       const blocked = ['conflict', 'broken'].includes(binding.state)
       const linked = binding.state === 'linked'
+      const inherited = binding.state === 'inherited'
       return <div key={binding.agent} className="flex min-h-12 items-center justify-between gap-3 border-b border-border/60 py-2 last:border-0">
-        <div className="flex min-w-0 items-center gap-2.5"><AgentIcon agent={agents.find((agent) => agent.name === binding.agent)} size={20} /><div className="min-w-0"><span className="block truncate text-xs">{binding.agent}</span>
+        <div className="flex min-w-0 items-center gap-2.5"><AgentIcon agent={group.agent} size={20} /><div className="min-w-0"><span className="block truncate text-xs" title={group.agent.dir}>{group.label}</span>
           {blocked ? <span className="text-[10px] text-warning">{t(`skills.${binding.state}`)}</span> : null}
         </div></div>
-        <button type="button" className="quiet-button flex items-center gap-1.5" disabled={Boolean(busy) || blocked} onClick={() => change(binding)} aria-label={t(linked ? 'skills.unlinkFor' : 'skills.linkFor', { name: item.name, agent: binding.agent })}>
+        {inherited ? <span className="text-xs text-muted-foreground" title={`${t('skills.inheritedHint')} · ${binding.inheritedDestinations.join(', ')}`}>{t('skills.inherited')}</span> : <button type="button" className="quiet-button flex items-center gap-1.5" disabled={Boolean(busy) || blocked} onClick={() => change(binding)} aria-label={t(linked ? 'skills.unlinkFor' : 'skills.linkFor', { name: item.name, agent: group.label })}>
           {linked ? <LinkBreakIcon size={13} /> : <LinkIcon size={13} />}
           {busy === binding.agent ? t('common.saving') : linked ? t('common.unlink') : t('common.link')}
-        </button>
+        </button>}
       </div>
     })}
     {error ? <p role="alert" className="mt-3 text-xs leading-5 text-warning">{error}</p> : null}
+  </section>
+}
+
+function SkillContent({ id }) {
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let active = true
+    getSkill(id).then(value => { if (active) setResult(value) }).catch(failure => { if (active) setError(failure.message) })
+    return () => { active = false }
+  }, [id])
+  return <section className="skill-document">
+    <h3>SKILL.md</h3>
+    {error ? <p role="alert">{error}</p> : result ? <pre>{result.content}</pre> : <p aria-busy="true">…</p>}
   </section>
 }
 
@@ -97,29 +115,31 @@ function DetailContent({ route, item, agents, onClose, onLinkChange, onOpenFolde
   const isCapability = ['plugins', 'mcp', 'hooks'].includes(route)
   const paths = [...new Set(item.paths?.length ? item.paths : [item.path || item.dir].filter(Boolean))]
   return <div className="detail-content h-full overflow-y-auto" data-route={route}>
-    <div className="detail-topline flex items-start justify-between gap-4">
-      {route !== 'skills' ? <span className="detail-icon">{route === 'agents' ? <AgentIcon agent={item} size={32} /> : <CapabilityIcon route={route} item={item} size={30} />}</span> : null}
+    <div className="detail-topline">
+      <div className="detail-heading">
+        {route !== 'skills' ? <span className="detail-icon">{route === 'agents' ? <AgentIcon agent={item} size={28} /> : <CapabilityIcon route={route} item={item} size={28} />}</span> : null}
+        <h2 id="detail-title">{item.name}</h2>
+      </div>
       <button type="button" className="detail-close icon-button" onClick={onClose} aria-label={t('common.close')}><XIcon size={19} /></button>
     </div>
-    <h2 id="detail-title" className="mt-7 break-words text-[23px] font-semibold leading-[1.25] tracking-[-0.045em]">{item.name}</h2>
     {item.version ? <p className="mt-2 font-mono text-[11px] text-muted-foreground">{item.version}</p> : null}
     {description ? <p className="mt-5 whitespace-pre-line break-words text-[13px] leading-[1.9] text-muted-foreground">{description}</p> : null}
     {isCapability && (!scoped || item.capabilities?.length) ? <div className="detail-context" aria-label={t('common.source')}>
       {item.agent && !scoped ? <span className="detail-owner"><AgentIcon agent={agents.find((agent) => agent.name === item.agent)} size={16} />{item.agent}</span> : null}
       {item.capabilities?.length ? <span className="detail-capabilities">{item.capabilities.join(' · ')}</span> : null}
-    </div> : !isCapability ? <dl className="detail-meta">
-      {route === 'agents' ? <div className="detail-status"><StatusPill status={(item.detected ?? item.installed) ? 'installed' : 'not-installed'} /></div> : null}
-      {route === 'skills' && item.unmanaged ? <>
+    </div> : !isCapability && (route === 'agents' || !item.managed) ? <dl className="detail-meta">
+      {route === 'agents' ? <div className="detail-status"><StatusPill status={item.installed ? 'installed' : 'not-installed'} /></div> : null}
+      {route === 'skills' && !item.managed ? <>
         <DetailRow label={t('common.status')}>{t(item.ignored ? 'skills.ignoredStatus' : 'skills.unmanagedStatus')}</DetailRow>
         <DetailRow label={t('common.source')}><span className="detail-owner"><AgentIcon agent={agents.find((agent) => agent.name === item.agent)} size={16} />{item.agent}{skillCategory(item) ? <span className="text-muted-foreground">/ {skillCategory(item)}</span> : null}</span></DetailRow>
       </> : null}
-      {route === 'skills' && !item.unmanaged ? <DetailRow label={t('common.linked')}>{item.linked} / {item.agentCount}</DetailRow> : null}
     </dl> : null}
     <section className="detail-files">
       {paths.map((path) => <CopyPath key={path} label={route === 'agents' ? t('agent.directory') : route === 'skills' ? t('skills.skillFolder') : t('common.details')} value={path} onOpenFolder={route === 'agents' && !(item.skillsDirectoryExists ?? item.configured ?? item.installed) ? undefined : onOpenFolder} />)}
       {item.manifest && !paths.includes(item.manifest) ? <CopyPath label={t('common.manifest')} value={item.manifest} displayValue={item.path && item.manifest.startsWith(`${item.path}/`) ? item.manifest.slice(item.path.length + 1) : undefined} onOpenFolder={onOpenFolder} /> : null}
     </section>
-    {route === 'skills' && !item.unmanaged && !wide && item.bindings?.length ? <SkillBindings item={item} agents={agents} onLinkChange={onLinkChange} /> : null}
+    {route === 'skills' && item.managed && !wide && item.bindings?.length ? <SkillBindings item={item} agents={agents} onLinkChange={onLinkChange} /> : null}
+    {route === 'skills' && item.id ? <SkillContent id={item.id} /> : null}
   </div>
 }
 

@@ -38,7 +38,7 @@ test('configuration roots are independent of skill target overrides and honor de
   const home = path.resolve(os.tmpdir(), 'oneskill-profile')
   const profile = { name: 'example', dir: path.join(home, 'personal/skills'), configuration: { dir: path.join(home, 'configuration'), env: 'ONESKILL_CONFIG_TEST' } }
   const context = createDiscoveryContext({ home, env: { ONESKILL_CONFIG_TEST: path.join(home, 'environment') } })
-  const locations = configuredAgentLocations(profile, path.join(home, 'override/skills'), context)
+  const locations = configuredAgentLocations({ ...profile, dir: path.join(home, 'override/skills') }, context)
   assert.equal(locations.target.path, path.join(home, 'override/skills'))
   assert.equal(locations.configRoot, path.join(home, 'environment'))
   assert.equal(locations.configSource, 'ONESKILL_CONFIG_TEST')
@@ -47,41 +47,41 @@ test('configuration roots are independent of skill target overrides and honor de
 test('declared Windows paths expand user environment locations without storing a username', () => {
   const context = createDiscoveryContext({ platform: 'win32', home: 'C:\\Users\\demo', env: { APPDATA: 'C:\\Users\\demo\\AppData\\Roaming' } })
   const definition = { name: 'example', dir: '${APPDATA}/Example/skills', configuration: { dir: '${APPDATA}/Example' } }
-  const locations = configuredAgentLocations(definition, undefined, context)
+  const locations = configuredAgentLocations(definition, context)
   assert.equal(locations.target.path, 'C:\\Users\\demo\\AppData\\Roaming\\Example\\skills')
   assert.equal(locations.configRoot, 'C:\\Users\\demo\\AppData\\Roaming\\Example')
-  assert.throws(() => configuredAgentLocations({ ...definition, dir: '${MISSING_PATH}/skills' }, undefined, context), /Path requires environment variable/)
+  assert.throws(() => configuredAgentLocations({ ...definition, dir: '${MISSING_PATH}/skills' }, context), /Path requires environment variable/)
 })
 
 test('resource paths and file environment overrides resolve inside the selected host profile', () => {
   const context = createDiscoveryContext({ platform: 'darwin', home: '/tmp/user', env: { FILE_OVERRIDE: '/tmp/custom/settings.json' } })
   const definition = { name: 'example', configuration: { dir: '~/.example' }, resources: { plugins: ['plugins', '~/.external/plugins'], mcp: { files: [{ base: 'config', path: 'settings/mcp.json', key: 'servers', env: 'FILE_OVERRIDE' }] } } }
-  const resolved = configuredAgentLocations(definition, undefined, context)
+  const resolved = configuredAgentLocations(definition, context)
   assert.deepEqual(resolved.definition.resources.plugins, ['/tmp/user/.example/plugins', '/tmp/user/.external/plugins'])
   assert.equal(resolved.definition.resources.mcp.files[0].path, '/tmp/custom/settings.json')
   assert.equal(definition.resources.mcp.files[0].path, 'settings/mcp.json')
   const windows = createDiscoveryContext({ platform: 'win32', home: 'C:\\Users\\demo', env: {} })
-  assert.equal(configuredAgentLocations({ name: 'example', configuration: { dir: '${USERPROFILE}/.example' } }, undefined, windows).configRoot, 'C:\\Users\\demo\\.example')
+  assert.equal(configuredAgentLocations({ name: 'example', configuration: { dir: '${USERPROFILE}/.example' } }, windows).configRoot, 'C:\\Users\\demo\\.example')
 })
 
 test('directory templates use literal fallbacks and shared children follow an overridden root', () => {
   const definition = { name: 'example', commands: ['example'], configDir: { macos: '${XDG_CONFIG_HOME:-~/.config}/example', windows: '${APPDATA}/example' }, skillDir: 'skills', pluginDirs: ['plugins'], mcp: [{ file: 'settings.toml', key: 'servers' }] }
   const source = resolveAgentPlatform(definition, 'darwin')
-  const defaults = configuredAgentLocations(source, undefined, createDiscoveryContext({ platform: 'darwin', home: '/tmp/user', env: {} }))
+  const defaults = configuredAgentLocations(source, createDiscoveryContext({ platform: 'darwin', home: '/tmp/user', env: {} }))
   assert.equal(defaults.configRoot, '/tmp/user/.config/example')
   assert.equal(defaults.target.path, '/tmp/user/.config/example/skills')
-  const redirected = configuredAgentLocations(source, undefined, createDiscoveryContext({ platform: 'darwin', home: '/tmp/user', env: { XDG_CONFIG_HOME: '/tmp/custom' } }))
+  const redirected = configuredAgentLocations(source, createDiscoveryContext({ platform: 'darwin', home: '/tmp/user', env: { XDG_CONFIG_HOME: '/tmp/custom' } }))
   assert.equal(redirected.configRoot, '/tmp/custom/example')
   assert.equal(redirected.target.path, '/tmp/custom/example/skills')
   assert.deepEqual(redirected.definition.resources.plugins, ['/tmp/custom/example/plugins'])
   const parentOverride = resolveAgentPlatform({ ...definition, configDir: { macos: '~/.example', windows: '~/.example' }, configDirEnv: 'EXAMPLE_PARENT', configDirEnvSuffix: '.example' }, 'darwin')
-  const parent = configuredAgentLocations(parentOverride, undefined, createDiscoveryContext({ platform: 'darwin', home: '/tmp/user', env: { EXAMPLE_PARENT: '/tmp/parent' } }))
+  const parent = configuredAgentLocations(parentOverride, createDiscoveryContext({ platform: 'darwin', home: '/tmp/user', env: { EXAMPLE_PARENT: '/tmp/parent' } }))
   assert.equal(parent.configRoot, '/tmp/parent/.example')
   assert.equal(parent.target.path, '/tmp/parent/.example/skills')
 })
 
 test('all Agent names use the same declared configuration-file scanner', async (t) => {
-  const f = await fixture(t, (root) => ['codex', 'custom-agent'].map((name) => ({ name, probeInstallation: false, dir: path.join(root, name, 'skills'), configuration: { dir: path.join(root, name, 'config') }, resources: { mcp: { files: [{ base: 'config', path: 'servers.toml', format: 'toml', key: 'servers' }] } } })))
+  const f = await fixture(t, (root) => ['codex', 'custom-agent'].map((name) => ({ name, commands: [name], probeInstallation: false, skillDir: path.join(root, name, 'skills'), configDir: { macos: path.join(root, name, 'config'), windows: path.join(root, name, 'config'), linux: path.join(root, name, 'config') }, mcp: [{ file: 'servers.toml', format: 'toml', key: 'servers' }] })))
   for (const name of ['codex', 'custom-agent']) {
     await f.write(`${name}/config/servers.toml`, '[servers.docs]\ncommand="private-command"\n[servers.docs.env]\nTOKEN="do-not-return"\n')
     await f.write(`${name}/skills/servers.toml`, '[servers.wrong_location]\ncommand="wrong"\n')
@@ -94,7 +94,7 @@ test('all Agent names use the same declared configuration-file scanner', async (
 })
 
 test('malformed configurations report diagnostics while valid files remain discoverable', async (t) => {
-  const f = await fixture(t, (root) => [{ name: 'example', probeInstallation: false, dir: path.join(root, 'skills'), configuration: { dir: path.join(root, 'config') }, resources: { mcp: { files: [{ base: 'config', path: 'broken.json', key: 'mcpServers' }, { base: 'config', path: 'good.jsonc', key: 'mcp', format: 'jsonc' }] } } }])
+  const f = await fixture(t, (root) => [{ name: 'example', commands: ['example'], probeInstallation: false, skillDir: path.join(root, 'skills'), configDir: { macos: path.join(root, 'config'), windows: path.join(root, 'config'), linux: path.join(root, 'config') }, mcp: [{ file: 'broken.json', key: 'mcpServers' }, { file: 'good.jsonc', key: 'mcp', format: 'jsonc' }] }])
   await f.write('config/broken.json', '{"TOKEN":"private", broken')
   await f.write('config/good.jsonc', '{"mcp":{"docs":{}},}')
   const result = await f.core.detectCapabilities('mcp')
@@ -104,34 +104,56 @@ test('malformed configurations report diagnostics while valid files remain disco
   assert.equal((await readConfiguration(path.join(f.root, 'absent.json'), 'json')).missing, true)
 })
 
-test('multiple skill roots preserve existing links without relocating packages, and unlink only library references', async (t) => {
-  const f = await fixture(t, (root) => [{ name: 'example', probeInstallation: false, dir: path.join(root, 'shared'), configuration: { dir: path.join(root, 'config') }, resources: { targetIgnorePrefix: '@shared/', skills: [{ id: 'legacy', base: 'config', path: 'skills', ignorePrefix: '' }] } }])
+test('additional roots are read-only availability; unlink only changes the selected target', async (t) => {
+  const f = await fixture(t, (root) => [{ name: 'example', commands: ['example'], probeInstallation: false, skillDir: path.join(root, 'shared'), configDir: { macos: path.join(root, 'config'), windows: path.join(root, 'config'), linux: path.join(root, 'config') }, skillLinkIgnorePrefix: '@shared/', extraSkillDirs: [{ id: 'secondary', path: 'skills', ignorePrefix: '' }] }])
   const source = path.dirname(await f.write('skills/review/SKILL.md', '---\nname: review\ndescription: Test\n---\n'))
   await fs.mkdir(path.join(f.root, 'config/skills'), { recursive: true })
   await fs.symlink(source, path.join(f.root, 'config/skills/review'), 'dir')
-  assert.equal((await f.core.detectSkills()).items[0].bindings[0].state, 'linked')
-  assert.equal((await f.core.setSkillLink('example', 'review', true)).changed, false)
+  assert.equal((await f.core.detectSkills()).items[0].bindings[0].state, 'inherited')
+  assert.equal((await f.core.setSkillLink('example', 'review', false)).changed, false)
   await assert.rejects(fs.stat(path.join(f.root, 'shared/review')), { code: 'ENOENT' })
   assert.equal((await f.core.countAgentSkills(await f.core.loadAgents()))[0].totalSkills, 1)
-  await f.core.setSkillLink('example', 'review', false)
-  assert.equal((await fs.stat(source)).isDirectory(), true)
   await f.core.setSkillLink('example', 'review', true)
   assert.equal((await fs.lstat(path.join(f.root, 'shared/review'))).isSymbolicLink(), true)
+  assert.equal((await f.core.detectSkills()).items[0].bindings[0].state, 'linked')
+  await f.core.setSkillLink('example', 'review', false)
+  assert.equal((await f.core.detectSkills()).items[0].bindings[0].state, 'inherited')
+  assert.equal(await fs.realpath(path.join(f.root, 'config/skills/review')), await fs.realpath(source))
+  assert.equal((await fs.stat(source)).isDirectory(), true)
+})
+
+test('a shared link is direct for its owner and inherited for other readers; readers cannot unlink it', async t => {
+  const f = await fixture(t, root => [
+    { name: 'owner', commands: ['owner'], probeInstallation: false, configDir: { macos: root, windows: root, linux: root }, skillDir: path.join(root, 'shared') },
+    { name: 'reader', commands: ['reader'], probeInstallation: false, configDir: { macos: root, windows: root, linux: root }, skillDir: path.join(root, 'private'), extraSkillDirs: [{ id: 'shared', path: path.join(root, 'shared') }] },
+  ])
+  const source = path.dirname(await f.write('skills/review/SKILL.md', 'Review'))
+  await fs.mkdir(path.join(f.root, 'shared'), { recursive: true })
+  await fs.mkdir(path.join(f.root, 'private'), { recursive: true })
+  await f.core.setSkillLink('owner', 'review', true)
+  const bindings = (await f.core.detectSkills()).items[0].bindings
+  assert.deepEqual(bindings.map(binding => [binding.agent, binding.state]), [['owner', 'linked'], ['reader', 'inherited']])
+  assert.equal((await f.core.setSkillLink('reader', 'review', false)).changed, false)
+  assert.equal(await fs.realpath(path.join(f.root, 'shared/review')), await fs.realpath(source))
+  await f.core.setSkillLink('reader', 'review', true)
+  await f.core.setSkillLink('reader', 'review', false)
+  assert.equal(await fs.realpath(path.join(f.root, 'shared/review')), await fs.realpath(source))
+  await assert.rejects(fs.lstat(path.join(f.root, 'private/review')), { code: 'ENOENT' })
 })
 
 test('aliases of a skill root count once and preserve pre-existing ignore preferences', async (t) => {
-  const f = await fixture(t, (root) => [{ name: 'example', probeInstallation: false, dir: path.join(root, 'shared'), configuration: { dir: path.join(root, 'config') }, resources: { targetIgnorePrefix: '@shared/', skills: [{ id: 'legacy', base: 'config', path: 'skills', ignorePrefix: '' }] } }])
+  const f = await fixture(t, (root) => [{ name: 'example', commands: ['example'], probeInstallation: false, skillDir: path.join(root, 'shared'), configDir: { macos: path.join(root, 'config'), windows: path.join(root, 'config'), linux: path.join(root, 'config') }, skillLinkIgnorePrefix: '@shared/', extraSkillDirs: [{ id: 'secondary', path: 'skills', ignorePrefix: '' }] }])
   await f.write('config/skills/.system/review/SKILL.md', '---\nname: review\ndescription: Test\n---\n')
   await fs.symlink(path.join(f.root, 'config/skills'), path.join(f.root, 'shared'), process.platform === 'win32' ? 'junction' : 'dir')
-  const original = '# Existing rule\n' + JSON.stringify({ agent: 'example', relative: '.system/review', ignored: true }) + '\n'
-  await f.write('migrate.ignore', original)
-  const migrations = await f.core.detectMigrations()
+  const original = JSON.stringify([{ agent: 'example', relative: '.system/review', ignored: true }])
+  await f.write('skills.ignore.json', original)
+  const migrations = await f.core.detectUnmanagedSkills()
   assert.equal(migrations.items.length, 0)
   assert.equal(migrations.ignoredItems.length, 1)
   assert.equal((await f.core.countAgentSkills(await f.core.loadAgents()))[0].totalSkills, 1)
-  assert.equal(await fs.readFile(path.join(f.root, 'migrate.ignore'), 'utf8'), original)
+  assert.equal(await fs.readFile(path.join(f.root, 'skills.ignore.json'), 'utf8'), original)
   await f.core.setSkillIgnored('example', migrations.ignoredItems[0].path, false)
-  assert.equal((await f.core.detectMigrations()).items.length, 1)
+  assert.equal((await f.core.detectUnmanagedSkills()).items.length, 1)
 })
 
 test('preset rules live in one catalog with references and no Agent-specific inventory commands', async () => {

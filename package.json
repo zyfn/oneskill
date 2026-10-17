@@ -1,7 +1,7 @@
 {
   "name": "oneskill",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.4",
   "license": "MIT",
   "type": "module",
   "description": "Local-first Agent capability workspace",
@@ -12,17 +12,25 @@
     "oneskill": "src/cli.mjs"
   },
   "scripts": {
-    "start": "node src/cli.mjs serve --open",
-    "web": "node src/cli.mjs serve --open",
-    "dev": "node src/cli.mjs serve",
+    "start": "node src/cli.mjs web --open",
+    "web": "node src/cli.mjs web --open",
+    "dev": "node src/cli.mjs web",
     "dev:web": "npm --prefix web run dev",
-    "build": "npm --prefix web run build",
+    "build": "node scripts/build.mjs",
     "cli": "node src/cli.mjs",
     "check": "node scripts/check-syntax.mjs && npm test && npm run build",
-    "test": "node scripts/run-tests.mjs"
+    "test": "node scripts/run-tests.mjs",
+    "build:plugin": "node scripts/build-plugin.mjs",
+    "mcp": "node src/cli.mjs mcp"
   },
   "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^2.0.3",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "jsonc-parser": "^3.3.1",
-    "smol-toml": "^1.9.0"
+    "smol-toml": "^1.9.0",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

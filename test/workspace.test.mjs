@@ -6,6 +6,19 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 import { execFile } from 'node:child_process'
 import { createWorkspace, PROJECT_ROOT } from '../src/core.mjs'
+
+test('Agent logos retain their image formats when embedded for Web and MCP Apps', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-logos-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const names = ['antigravity.png', 'gemini.png', 'github-copilot.png', 'kimi-code.png', 'trae.png', 'claude.svg']
+  await fs.writeFile(path.join(root, 'agents.catalog.json'), JSON.stringify(names.map((file, i) => ({ name: `image-${i}`, commands: ['fixture'], probeInstallation: false, logo: `/agent-logos/${file}` }))))
+  const agents = await createWorkspace({ root }).loadAgents()
+  for (const [i, file] of names.entries()) {
+    const mime = file.endsWith('.png') ? 'image/png' : 'image/svg+xml'
+    const bytes = await fs.readFile(path.join(PROJECT_ROOT, 'web/public/agent-logos', file))
+    assert.equal(agents[i].logo, `data:${mime};base64,${bytes.toString('base64')}`)
+  }
+})
 import { createDiscoveryContext } from '../src/agent-discovery.mjs'
 
 test('independent workspace instances isolate libraries and persistent ignore preferences', async t => {
@@ -23,16 +36,16 @@ test('independent workspace instances isolate libraries and persistent ignore pr
     instances.push(createWorkspace({ root }))
   }
   const [first, second] = instances
-  const candidate = (await first.detectMigrations()).items[0]
+  const candidate = (await first.detectUnmanagedSkills()).items[0]
   await first.setSkillIgnored('fixture', candidate.path, true)
-  assert.equal((await first.workspaceData()).ignoredSkills.length, 1)
-  assert.equal((await second.workspaceData()).ignoredSkills.length, 0)
+  assert.equal((await first.workspaceData()).skills.filter(item => item.ignored).length, 1)
+  assert.equal((await second.workspaceData()).skills.filter(item => item.ignored).length, 0)
   assert.deepEqual((await first.detectSkills()).items.map(item => item.name), ['first'])
   assert.deepEqual((await second.detectSkills()).items.map(item => item.name), ['second'])
   await first.setSkillLink('fixture', 'shared', true)
   assert.equal((await first.detectSkills()).items[0].bindings[0].state, 'linked')
   assert.equal((await second.detectSkills()).items[0].bindings[0].state, 'not-linked')
-  assert.deepEqual((await fs.readdir(first.root)).sort(), ['agent', 'agents.catalog.json', 'migrate.ignore', 'skills'])
+  assert.deepEqual((await fs.readdir(first.root)).sort(), ['agent', 'agents.catalog.json', 'skills', 'skills.ignore.json'])
 })
 
 test('CLI workspace selection uses application presets without copying source or Web assets', async t => {
@@ -41,10 +54,10 @@ test('CLI workspace selection uses application presets without copying source or
   await fs.writeFile(path.join(root, 'agents.local.json'), JSON.stringify([{ name: 'fixture', commands: ['fixture'], probeInstallation: false }]))
   await fs.writeFile(path.join(root, 'agents.catalog.json'), '[]')
   const run = promisify(execFile)
-  const { stdout } = await run(process.execPath, [path.join(PROJECT_ROOT, 'src/cli.mjs'), 'agents', '--workspace', root, '--json'])
+  const { stdout } = await run(process.execPath, [path.join(PROJECT_ROOT, 'src/cli.mjs'), 'agents', '--workspace', root, '--runtime-dir', path.join(root, 'runtime'), '--idle-timeout', '1000'])
   assert.deepEqual(JSON.parse(stdout).map(agent => agent.name), ['fixture'])
-  assert.deepEqual((await fs.readdir(root)).sort(), ['agents.catalog.json', 'agents.local.json'])
-  await assert.rejects(run(process.execPath, [path.join(PROJECT_ROOT, 'src/cli.mjs'), 'agents', '--workspace']), error => /requires a directory/.test(error.stderr))
+  assert.deepEqual((await fs.readdir(root)).filter(name => name !== 'runtime').sort(), ['agents.catalog.json', 'agents.local.json'])
+  await assert.rejects(run(process.execPath, [path.join(PROJECT_ROOT, 'src/cli.mjs'), 'agents', '--workspace']), error => /requires a value/.test(error.stderr))
   await fs.unlink(path.join(root, 'agents.catalog.json'))
   const discoveryContext = createDiscoveryContext({ home: root, env: { APPDATA: path.join(root, 'roaming'), LOCALAPPDATA: path.join(root, 'local') }, standardBinDirs: [], applicationRoots: [], extensionRoots: [] })
   assert.ok((await createWorkspace({ root, discoveryContext }).loadAgents()).some(agent => agent.name === 'fixture'))

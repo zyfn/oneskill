@@ -232,7 +232,7 @@ test('Kimi native installations are independent of npm and the configuration roo
   f.context.env.KIMI_INSTALL_DIR = installation
   f.context.env.KIMI_CODE_HOME = path.join(f.root, 'kimi-config')
   await f.executable(path.join(installation, 'bin/kimi'))
-  const target = configuredSkillDirectory(preset('kimi-code', { dir: '~/.kimi-code/skills' }), undefined, f.context)
+  const target = configuredSkillDirectory(preset('kimi-code', { dir: '~/.kimi-code/skills' }), f.context)
   assert.equal(target.path, path.join(f.root, 'kimi-config/skills'))
   const result = await discoverAgent(preset('kimi-code'), target.path, path.dirname(target.path), f.context)
   assert.equal(result.installed, true)
@@ -243,13 +243,13 @@ test('Kimi native installations are independent of npm and the configuration roo
 test('native configuration overrides preserve their documented root semantics and registry precedence', () => {
   const home = path.resolve('/tmp/oneskill-home')
   const context = createDiscoveryContext({ home, env: { CLAUDE_CONFIG_DIR: '/tmp/claude-profile', GEMINI_CLI_HOME: '/tmp/gemini-home', COPILOT_HOME: '/tmp/copilot-profile', QWEN_HOME: '/tmp/qwen-profile', DSH_HOME: '/tmp/dsh-profile' } })
-  assert.deepEqual(configuredSkillDirectory(preset('claude', { dir: '~/.claude/skills' }), undefined, context), { path: path.resolve('/tmp/claude-profile/skills'), source: 'CLAUDE_CONFIG_DIR' })
-  assert.equal(configuredSkillDirectory(preset('gemini', { dir: '~/.gemini/skills' }), undefined, context).path, path.resolve('/tmp/gemini-home/.gemini/skills'))
-  assert.equal(configuredSkillDirectory(preset('github-copilot', { dir: '~/.copilot/skills' }), undefined, context).path, path.resolve('/tmp/copilot-profile/skills'))
-  assert.equal(configuredSkillDirectory(preset('qwen-code', { dir: '~/.qwen/skills' }), undefined, context).path, path.resolve('/tmp/qwen-profile/skills'))
-  assert.equal(configuredSkillDirectory(preset('deepseek', { dir: '~/.dsh/skills' }), undefined, context).path, path.resolve('/tmp/dsh-profile/skills'))
-  assert.equal(configuredSkillDirectory(preset('claude', { dir: '~/.claude/skills' }), '/tmp/manual/skills', context).source, 'registry')
-  assert.equal(configuredSkillDirectory(preset('claude', { dir: '/tmp/custom-catalog/skills' }), undefined, context).path, path.resolve('/tmp/custom-catalog/skills'))
+  assert.deepEqual(configuredSkillDirectory(preset('claude', { dir: '~/.claude/skills' }), context), { path: path.resolve('/tmp/claude-profile/skills'), source: 'CLAUDE_CONFIG_DIR' })
+  assert.equal(configuredSkillDirectory(preset('gemini', { dir: '~/.gemini/skills' }), context).path, path.resolve('/tmp/gemini-home/.gemini/skills'))
+  assert.equal(configuredSkillDirectory(preset('github-copilot', { dir: '~/.copilot/skills' }), context).path, path.resolve('/tmp/copilot-profile/skills'))
+  assert.equal(configuredSkillDirectory(preset('qwen-code', { dir: '~/.qwen/skills' }), context).path, path.resolve('/tmp/qwen-profile/skills'))
+  assert.equal(configuredSkillDirectory(preset('deepseek', { dir: '~/.dsh/skills' }), context).path, path.resolve('/tmp/dsh-profile/skills'))
+  assert.equal(configuredSkillDirectory(preset('claude', { dir: '/tmp/manual/skills' }), context).source, 'catalog')
+  assert.equal(configuredSkillDirectory(preset('claude', { dir: '/tmp/custom-catalog/skills' }), context).path, path.resolve('/tmp/custom-catalog/skills'))
 })
 
 test('Windows PATH and PATHEXT discovery skips implicit current-directory candidates', () => {

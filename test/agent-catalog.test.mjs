@@ -70,11 +70,11 @@ test('explicit local roots and Skill targets take precedence without modifying t
   const records = await readAgentDefinitions(f.root)
   const known = records.find(entry => entry.name === 'known')
   assert.equal(known.preset, true)
-  assert.equal(known.targetOverride, '/local/skills')
+  assert.equal(known.dir, '/local/skills')
   assert.deepEqual(known.discovery.commands, ['known-cli'])
   assert.equal(known.configuration.env, undefined)
   assert.deepEqual(known.resources.plugins, ['plugins'])
-  assert.deepEqual(records.find(entry => entry.name === 'legacy-agent').discovery.commands, ['legacy-agent'])
+  assert.equal(records.some(entry => entry.name === 'legacy-agent'), false)
   assert.deepEqual(JSON.parse(await fs.readFile(path.join(f.root, 'agents.catalog.json'), 'utf8')), [preset])
 })
 
@@ -128,7 +128,7 @@ test('a one-platform local path edit preserves the other platform and shared rul
   assert.deepEqual((await readAgentDefinitions(f.root, { platform: 'darwin' }))[0].resources.plugins, [])
 })
 
-test('a null platform root stays disabled despite legacy targets and can be explicitly configured', async t => {
+test('a null platform root stays disabled and can be explicitly configured', async t => {
   const f = await fixture(t, [{ name: 'desktop', commands: ['desktop'], configDir: { macos: '~/.desktop', windows: null }, skillDir: 'skills' }])
   await fs.writeFile(path.join(f.root, 'agents.registry'), 'desktop|/legacy/skills\n')
   assert.deepEqual(await readAgentDefinitions(f.root, { platform: 'win32' }), [])
@@ -136,7 +136,7 @@ test('a null platform root stays disabled despite legacy targets and can be expl
   const [windows] = await readAgentDefinitions(f.root, { platform: 'win32' })
   assert.equal(windows.preset, true)
   assert.deepEqual(windows.discovery.commands, ['desktop'])
-  assert.equal(windows.targetOverride, '/legacy/skills')
+  assert.equal(windows.dir, '${APPDATA}/Desktop/skills')
 })
 
 test('platform paths are selected before expanding foreign environment variables or scanning', async t => {

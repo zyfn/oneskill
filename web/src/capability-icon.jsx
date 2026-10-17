@@ -9,12 +9,13 @@ function PluginIcon({ item, className, size }) {
 
 export function CapabilityIcon({ route, item, className, size = 24 }) {
   if (route === 'plugins') return <PluginIcon item={item} className={className} size={size} />
-  const Icon = { skills: NotebookIcon, mcp: PlugsConnectedIcon, hooks: LightningIcon, migrate: NotebookIcon, agents: RobotIcon }[route] || NotebookIcon
+  const Icon = { skills: NotebookIcon, mcp: PlugsConnectedIcon, hooks: LightningIcon, import: NotebookIcon, agents: RobotIcon }[route] || NotebookIcon
   return <Icon className={className} size={size} weight="regular" aria-hidden="true" />
 }
 
 export function AgentIcon({ agent, size = 22 }) {
-  return agent?.logo
-    ? <img src={agent.logo} alt="" width={size} height={size} className="shrink-0 object-contain" style={{ width: size, height: size }} />
+  const [failedSource, setFailedSource] = useState(null)
+  return agent?.logo && failedSource !== agent.logo
+    ? <img src={agent.logo} alt="" width={size} height={size} className="shrink-0 object-contain" style={{ width: size, height: size }} onError={() => setFailedSource(agent.logo)} />
     : <RobotIcon size={size} weight="regular" aria-hidden="true" />
 }

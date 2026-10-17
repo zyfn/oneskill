@@ -6,21 +6,23 @@ import { SkillCollectionNav } from '@/skill-collection-nav'
 import { skillCategory, skillCollections, belongsToCollection } from '@/skill-folders.mjs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useLocale } from '@/i18n'
+import { skillTargets } from '@/skill-targets.mjs'
 
-function SkillLinkButton({ skill, binding, busy, onChange }) {
+function SkillLinkButton({ skill, binding, agentLabel = binding.agent, busy, onChange }) {
   const { t } = useLocale()
   const linked = binding.state === 'linked'
   const blocked = ['broken', 'conflict'].includes(binding.state)
+  const inherited = binding.state === 'inherited'
   const pending = busy === `${binding.agent}:${skill.relative}`
-  const label = blocked ? `${binding.agent}: ${t(`skills.${binding.state}`)}` : t(linked ? 'skills.unlinkFor' : 'skills.linkFor', { name: skill.name, agent: binding.agent })
+  const label = blocked || inherited ? `${agentLabel}: ${t(`skills.${binding.state}`)}` : t(linked ? 'skills.unlinkFor' : 'skills.linkFor', { name: skill.name, agent: agentLabel })
   return <Tooltip>
     <TooltipTrigger asChild>
-      <button type="button" className="skill-link" data-linked={linked || undefined} data-blocked={blocked || undefined} data-pending={pending || undefined}
-        disabled={blocked || Boolean(busy)} aria-label={label} aria-pressed={linked} aria-busy={pending} onClick={() => onChange(skill, binding)}>
-        {blocked ? <WarningCircleIcon size={17} /> : linked ? <LinkIcon size={19} weight="bold" /> : <LinkBreakIcon size={19} />}
+      <button type="button" className="skill-link" data-linked={linked || undefined} data-inherited={inherited || undefined} data-blocked={blocked || undefined} data-pending={pending || undefined}
+        disabled={blocked || Boolean(busy)} aria-disabled={inherited || undefined} aria-label={label} aria-pressed={linked} aria-busy={pending} onClick={inherited ? undefined : () => onChange(skill, binding)}>
+        {blocked ? <WarningCircleIcon size={17} /> : linked || inherited ? <LinkIcon size={19} weight={linked ? 'bold' : 'regular'} /> : <LinkBreakIcon size={19} />}
       </button>
     </TooltipTrigger>
-    <TooltipContent>{blocked ? label : pending ? t('common.saving') : `${linked ? t('skills.linked') : t('skills.notLinked')} · ${t('skills.linkHint')}`}</TooltipContent>
+    <TooltipContent>{inherited ? `${t('skills.inheritedHint')} · ${binding.inheritedDestinations.join(', ')}` : blocked ? label : pending ? t('common.saving') : `${linked ? t('skills.linked') : t('skills.notLinked')} · ${t('skills.linkHint')} · ${binding.destination}`}</TooltipContent>
   </Tooltip>
 }
 
@@ -44,7 +46,7 @@ export function SkillsLibrary({ rows, skills, agents, selected, onSelect, onLink
   const activeFolder = folders.some((entry) => entry.path === folder) ? folder : null
   const showCollections = folders.length > 0 && collectionsOpen
   const visible = rows.filter((skill) => belongsToCollection(skill, activeFolder))
-  const detected = agents.filter((agent) => (agent.detected ?? agent.installed) && agent.dir)
+  const detected = useMemo(() => skillTargets(agents), [agents])
   const revealParents = (value) => {
     if (!value) return
     const parts = value.split('/')
@@ -76,19 +78,19 @@ export function SkillsLibrary({ rows, skills, agents, selected, onSelect, onLink
   const heading = <div className="library-heading-row">
     {!showCollections ? <span className="library-icon-actions">{folders.length > 0 ? <button ref={showButton} type="button" className="collection-show" aria-label={t('skills.showCollections')} title={t('skills.showCollections')} aria-expanded="false" aria-controls={navId} onClick={() => toggleCollections(true)}><SidebarSimpleIcon size={16} /></button> : folderAction}</span> : null}
     {showScopePath ? <span className="library-scope-path" title={activeFolder}>{activeFolder}</span> : null}
-    <span className="matrix-legend"><span><LinkIcon size={14} weight="bold" />{t('skills.linked')}</span><span><LinkBreakIcon size={14} />{t('skills.notLinked')}</span></span>
+    <span className="matrix-legend"><span><LinkIcon size={14} weight="bold" />{t('skills.linked')}</span><span><LinkBreakIcon size={14} />{t('skills.notLinked')}</span>{rows.some(skill => skill.bindings?.some(binding => binding.state === 'inherited')) ? <span className="inherited-legend" title={t('skills.inheritedHint')}><LinkIcon size={14} />{t('skills.inherited')}</span> : null}</span>
   </div>
 
-  return <section className="skills-library" data-collections={showCollections ? 'open' : 'closed'} aria-label={t('skills.managedTitle')}>
+  return <section className="skills-surface skills-library" data-collections={showCollections ? 'open' : 'closed'} aria-label={t('skills.managedTitle')}>
     {folders.length > 0 ? <SkillCollectionNav id={navId} visible={showCollections} folders={folders} active={activeFolder} count={skills.length} approximate={approximate} expanded={expanded} onExpand={toggleBranch} onChoose={chooseFolder} onHide={() => toggleCollections(false)} hideButtonRef={hideButton} folderAction={showCollections ? folderAction : null} /> : null}
     <div className="library-main">
       <span className="sr-only" aria-live="polite">{t('common.result', { count: visible.length })}</span>
       <div ref={matrix} className="matrix-scroll" tabIndex={0} role="region" aria-label={t('skills.bindings')}
         onScroll={(event) => { event.currentTarget.dataset.scrolled = String(event.currentTarget.scrollTop > 4) }}>
-        <table className="skill-matrix library-matrix" style={{ minWidth: `${Math.max(460, 320 + detected.length * 96)}px` }}>
+        <table className="skill-matrix library-matrix" style={{ minWidth: `${Math.max(460, 280 + detected.length * 80)}px` }}>
           <thead><tr>
             <th scope="col" className="skill-name-column" aria-label={t('skills.column')}>{heading}</th>
-            {detected.map((agent) => <th scope="col" key={agent.name}><span className="matrix-agent-heading"><AgentIcon agent={agent} size={22} /><span className="matrix-agent-name" title={agent.name}>{agent.name}</span></span></th>)}
+            {detected.map(group => <th scope="col" key={group.key}><span className="matrix-agent-heading" data-shared={group.names.length > 1 || undefined} title={group.names.length > 1 ? `${t('skills.sharedTarget')} · ${group.agent.dir}` : group.agent.dir}><AgentIcon agent={group.agent} size={22} /><span className="matrix-agent-name" title={group.label}>{group.label}</span></span></th>)}
           </tr></thead>
           <tbody>{visible.map((skill) => {
             const category = skillCategory(skill)
@@ -98,9 +100,9 @@ export function SkillsLibrary({ rows, skills, agents, selected, onSelect, onLink
                   <span className="skill-copy"><span className="skill-title-line"><span className="skill-title" title={skill.name}>{skill.name}</span>{category !== activeFolder && category ? <span className="skill-location" title={category}>{category}</span> : null}</span><span className="skill-description">{skill.description}</span></span>
                 </button>
               </th>
-              {detected.map((agent) => {
-                const binding = skill.bindings?.find((entry) => entry.agent === agent.name)
-                return <td key={agent.name}>{binding ? <SkillLinkButton skill={skill} binding={binding} busy={busy} onChange={changeLink} /> : <span className="text-muted-foreground">—</span>}</td>
+              {detected.map(group => {
+                const binding = skill.bindings?.find((entry) => entry.agent === group.agent.name)
+                return <td key={group.key}>{binding ? <SkillLinkButton skill={skill} binding={binding} agentLabel={group.label} busy={busy} onChange={changeLink} /> : <span className="text-muted-foreground">—</span>}</td>
               })}
             </tr>
           })}</tbody>

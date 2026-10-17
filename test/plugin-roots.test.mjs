@@ -12,10 +12,10 @@ test('native plugin scans follow Agent path overrides and deduplicate overlappin
   const customCodex = path.join(root, 'custom-codex')
   const claude = path.join(root, 'claude')
   await fs.writeFile(path.join(root, 'agents.catalog.json'), JSON.stringify([
-    { name: 'codex', dir: path.join(defaultCodex, 'skills') },
-    { name: 'claude', dir: path.join(claude, 'skills') },
+    { name: 'codex', commands: ['codex-fixture'], probeInstallation: false, configDir: { macos: defaultCodex, windows: defaultCodex, linux: defaultCodex }, skillDir: 'skills', pluginDirs: ['plugins/cache'] },
+    { name: 'claude', commands: ['claude-fixture'], probeInstallation: false, configDir: { macos: claude, windows: claude, linux: claude }, skillDir: 'skills', pluginDirs: ['plugins/cache', 'plugins'] },
   ]))
-  await fs.writeFile(path.join(root, 'agents.registry'), `codex|${path.join(customCodex, 'skills')}\n`)
+  await fs.writeFile(path.join(root, 'agents.local.json'), JSON.stringify([{ name: 'codex', configDir: { macos: customCodex, windows: customCodex, linux: customCodex } }]))
   async function plugin(base, relative, agent, name) {
     const directory = path.join(base, relative, `.${agent}-plugin`)
     await fs.mkdir(directory, { recursive: true })

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeftIcon, ArrowRightIcon, CheckCircleIcon, WarningCircleIcon } from '@phosphor-icons/react'
 import { AgentIcon } from '@/capability-icon'
-import { importLocalSkills } from '@/api'
+import { importSkills } from '@/api'
 import { itemKey } from '@/capability-model'
 import { useLocale } from '@/i18n'
 
@@ -20,7 +20,7 @@ export function ImportSkills({ items, hasHiddenItems, agents, source, onBack, on
     setBusy(true)
     setError('')
     try {
-      const response = await importLocalSkills(selectedItems.map(({ agent, path }) => ({ agent, path })))
+      const response = await importSkills(selectedItems.map(item => item.id))
       setResults((previous) => [...previous.filter((item) => !selected.includes(itemKey(item))), ...response.results])
       setSelected([])
       await onImported()

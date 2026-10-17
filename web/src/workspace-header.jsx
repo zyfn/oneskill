@@ -16,8 +16,8 @@ export function WorkspaceHeader({ route, approximate = false, query, onQueryChan
     window.addEventListener('keydown', focusSearch)
     return () => window.removeEventListener('keydown', focusSearch)
   }, [])
-  const titleKey = route === 'migrate' ? 'page.skills' : `page.${route}`
-  const searchKey = route === 'migrate' ? 'search.migrate' : `search.${route}`
+  const titleKey = route === 'import' ? 'page.skills' : `page.${route}`
+  const searchKey = route === 'import' ? 'search.import' : `search.${route}`
 
   return (
     <header className="workspace-header">
