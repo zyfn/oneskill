@@ -65,6 +65,8 @@
 
 链接指向共享包，不复制内容。目标已被占用时报告冲突，不覆盖已有文件。移动或重命名已链接的包前，先取消链接，再移动、重新扫描并链接新位置。多级目录能否被加载取决于目标 Agent。
 
+写入同一个 Skill 目录的 Agent 共用一列和一条链接，例如 Qoder 与 Qoder CLI。从其他扫描目录读取到的链接显示为“其他目录可用”，不提供独立取消按钮；链接和取消链接仅操作该列配置的目标目录，不删除其他目录的链接。共享目录的可见范围由各 Agent 自身决定。
+
 ## 导入与恢复
 
 **Skills → 未管理** 列出 Agent Skill 目录中尚未进入共享库的包。
@@ -90,7 +92,7 @@
 | `skills/` | 统一管理库；除 `.gitkeep` 外，内容不进入 Git。 |
 | `agents.catalog.json` | Agent 命令、图标、独立配置根目录、资源声明和官方来源。 |
 | `agents.local.json` | 本地 Agent 定义与预设覆盖，不随 Git 分发。 |
-| `migrate.ignore` | 本地导入保护与持久化忽略规则，不随 Git 分发。 |
+| `skills.ignore.json` | 本地导入保护与持久化忽略规则，不随 Git 分发。 |
 | Agent 的 `.oneskill-backups/` | 原包与导入恢复记录。 |
 | `web/dist/` | 构建后的浏览器资源，不进入 Git。 |
 | 浏览器本地存储 | 语言与目录栏展开偏好，不保存 Skill 内容。 |
@@ -98,39 +100,35 @@
 忽略规则按 Agent 与包的相对路径匹配：
 
 ```json
-{"agent":"codex","relative":".system/agent-guide","ignored":true}
+[{"agent":"codex","relative":".system/agent-guide","ignored":true}]
 ```
 
-旧的 `Agent:Skill名称` 保护规则继续生效。路径级 `ignored:false` 可以恢复一个包，不影响其他位置同名包的保护。偏好通过原子文件替换保存。
+忽略规则为 JSON 数组，以 Agent 和包的相对路径匹配，通过原子文件替换保存。不读取旧名称规则。
 
-服务只绑定本地回环地址。修改请求需要本地访问授权，浏览器会在必要时续期。目前不提供远程托管或多用户账号体系。
+服务只绑定本地回环地址。修改请求需要本地访问授权，读取与修改都要求授权。目前不提供远程托管或多用户账号体系。
 
 ## CLI
 
-使用 `npm run cli -- <命令>` 执行。
+Web、CLI、MCP 共用同一个工作区服务，默认数据目录为 `~/.oneskill`。
 
-| 命令 | 用途 |
-| --- | --- |
-| `detect [--json]` | 扫描配置的工作区并报告能力。 |
-| `skills [--json]` | 列出共享 Skill 与 Agent 链接。 |
-| `plugins [--json]` | 列出发现的原生插件清单。 |
-| `mcp [--json]` | 列出发现的 MCP 服务器配置。 |
-| `hooks [--json]` | 列出发现的 Hook 配置。 |
-| `agents [--json]` | 列出 Agent 的安装与配置发现结果。 |
-| `link <agent> <skill>` | 按管理库内的相对路径为 Agent 链接 Skill。 |
-| `unlink <agent> <skill>` | 移除 Agent 中的管理库链接。 |
-| `validate` | 报告悬空链接与冲突；发现问题时以非零状态退出。 |
-| `help` | 显示命令帮助。 |
+```bash
+npm run cli -- workspace --refresh
+npm run cli -- skills
+npm run cli -- agents
+npm run cli -- plugins
+npm run cli -- mcp-inventory
+npm run cli -- call getSkill '{"skillId":"managed:review"}'
+```
 
-Agent JSON 中，`installed` 与 `detected` 表示程序安装证据，`configured` 独立表示配置目录存在。CLI 的 `runnable` 表示 `--version` 执行结果，`version` 保存识别到的版本；桌面应用和扩展的 `runnable` 为 null。`status` 分为 `installed`、CLI 探测失败时的 `unavailable`、以及 `not-detected`；`detection.evidence` 记录来源、路径与 CLI 探测错误。版本检查成功不保证登录或会话状态正常。
+所有入口接受 `--workspace <目录>`；完整操作与参数见 `src/contracts/operations.mjs`。操作输出为 JSON，错误包含统一的 `code` 与 `message`。
 
 ## 平台与开发
 
 需要 Node.js 20+、npm 与桌面浏览器。macOS 已进行人工验证；Linux、Windows 桌面流程仍待平台验收。Windows 可能需要开发者模式或相应的符号链接权限，Linux 打开目录需要桌面文件管理器。`oneskill.command` 是 macOS 启动器。
 
-`--workspace <目录>` 可为 CLI 和 Web 服务指定独立的管理库与偏好目录。内置 Agent 预设和 Web 资源仍由应用提供，工作区也可选用自己的 `agents.catalog.json`。
+`--workspace <目录>` 为所有入口选择同一个管理库与偏好目录。内置 Agent 预设和 Web 资源仍由应用提供，工作区也可选用自己的 `agents.catalog.json`。
 
-前端开发时，在两个终端分别运行 `npm run dev` 和 `npm run dev:web`。默认 `/api` 代理指向 8787 端口。`npm run check` 执行语法检查、文件系统与 API 测试，以及前端生产构建。
+前端开发时，在两个终端分别运行 `npm run dev` 和 `npm run dev:web`。Vite 的 `ONESKILL_ENDPOINT` 指向 Web 命令输出的服务地址。`npm run check` 执行语法检查、文件系统与 API 测试，以及前端生产构建。
 
 
 ## 许可证与标识

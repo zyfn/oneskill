@@ -2,134 +2,168 @@
 
 # oneskill
 
-**One skill library, connected to your Agents.**
+**One Skill library, connected to your Agents.**
 
 **English** · [简体中文](README.zh-CN.md)
 
-oneskill is a local Skill manager for coding Agents. It stores Skill packages in one library and links them into Agent directories, reducing duplicate copies and inconsistent versions. Organize Skills by folder and manage which Agents can use each package.
+oneskill is a local Skill manager for coding Agents. Keep shared packages in one library, organize them with folders, and connect them to Agent directories through symbolic links. Edit a package once instead of maintaining separate copies for every Agent.
 
 ## Features
 
-- **Skill management:** Store each package once and connect it to multiple Agents through symbolic links. Unlinking preserves the source package.
-- **Folder collections:** Organize Skills in nested folders, filter by collection, search packages, and view their details.
-- **Import and ignore:** Import existing packages with backups and conflict checks, or ignore packages that should stay in their Agent directory.
-- **Local Web UI and CLI:** Manage the same files from a browser or terminal. The interface supports English and Simplified Chinese; no cloud account or database is required.
-
-```text
-oneskill/skills/code-review/            shared source
-    ▲
-    ├── ~/.agents/skills/code-review    symbolic link
-    └── ~/.claude/skills/code-review    symbolic link
-```
-
-Link and unlink operations create or remove symbolic links without deleting the source package.
+- **A shared library:** Browse collections, search Skills, read `SKILL.md`, and manage Agent connections.
+- **Existing Skills, organized:** Import packages from Agent directories with backups and conflict checks, or ignore packages that should stay where they are.
+- **Local inventories:** Inspect Agent installation status and discovered Skills, plugins, and MCP configuration.
+- **Three entrypoints, one workspace:** Use the Web UI, CLI, or Codex plugin with the same data and operations. Web and the plugin share the same responsive interface, with English and Simplified Chinese support.
+- **Files stay local:** No cloud account or database is required. Your library remains a directory of ordinary Skill packages.
 
 ## Preview
 
-**Skills management.** Browse folder collections and view each Skill's Agent connections.
+**Skills library and Agent connections**
 
 ![Skills library with folder collections and Agent links](docs/screenshots/skills.png)
 
-**Agents overview.** View detection results and local Skill, plugin, and MCP counts.
+**Agent overview**
 
-![Agents overview with local capability counts](docs/screenshots/agents.png)
+![Agent overview with local capability counts](docs/screenshots/agents.png)
 
 ## Installation
 
-Requires **Node.js 20+**, npm, and a desktop browser.
+Requires **Node.js 20+** and npm. The Web interface also requires a browser; the Codex integration requires a desktop client that supports local plugins and MCP Apps.
 
 ```bash
 git clone https://github.com/zyfn/oneskill.git
 cd oneskill
 npm ci
+npm --prefix web ci
+npm run build
 ```
 
 ## Usage
 
-### Web UI
-
-Start the browser interface:
+### Web
 
 ```bash
 npm start
 ```
 
-On macOS, you can also double-click `oneskill.command` in the project folder.
+On macOS, you can also double-click `oneskill.command`.
 
-#### 1. Add or import Skills
+1. **Add Skills.** Place packages containing `SKILL.md` under `~/.oneskill/skills/`, or open **Skills → Unmanaged** and choose **Manage here**. **Manage multiple** imports several packages in one workflow.
+2. **Organize the library.** Create folders under `skills/`, then select **Rescan**. Collections follow the directory tree; **All skills** includes packages at the library root and in nested folders. Collapse the collection navigation when you need more room.
+3. **Connect Agents.** Select a link control in the library matrix. Agent products that write to the same directory share one column and one link. **Shared** indicates a link read from another scanned directory; its source is shown in the tooltip, and that cell does not remove it.
+4. **Review or ignore local packages.** The unmanaged list shows each package's source Agent and its actions. **Ignore** hides a package without changing its files; use **Ignored → Restore** to bring it back.
+5. **Edit the source.** Open a Skill's folder and edit its files. Connected Agents read the same source package, subject to their own reload and discovery behavior.
 
-Add a package containing `SKILL.md` to `skills/`, or open **Skills → Unmanaged** to review packages already present in your Agent directories. **Manage here** imports the complete package and links it back to its original Agent, so that Agent can continue using it.
-
-The original package is backed up before its location becomes a link. If a destination contains different content, oneskill reports the conflict instead of overwriting it.
-
-#### 2. Organize by folder
-
-Create parent folders under `skills/` to group related packages:
-
-```text
-skills/
-├── engineering/
-│   ├── code-review/SKILL.md
-│   └── backend/query-plan/SKILL.md
-├── writing/
-│   └── technical-docs/SKILL.md
-└── workspace-notes/SKILL.md
-```
-
-The collection tree follows these folders. Expand branches as needed, select a parent to include its descendants, or collapse the navigation to give the library more room. **All skills** includes every package, including those directly under `skills/`.
-
-After adding or reorganizing folders, **Rescan** the workspace. Unlink a package before changing its path, then reconnect it at the new location.
-
-#### 3. Link and unlink Agents
-
-The library's Agent columns show **Linked** and **Not linked**. Select a connection to change it. A skill can be available to several Agents, one Agent, or none; it stays in the library in every case.
-
-Linking creates a symbolic link in the selected Agent's skill directory. Unlinking removes that link and preserves the shared package.
-
-#### 4. Edit or ignore packages
-
-Update a shared skill in place so its linked Agents read the same revision. Use search and collections to focus on the skills you need, and inspect a package's details or open its folder when editing.
-
-Use **Ignore** to hide a package from the unmanaged list without changing its files or Agent access. This choice persists across scans and restarts; **Ignored → Restore** brings it back.
-
-#### Agent, plugin, and MCP inventories
-
-The **Agents** page shows detection results and local resource counts. **Plugins** and **MCP** provide searchable, read-only inventories with Agent filters and source details.
+The **Agents** page separates installed and not-installed entries. **Plugins** and **MCP** are searchable, read-only configuration inventories; they do not install resources or verify that those resources run successfully.
 
 ### CLI
 
-Place Skill packages containing `SKILL.md` under `skills/`, then run commands from the project folder. The CLI uses the same files as the Web UI and does not require the Web service to be running.
+The CLI returns JSON and uses the same local service as the interface:
 
 ```bash
-npm run cli -- agents --json
-npm run cli -- skills --json
-npm run cli -- plugins --json
-npm run cli -- mcp --json
-npm run cli -- link codex engineering/code-review
-npm run cli -- unlink codex engineering/code-review
-npm run cli -- validate
+npm run cli -- workspace
+npm run cli -- workspace --refresh
+npm run cli -- skills
+npm run cli -- agents
+npm run cli -- plugins
+npm run cli -- mcp-inventory
 ```
 
-Run `npm run cli -- help` for all available commands.
+Use identifiers returned by the workspace for individual operations:
 
-## Agent support and detection
+```bash
+npm run cli -- call getSkill '{"skillId":"managed:engineering/code-review"}'
+npm run cli -- call setSkillLink '{"agentId":"agent:codex","skillId":"managed:engineering/code-review","linked":true}'
+```
 
-The catalog records command names, official configuration conventions, and compatibility locations for Codex, Claude Code, Cursor, Gemini CLI, Qwen Code, and other Agents. Shared rules are declared once, with explicit macOS and Windows configuration roots. Add custom Agents or override presets in `agents.local.json`; see the [local definition example](agents.local.example.json). Changes take effect on rescan. Shared skill directories may be read by several Agents.
+`call` generates a request identifier for mutations when one is not supplied. See `npm run cli -- help` and the [operation reference](docs/reference.md) for details.
 
-CLI entries are detected only when `--version` exits successfully with a recognized version. Failed checks appear under Not installed; detailed evidence remains available in CLI JSON. Desktop and extension entries confirm installation metadata only; they do not establish runtime health. Qoder desktop and Qoder CLI are separate entries. Configuration directories are scanned independently and never prove installation. Skill loading follows each Agent's own rules. See [Agent discovery](docs/agent-discovery.md) for detection methods and limits, or the [reference](docs/reference.md) for skill directories and scan coverage.
+### Codex plugin
+
+After building the project, package and install the local plugin:
+
+```bash
+npm run build:plugin
+codex plugin marketplace add ./dist/marketplace
+codex plugin add oneskill@oneskill-local
+```
+
+Restart the desktop client, then open **oneskill** from its sidebar or additional-app menu. The plugin includes the same interface and exposes workspace operations as MCP tools for use in conversations. Sidebar placement depends on the host client.
+
+The generated package includes the server code, UI, and Agent catalog. It requires Node.js on `PATH`, but does not install dependencies or build the interface when launched. After updating the source, rebuild the Web assets and plugin package, reinstall the plugin, and reload the desktop client to use the new version.
+
+### Choose a workspace
+
+All entrypoints default to `~/.oneskill`. To use an existing library elsewhere, select the **same absolute directory** for each entrypoint:
+
+```bash
+npm run cli -- web --open --workspace /absolute/path/to/workspace
+npm run cli -- skills --workspace /absolute/path/to/workspace
+npm run build:plugin -- --workspace /absolute/path/to/workspace
+```
+
+For the plugin, install the generated package after choosing the workspace. The data directory is separate from the source checkout and plugin cache.
+
+## How it works
+
+![oneskill architecture: Web, CLI and Codex share one local Workspace service and filesystem operations](docs/architecture.svg)
+
+1. **Discover.** Load Agent definitions for the current operating system and inspect their declared locations. CLI installation checks require `--version` to exit successfully with a recognized version; desktop applications and extensions use installation metadata. A configuration directory alone is not installation evidence.
+2. **Read.** Scan the Skill library and configured Agent roots, then publish a shared workspace snapshot. External filesystem changes appear after **Rescan**; this is not a filesystem watcher. Inventory counts describe discovered entries, subject to scan limits.
+3. **Change through one service.** Web uses authenticated local HTTP; the CLI and MCP adapter connect to the same service. Operations share parameter validation and errors. Writes are serialized, target directories are locked, and request receipts prevent the same completed request from being applied twice.
+4. **Keep ordinary files.** Linking creates a filesystem reference from the configured Agent target to the library package. Unlinking removes that reference and preserves the source. Importing verifies the copied package, backs up the original, and replaces its old location with a link. Conflicting content is not overwritten.
+
+Multiple Agents may read a shared directory, so one physical link can be visible to more than one Agent. oneskill shows this relationship rather than claiming independent controls for the same path. Links found in additional scan roots are read-only in that Agent's matrix cell.
+
+The service listens on `127.0.0.1` and is intended for one local user. Access credentials, service metadata, locks, and request receipts are kept separately from the Skill library. An interrupted write is not blindly replayed: rescan and inspect the files before retrying.
+
+## Workspace and Agent configuration
+
+```text
+~/.oneskill/
+├── skills/
+│   ├── engineering/
+│   │   └── code-review/SKILL.md
+│   └── writing/
+│       └── technical-docs/SKILL.md
+├── agents.local.json      # Optional Agent definitions and overrides
+└── skills.ignore.json     # Persisted ignore preferences
+```
+
+The built-in [Agent catalog](agents.catalog.json) declares commands, icons, macOS and Windows configuration locations, and resource-reading rules. To add an Agent or override a preset, create `agents.local.json` in your workspace and rescan:
+
+```json
+[
+  {
+    "name": "example-agent",
+    "commands": ["example-agent"],
+    "configDir": {
+      "macos": "~/.example-agent",
+      "windows": "${USERPROFILE}/.example-agent"
+    },
+    "skillDir": "skills"
+  }
+]
+```
+
+Relative resource paths follow the selected configuration root. Existing JSON, JSONC, TOML, and plugin-manifest readers are configuration-driven; a new proprietary format requires a scanner implementation. See [Agent discovery](docs/agent-discovery.md) and the [reference](docs/reference.md) for supported locations and boundaries.
+
+Agent installation does not guarantee support for every resource format. Skill loading and nested-directory support follow each Agent's own rules. Windows may require Developer Mode or permission to create symbolic links; native desktop behavior still needs platform-specific verification.
 
 ## Development
 
 ```bash
-npm --prefix web ci
-npm run dev          # API and built UI
-npm run dev:web      # Vite development server, in another terminal
-npm run check        # Syntax checks, tests, and production build
+npm run dev          # Local service with the built UI
+npm run check        # Syntax checks, tests, and both UI builds
 ```
 
-The frontend uses React, Vite, and Tailwind CSS. The scanner, filesystem operations, HTTP API, and CLI live in `src/`; the interface lives in `web/src/`.
+For frontend hot reload, start the local service and point Vite at its printed service address:
 
-Contributions are welcome, especially Agent discovery improvements, platform verification, and focused interaction refinements. Include sanitized fixtures for scanner changes, verify both interface languages for UI changes, and run `npm run check` before submitting a pull request.
+```bash
+ONESKILL_ENDPOINT=http://127.0.0.1:PORT npm run dev:web
+```
+
+The Node.js runtime and filesystem operations live in `src/`; React, Vite, and Tailwind CSS power `web/src/`. See [Architecture](docs/architecture.md) for module boundaries. Contributions should include sanitized fixtures for scanner changes, exercise both interface languages, and pass `npm run check`.
 
 ## License
 

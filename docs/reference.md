@@ -65,6 +65,8 @@ Each skill package contains a `SKILL.md`. Parent folders define collections; sel
 
 Links refer to the shared package instead of duplicating its contents. Destination conflicts are reported without overwriting existing files. Before moving or renaming a linked package, unlink it, move it, rescan, and link the new location. Nested-directory loading depends on the target Agent.
 
+Agents writing to the same Skill directory share one column and one link, such as Qoder and Qoder CLI. Links read from additional scan roots appear as read-only availability. Linking and unlinking only change the column's configured target; links in other directories are preserved. Each Agent determines which shared directories it reads.
+
 ## Import and recovery
 
 **Skills → Unmanaged** lists packages in Agent skill directories that are outside the shared library.
@@ -90,7 +92,7 @@ Imports save original packages in the source Agent's `.oneskill-backups/import-*
 | `skills/` | Canonical library; excluded from Git except for `.gitkeep`. |
 | `agents.catalog.json` | Agent commands, logos, independent configuration roots, resource declarations, and primary references. |
 | `agents.local.json` | Local Agent definitions and preset overrides, excluded from Git. |
-| `migrate.ignore` | Local import protection and persistent ignore rules, excluded from Git. |
+| `skills.ignore.json` | Local import protection and persistent ignore rules, excluded from Git. |
 | Agent `.oneskill-backups/` | Original packages and import restore records. |
 | `web/dist/` | Generated browser assets; excluded from Git. |
 | Browser local storage | Language and collection-navigation visibility preferences. Skill contents are not stored here. |
@@ -98,39 +100,35 @@ Imports save original packages in the source Agent's `.oneskill-backups/import-*
 Ignore rules identify an Agent and a relative package directory:
 
 ```json
-{"agent":"codex","relative":".system/agent-guide","ignored":true}
+[{"agent":"codex","relative":".system/agent-guide","ignored":true}]
 ```
 
-Legacy `Agent:skill-name` protection rules remain supported. A path-specific `ignored:false` rule restores one package without changing the protection of same-name packages elsewhere. Preference writes use atomic file replacement.
+Ignore preferences are a JSON array keyed by Agent and package-relative path, saved through atomic replacement. Retired name-only rules are not read.
 
-The service binds to loopback. Mutating requests require local access authorization; the browser renews it when necessary. Remote hosting and multi-user accounts are outside the current scope.
+The service binds to loopback. Mutating requests require local access authorization; all reads and writes require authorization. Remote hosting and multi-user accounts are outside the current scope.
 
 ## CLI
 
-Run commands with `npm run cli -- <command>`.
+Web, CLI and MCP use the same Workspace service. The default data directory is `~/.oneskill`.
 
-| Command | Purpose |
-| --- | --- |
-| `detect [--json]` | Scan the configured workspace and report capabilities. |
-| `skills [--json]` | List shared skills and Agent links. |
-| `plugins [--json]` | List detected native plugin manifests. |
-| `mcp [--json]` | List detected MCP server configuration. |
-| `hooks [--json]` | List detected hook configuration. |
-| `agents [--json]` | List Agents with installation and configuration discovery. |
-| `link <agent> <skill>` | Link a relative library package path to an Agent. |
-| `unlink <agent> <skill>` | Remove a library link from an Agent. |
-| `validate` | Report broken links and conflicts; exit nonzero if any are found. |
-| `help` | Show command help. |
+```bash
+npm run cli -- workspace --refresh
+npm run cli -- skills
+npm run cli -- agents
+npm run cli -- plugins
+npm run cli -- mcp-inventory
+npm run cli -- call getSkill '{"skillId":"managed:review"}'
+```
 
-Agent JSON uses `installed` and `detected` for program installation evidence, and `configured` for an existing configuration directory. CLI `runnable` reports the `--version` result and `version` stores a recognized version; desktop and extension `runnable` is null. `status` is `installed`, `unavailable` for failed CLI probes, or `not-detected`. `detection.evidence` records the source, path, and CLI probe error. Version success does not certify authentication or session health.
+All entrypoints accept `--workspace <directory>`. Operation schemas live in `src/contracts/operations.mjs`. Output is JSON; errors contain a shared `code` and `message`.
 
 ## Platforms and development
 
 Requires Node.js 20+, npm, and a desktop browser. macOS has been manually tested. Linux and Windows desktop workflows still require platform verification; Windows may need Developer Mode or additional symlink permissions, and Linux folder opening requires a desktop file manager. `oneskill.command` is a macOS launcher.
 
-`--workspace <directory>` selects a separate library and preference directory for both CLI commands and `serve`. Built-in presets and Web assets remain in the application; a workspace can optionally provide its own `agents.catalog.json`.
+`--workspace <directory>` selects a separate library and preference directory for all entrypoints. Built-in presets and Web assets remain in the application; a workspace can optionally provide its own `agents.catalog.json`.
 
-For frontend development, run the API with `npm run dev` and Vite with `npm run dev:web` in separate terminals. The default `/api` proxy targets port 8787. `npm run check` runs syntax checks, filesystem/API tests, and a production web build.
+For frontend development, run the API with `npm run dev` and Vite with `npm run dev:web` in separate terminals. Set Vite’s `ONESKILL_ENDPOINT` to the service address printed by the Web command. `npm run check` runs syntax checks, filesystem/API tests, and a production web build.
 
 
 ## License and attribution
