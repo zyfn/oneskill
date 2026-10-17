@@ -8,7 +8,7 @@ import { promisify } from 'node:util'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { PROJECT_ROOT } from '../src/core.mjs'
-import { connectWorkspace } from '../src/runtime/connect.mjs'
+import { stopWorkspaceProcess } from './helpers/workspace-process.mjs'
 
 test('generated plugin starts without node_modules and serves its global UI and parsed inventory', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-package-'))
@@ -35,9 +35,8 @@ test('generated plugin starts without node_modules and serves its global UI and 
   const client = new Client({ name: 'packaged-plugin-test', version: '1.0.0' })
   t.after(async () => {
     await client.close()
-    const service = await connectWorkspace({ root: workspace, start: false }).catch(() => null)
-    if (service) process.kill(service.descriptor.pid, 'SIGTERM')
-    await fs.rm(root, { recursive: true, force: true })
+    await stopWorkspaceProcess({ root: workspace })
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 })
   })
   try { await client.connect(transport) } catch (error) { throw new Error(`${error.message}: ${errors}`) }
   const tool = (await client.listTools()).tools.find(item => item.name === 'oneskill_get_workspace')

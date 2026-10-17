@@ -20,6 +20,7 @@ test('Agent logos retain their image formats when embedded for Web and MCP Apps'
   }
 })
 import { createDiscoveryContext } from '../src/agent-discovery.mjs'
+import { stopWorkspaceProcess } from './helpers/workspace-process.mjs'
 
 test('independent workspace instances isolate libraries and persistent ignore preferences', async t => {
   const base = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-workspaces-'))
@@ -50,7 +51,10 @@ test('independent workspace instances isolate libraries and persistent ignore pr
 
 test('CLI workspace selection uses application presets without copying source or Web assets', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-cli-workspace-'))
-  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  t.after(async () => {
+    await stopWorkspaceProcess({ root, runtimeRoot: path.join(root, 'runtime') })
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 })
+  })
   await fs.writeFile(path.join(root, 'agents.local.json'), JSON.stringify([{ name: 'fixture', commands: ['fixture'], probeInstallation: false }]))
   await fs.writeFile(path.join(root, 'agents.catalog.json'), '[]')
   const run = promisify(execFile)

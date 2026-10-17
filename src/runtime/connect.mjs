@@ -29,7 +29,7 @@ export async function connectWorkspace({ root, runtimeRoot, port, idleTimeout, s
       descriptor = await verify(location)
       if (!descriptor) {
         const log = await fs.open(path.join(location.directory, 'service.log'), 'a', 0o600)
-        const child = spawn(process.execPath, [path.join(PROJECT_ROOT, 'src/cli.mjs'), '_runtime', '--workspace', location.root, '--runtime-dir', location.runtimeRoot, ...(port !== undefined ? ['--port', String(port)] : []), ...(idleTimeout !== undefined ? ['--idle-timeout', String(idleTimeout)] : [])], { detached: true, windowsHide: true, stdio: ['ignore', log.fd, log.fd] })
+        const child = spawn(process.execPath, [path.join(PROJECT_ROOT, 'src/cli.mjs'), '_runtime', '--workspace', location.root, '--runtime-dir', location.runtimeRoot, ...(port !== undefined ? ['--port', String(port)] : []), ...(idleTimeout !== undefined ? ['--idle-timeout', String(idleTimeout)] : [])], { cwd: location.directory, detached: true, windowsHide: true, stdio: ['ignore', log.fd, log.fd] })
         await log.close()
         let failure
         child.once('error', error => { failure = error })
