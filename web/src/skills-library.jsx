@@ -10,11 +10,11 @@ import { skillTargets } from '@/skill-targets.mjs'
 
 function SkillLinkButton({ skill, binding, agentLabel = binding.agent, busy, onChange }) {
   const { t } = useLocale()
-  const linked = binding.state === 'linked'
+  const linked = binding.state === 'linked' || binding.state === 'inherited'
   const blocked = ['broken', 'conflict'].includes(binding.state)
   const inherited = binding.state === 'inherited'
   const pending = busy === `${binding.agent}:${skill.relative}`
-  const label = blocked || inherited ? `${agentLabel}: ${t(`skills.${binding.state}`)}` : t(linked ? 'skills.unlinkFor' : 'skills.linkFor', { name: skill.name, agent: agentLabel })
+  const label = blocked ? `${agentLabel}: ${t(`skills.${binding.state}`)}` : inherited ? `${agentLabel}: ${t('skills.linked')} · ${skill.name}` : t(linked ? 'skills.unlinkFor' : 'skills.linkFor', { name: skill.name, agent: agentLabel })
   return <Tooltip>
     <TooltipTrigger asChild>
       <button type="button" className="skill-link" data-linked={linked || undefined} data-inherited={inherited || undefined} data-blocked={blocked || undefined} data-pending={pending || undefined}
@@ -78,7 +78,7 @@ export function SkillsLibrary({ rows, skills, agents, selected, onSelect, onLink
   const heading = <div className="library-heading-row">
     {!showCollections ? <span className="library-icon-actions">{folders.length > 0 ? <button ref={showButton} type="button" className="collection-show" aria-label={t('skills.showCollections')} title={t('skills.showCollections')} aria-expanded="false" aria-controls={navId} onClick={() => toggleCollections(true)}><SidebarSimpleIcon size={16} /></button> : folderAction}</span> : null}
     {showScopePath ? <span className="library-scope-path" title={activeFolder}>{activeFolder}</span> : null}
-    <span className="matrix-legend"><span><LinkIcon size={14} weight="bold" />{t('skills.linked')}</span><span><LinkBreakIcon size={14} />{t('skills.notLinked')}</span>{rows.some(skill => skill.bindings?.some(binding => binding.state === 'inherited')) ? <span className="inherited-legend" title={t('skills.inheritedHint')}><LinkIcon size={14} />{t('skills.inherited')}</span> : null}</span>
+    <span className="matrix-legend"><span><LinkIcon size={14} weight="bold" />{t('skills.linked')}</span><span><LinkBreakIcon size={14} />{t('skills.notLinked')}</span></span>
   </div>
 
   return <section className="skills-surface skills-library" data-collections={showCollections ? 'open' : 'closed'} aria-label={t('skills.managedTitle')}>

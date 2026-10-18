@@ -2,6 +2,10 @@ import { createContext, useContext } from 'react'
 
 const messages = {
   en: {
+    mcp: {
+      introduction: 'MCP configurations found in Agent and plugin files.',
+      inventoryHint: 'Discovered configurations, including cached plugin declarations. Not a live connection count.',
+    },
     nav: { agents: 'Agents', skills: 'Skills', plugins: 'Plugins', mcp: 'MCP' },
     brandHome: 'oneskill home',
     rescan: 'Rescan',
@@ -25,7 +29,7 @@ const messages = {
       allSkillsHint: 'Skills found in this Agent’s configured personal directory. Bundled and project skills may be outside this count.',
       linkedSkills: 'Linked skills',
       plugins: 'Plugins',
-      mcp: 'MCP',
+      mcp: 'MCP configs',
       directory: 'Skills directory',
       details: 'Details',
       directoryLabel: 'Agents directory',
@@ -83,8 +87,7 @@ const messages = {
       linked: 'Linked',
       notLinked: 'Not linked',
       linkHint: 'Click to link or unlink this Agent',
-      inherited: 'Shared',
-      inheritedHint: 'Read from another scanned directory. This control does not remove that link',
+      inheritedHint: 'Linked from another directory. Manage this link at its source',
       sharedTarget: 'These Agents share one Skill directory and one link',
       noAgents: 'No Agents were detected. Install or open an Agent, then rescan to connect it.',
       unmanaged: (count) => `${count} skill${count === 1 ? '' : 's'} still in Agent folders`,
@@ -173,6 +176,10 @@ const messages = {
     plugin: { detected: 'Agent plugin detected locally.', fallback: 'Plugin' },
   },
   zh: {
+    mcp: {
+      introduction: '查看 Agent 与插件文件中的 MCP 配置。',
+      inventoryHint: '扫描发现的配置数量，可能包含插件缓存声明，不代表当前连接数。',
+    },
     nav: { agents: 'Agent', skills: 'Skills', plugins: '插件', mcp: 'MCP' },
     brandHome: '打开 oneskill 首页',
     rescan: '重新扫描',
@@ -196,7 +203,7 @@ const messages = {
       allSkillsHint: '当前配置的个人目录扫描结果；Agent 内置 Skill 和项目级 Skill 可能不在此数量中。',
       linkedSkills: '已链接 Skill',
       plugins: '插件',
-      mcp: 'MCP',
+      mcp: 'MCP 配置',
       directory: 'Skills 目录',
       details: '详情',
       directoryLabel: 'Agent 目录',
@@ -254,8 +261,7 @@ const messages = {
       linked: '已链接',
       notLinked: '未链接',
       linkHint: '点击链接或取消链接',
-      inherited: '共享可用',
-      inheritedHint: '来自其他扫描目录，此处不会删除来源链接',
+      inheritedHint: '链接来自其他目录，请在来源位置管理此链接',
       sharedTarget: '这些 Agent 共用一个 Skill 目录及同一条链接',
       noAgents: '尚未检测到 Agent，安装或打开 Agent 后重新扫描即可接入。',
       unmanaged: (count) => `${count} 个 Skill 仍在 Agent 目录`,

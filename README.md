@@ -50,11 +50,11 @@ On macOS, you can also double-click `oneskill.command`.
 
 1. **Add Skills.** Place packages containing `SKILL.md` under `~/.oneskill/skills/`, or open **Skills → Unmanaged** and choose **Manage here**. **Manage multiple** imports several packages in one workflow.
 2. **Organize the library.** Create folders under `skills/`, then select **Rescan**. Collections follow the directory tree; **All skills** includes packages at the library root and in nested folders. Collapse the collection navigation when you need more room.
-3. **Connect Agents.** Select a link control in the library matrix. Agent products that write to the same directory share one column and one link. **Shared** indicates a link read from another scanned directory; its source is shown in the tooltip, and that cell does not remove it.
+3. **Connect Agents.** Select a link control in the library matrix. Agent products that write to the same directory share one column and one link. Links read from other scanned directories also appear as linked. Their tooltips show the source; those cells are read-only.
 4. **Review or ignore local packages.** The unmanaged list shows each package's source Agent and its actions. **Ignore** hides a package without changing its files; use **Ignored → Restore** to bring it back.
 5. **Edit the source.** Open a Skill's folder and edit its files. Connected Agents read the same source package, subject to their own reload and discovery behavior.
 
-The **Agents** page separates installed and not-installed entries. **Plugins** and **MCP** are searchable, read-only configuration inventories; they do not install resources or verify that those resources run successfully.
+The **Agents** page separates installed and not-installed entries. **Plugins** and **MCP** are searchable, read-only configuration inventories. MCP counts include Agent configuration and plugin declarations, with repeated cached versions merged within each plugin scope; different plugins remain separate. These counts may include inactive declarations and do not represent live connections.
 
 ### CLI
 

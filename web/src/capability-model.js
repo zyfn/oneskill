@@ -14,7 +14,7 @@ export function itemKey(item) {
 
 export function describeItem(route, item, locale = 'en') {
   if (item.description) return item.description
-  if (route === 'mcp') return ''
+  if (route === 'mcp') return item.plugin ? `${locale === 'zh' ? '插件' : 'Plugin'} · ${item.plugin}` : item.source || ''
   if (route === 'plugins') return ''
   if (route === 'hooks') {
     const copy = {

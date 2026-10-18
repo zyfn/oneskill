@@ -31,7 +31,7 @@ export function AgentTable({ rows, view, data, onOpenFolder }) {
     {!ordered.length ? <p className="agent-group-empty">{t(view === 'installed' ? 'agent.noInstalled' : 'agent.noUninstalled')}</p>
       : view === 'installed' ? <div className="agent-table-surface"><table className="agent-table">
       <caption className="sr-only">{t('agent.installed')}</caption>
-      <thead><tr><th scope="col">Agent</th><th scope="col" className="agent-metric" title={t('agent.allSkillsHint')}>{t('agent.allSkills')}</th><th scope="col" className="agent-metric">{t('agent.linkedSkills')}</th><th scope="col" className="agent-metric">{t('agent.plugins')}</th><th scope="col" className="agent-metric">MCP</th><th className="agent-table-action"><span className="sr-only">{t('common.openFolder')}</span></th></tr></thead>
+      <thead><tr><th scope="col">Agent</th><th scope="col" className="agent-metric" title={t('agent.allSkillsHint')}>{t('agent.allSkills')}</th><th scope="col" className="agent-metric">{t('agent.linkedSkills')}</th><th scope="col" className="agent-metric">{t('agent.plugins')}</th><th scope="col" className="agent-metric" title={t('mcp.inventoryHint')}>{t('agent.mcp')}</th><th className="agent-table-action"><span className="sr-only">{t('common.openFolder')}</span></th></tr></thead>
       <tbody>{ordered.map((agent) => <tr key={agent.name}>
         <th scope="row"><div className="agent-name"><span className="agent-table-logo"><AgentIcon agent={agent} size={24} /></span><span>{agent.name}</span></div></th>
         <td className="agent-metric"><span data-empty={agent.totalSkills === 0}>{agent.totalSkills ?? '—'}{agent.skillsTruncated ? '+' : ''}</span></td>

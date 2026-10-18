@@ -38,4 +38,4 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npm --prefix web ci
-      - run: node --test test/agent-catalog.test.mjs test/agent-discovery.test.mjs test/configuration.test.mjs test/npm-runtime.test.mjs test/server.test.mjs test/server-auth.test.mjs test/runtime.test.mjs test/plugin-package.test.mjs test/skill-targets.test.mjs test/workspace.test.mjs
+      - run: node --test test/agent-catalog.test.mjs test/agent-discovery.test.mjs test/configuration.test.mjs test/mcp-inventory.test.mjs test/npm-runtime.test.mjs test/server.test.mjs test/server-auth.test.mjs test/runtime.test.mjs test/plugin-package.test.mjs test/skill-targets.test.mjs test/workspace.test.mjs

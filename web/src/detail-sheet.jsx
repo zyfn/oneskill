@@ -85,7 +85,7 @@ function SkillBindings({ item, agents, onLinkChange }) {
         <div className="flex min-w-0 items-center gap-2.5"><AgentIcon agent={group.agent} size={20} /><div className="min-w-0"><span className="block truncate text-xs" title={group.agent.dir}>{group.label}</span>
           {blocked ? <span className="text-[10px] text-warning">{t(`skills.${binding.state}`)}</span> : null}
         </div></div>
-        {inherited ? <span className="text-xs text-muted-foreground" title={`${t('skills.inheritedHint')} · ${binding.inheritedDestinations.join(', ')}`}>{t('skills.inherited')}</span> : <button type="button" className="quiet-button flex items-center gap-1.5" disabled={Boolean(busy) || blocked} onClick={() => change(binding)} aria-label={t(linked ? 'skills.unlinkFor' : 'skills.linkFor', { name: item.name, agent: group.label })}>
+        {inherited ? <span className="text-xs text-muted-foreground" title={`${t('skills.inheritedHint')} · ${binding.inheritedDestinations.join(', ')}`}>{t('skills.linked')}</span> : <button type="button" className="quiet-button flex items-center gap-1.5" disabled={Boolean(busy) || blocked} onClick={() => change(binding)} aria-label={t(linked ? 'skills.unlinkFor' : 'skills.linkFor', { name: item.name, agent: group.label })}>
           {linked ? <LinkBreakIcon size={13} /> : <LinkIcon size={13} />}
           {busy === binding.agent ? t('common.saving') : linked ? t('common.unlink') : t('common.link')}
         </button>}

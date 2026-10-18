@@ -65,14 +65,21 @@ export function createWorkspace({ root = defaultWorkspaceRoot(), discoveryContex
   const skills = createSkillService({ sourceRoot: SOURCE_ROOT, ignoreFile: path.join(workspaceRoot, 'skills.ignore.json'), loadAgents })
   const { detectSkills, detectUnmanagedSkills, countAgentSkills } = skills
   const detectPlugins = async (agents = null) => scanPlugins(agents || await loadAgents())
-  const detectCapabilities = async (kind, agents = null) => scanCapabilities(kind, agents || await loadAgents())
+  const detectCapabilities = async (kind, agents = null, plugins = null) => {
+    agents ||= await loadAgents()
+    if (kind === 'mcp') plugins ||= await detectPlugins(agents)
+    const result = await scanCapabilities(kind, agents, { plugins: plugins?.items || [] })
+    if (plugins?.scan.truncated) result.scan.truncated = true
+    return result
+  }
 
   async function workspaceData() {
     const agents = await loadAgents()
+    const pluginScan = detectPlugins(agents)
     const [skills, plugins, mcp, hooks, localSkills, countedAgents] = await Promise.all([
       detectSkills(agents),
-      detectPlugins(agents),
-      detectCapabilities('mcp', agents),
+      pluginScan,
+      pluginScan.then(plugins => detectCapabilities('mcp', agents, plugins)),
       detectCapabilities('hook', agents),
       detectUnmanagedSkills(agents),
       countAgentSkills(agents),
@@ -92,7 +99,7 @@ export function createWorkspace({ root = defaultWorkspaceRoot(), discoveryContex
         else collections.set(location, { id: `collection:${location}`, path: location, name: parts[depth - 1], parentId: depth === 1 ? null : `collection:${parts.slice(0, depth - 1).join('/')}`, count: 1 })
       }
     }
-    const inventory = (kind, items) => items.map(item => ({ ...item, id: `${kind}:${item.agent}:${item.path || item.source}:${item.name}`, kind }))
+    const inventory = (kind, items) => items.map(item => ({ ...item, id: `${kind}:${item.agent}:${item.pluginId || item.path || item.source}:${item.name}`, kind }))
     return {
       checkedAt: new Date().toISOString(),
       source: displayPath(SOURCE_ROOT),

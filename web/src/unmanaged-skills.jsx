@@ -50,7 +50,7 @@ export function UnmanagedSkills({ items, ignoredItems, ignoredCount = ignoredIte
     <div className="inbox-toolbar">
       <p className="inbox-description">{t(showIgnored ? 'skills.ignoredDescription' : 'skills.unmanagedDescription')}</p>
       <div className="inbox-tools">
-        {!showIgnored && items.length ? <button type="button" className="quiet-button" disabled={Boolean(busy)} onClick={() => onNavigate('import')}>{t('skills.importMultiple')}<ArrowRightIcon size={15} /></button> : null}
+        {!showIgnored && items.length ? <button type="button" className="unmanaged-view-toggle" disabled={Boolean(busy)} onClick={() => onNavigate('import')}>{t('skills.importMultiple')}<ArrowRightIcon size={15} /></button> : null}
         {ignoredCount || showIgnored ? <button type="button" className="unmanaged-view-toggle" aria-pressed={showIgnored} onClick={() => {
           setShowIgnored(!showIgnored); setNotice(''); onClose(false)
         }} disabled={Boolean(busy)}>{showIgnored ? t('skills.backToUnmanaged') : t('skills.viewIgnored', { count: ignoredCount })}</button> : null}

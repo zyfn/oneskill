@@ -59,6 +59,8 @@ Commands, icons, resource subdirectories, and MCP reading rules are shared. `con
 
 Scans are bounded by root, depth, and entry count. History, sessions, dependency folders, and build output are skipped. A count ending in `+` indicates a scan limit was reached. Missing locations, unsupported formats, or unreadable files can produce incomplete results. Configuration details do not expose command arguments, environment values, or secrets.
 
+MCP configuration counts include Agent files and discovered plugin declarations. Cached versions of the same Agent/plugin-source/server identity are merged, with all paths retained in details. Same-name servers from different plugins remain separate. Plugin cache discovery does not establish enabled or running state.
+
 ## Library and links
 
 Each skill package contains a `SKILL.md`. Parent folders define collections; selecting a collection includes its descendants. **All skills** includes every package, including those directly under `skills/`. Nested branches expand on demand, and the collection navigation can be collapsed entirely.
