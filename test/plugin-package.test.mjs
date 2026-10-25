@@ -58,7 +58,7 @@ for (const useDefault of [true, false]) {
     assert.equal(data.structuredContent.mcp[0].name, 'docs')
     assert.equal(data.structuredContent.stats.managedSkills, 1)
     assert.equal(data.structuredContent.skills.find(item => item.managed).name, 'private-skill')
-    if (useDefault) assert.equal(data.structuredContent.source, '~/.oneskill/skills')
+    if (useDefault) assert.equal(data.structuredContent.source, path.join('~', '.oneskill', 'skills'))
     assert.equal((await client.readResource({ uri: tool._meta.ui.resourceUri })).contents[0].text, '<main>Workspace</main>')
     assert.equal(errors, '')
   })

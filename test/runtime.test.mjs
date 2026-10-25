@@ -16,6 +16,7 @@ import { digest, atomicJson } from '../src/runtime/paths.mjs'
 import { parseOperation } from '../src/contracts/operations.mjs'
 import { createWorkspaceService } from '../src/runtime/workspace-service.mjs'
 import { APP_VERSION } from '../src/version.mjs'
+import { acquireLock } from '../src/runtime/locks.mjs'
 
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-runtime-'))
@@ -31,6 +32,30 @@ async function fixture(t) {
   t.after(async () => { await runtime.close(); await fs.rm(root, { recursive: true, force: true }) })
   return { root, runtimeRoot, runtime, client }
 }
+
+test('lock acquisition retries when an owner releases between collision and inspection', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-lock-release-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const directory = path.join(root, 'start.lock')
+  const releaseFirst = await acquireLock(directory)
+  const first = JSON.parse(await fs.readFile(path.join(directory, 'owner.json'), 'utf8'))
+  const stat = fs.stat.bind(fs)
+  let released = false
+  t.mock.method(fs, 'stat', async (file, ...args) => {
+    if (file === directory && !released) {
+      released = true
+      await releaseFirst()
+    }
+    return stat(file, ...args)
+  })
+  const releaseSecond = await acquireLock(directory)
+  try {
+    assert.equal(released, true)
+    const second = JSON.parse(await fs.readFile(path.join(directory, 'owner.json'), 'utf8'))
+    assert.notEqual(second.nonce, first.nonce)
+    assert.equal(second.pid, process.pid)
+  } finally { await releaseSecond() }
+})
 
 test('HTTP, CLI and MCP share entity identifiers, snapshots, errors and link changes', async t => {
   const f = await fixture(t)

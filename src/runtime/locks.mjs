@@ -21,7 +21,11 @@ export async function acquireLock(directory, { timeout = 15000 } = {}) {
     } catch (error) {
       if (error.code !== 'EEXIST') throw error
       const owner = await readJson(path.join(directory, 'owner.json')).catch(() => null)
-      const age = Date.now() - (await fs.stat(directory)).mtimeMs
+      const info = await fs.stat(directory).catch(error => { if (error.code === 'ENOENT') return null; throw error })
+      // The current owner can release between mkdir's EEXIST and this read.
+      // Retry acquisition instead of failing a concurrent client's startup.
+      if (!info) continue
+      const age = Date.now() - info.mtimeMs
       if ((owner && !processAlive(owner.pid)) || (!owner && age > 10000)) {
         // Rename first: an old owner must never remove a replacement owner's lock.
         const retired = `${directory}.stale-${randomUUID()}`
