@@ -148,6 +148,7 @@ function DetailContent({ route, item, agents, onClose, onBindingChange, bindingB
     <details className="detail-files" open={route !== 'skills'}>
       <summary>{t(route === 'skills' ? 'skills.files' : 'common.details')}</summary>
       {paths.map((path) => <CopyPath key={path} label={route === 'agents' ? t('agent.directory') : route === 'skills' ? t('skills.skillFolder') : t('common.details')} value={path} onOpenFolder={route === 'agents' && !(item.skillsDirectoryExists ?? item.configured ?? item.installed) ? undefined : onOpenFolder} />)}
+      {route === 'skills' ? item.sharedLinks?.map(path => <CopyPath key={path} label={t('skills.sharedLinks')} value={path} />) : null}
       {item.manifest && !paths.includes(item.manifest) ? <CopyPath label={t('common.manifest')} value={item.manifest} displayValue={item.path && item.manifest.startsWith(`${item.path}/`) ? item.manifest.slice(item.path.length + 1) : undefined} onOpenFolder={onOpenFolder} /> : null}
     </details>
     {route === 'skills' && item.id ? <SkillContent id={item.id} /> : null}

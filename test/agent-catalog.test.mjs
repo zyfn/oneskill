@@ -4,8 +4,28 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
 import { readAgentDefinitions, resolveAgentPlatform } from '../src/agent-catalog.mjs'
-import { createDiscoveryContext } from '../src/agent-discovery.mjs'
+import { configuredAgentLocations, createDiscoveryContext } from '../src/agent-discovery.mjs'
 import { createWorkspace } from '../src/core.mjs'
+
+test('Codex writes to its own Skill directory on both hosts while the shared root stays read-only', async () => {
+  const catalog = JSON.parse(await fs.readFile(new URL('../agents.catalog.json', import.meta.url), 'utf8'))
+  const codex = catalog.find(entry => entry.name === 'codex')
+  for (const [platform, home] of [['darwin', '/tmp/oneskill-user'], ['win32', 'C:\\Users\\fixture']]) {
+    const definition = resolveAgentPlatform(codex, platform)
+    const context = createDiscoveryContext({ platform, home, env: { PATH: '' } })
+    const locations = configuredAgentLocations(definition, context)
+    assert.equal(locations.target.path, context.paths.join(home, '.codex', 'skills'))
+    assert.equal(locations.roots[0].target, true)
+    assert.equal(locations.roots[0].ignorePrefix, '')
+    const shared = locations.roots.find(root => root.id === 'shared')
+    assert.equal(shared.path, context.paths.join(home, '.agents', 'skills'))
+    assert.equal(shared.target, false)
+    assert.equal(shared.scope, 'user')
+    const redirected = configuredAgentLocations(definition, createDiscoveryContext({ platform, home, env: { CODEX_HOME: context.paths.join(home, 'custom-codex') } }))
+    assert.equal(redirected.target.path, context.paths.join(home, 'custom-codex', 'skills'))
+    assert.equal(redirected.roots.find(root => root.id === 'shared').path, shared.path)
+  }
+})
 
 async function fixture(t, presets = []) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-agents-'))

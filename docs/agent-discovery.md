@@ -34,7 +34,7 @@ Agent rules live in `agents.catalog.json`. Commands, icons, resource subdirector
 | `pluginDirs` | Plugin search roots; relative paths use the selected configuration root. A `macos`/`windows` map can limit locally observed roots to one host. |
 | `mcp` | Configuration `file` and the server-map `key` inside it. |
 
-Absolute paths, `~`, and environment-based paths remain independent of `configDir`. For example, Codex uses `skillDir: "~/.agents/skills"`, while Claude uses `skillDir: "skills"`. `~/.claude.json` is in the user's home, outside Claude's configuration directory.
+Absolute paths, `~`, and environment-based paths remain independent of `configDir`. Codex and Claude use `skillDir: "skills"`, so their writable Skill targets follow their own configuration roots and environment overrides. Codex also scans `~/.agents/skills` as an additional shared source. `~/.claude.json` is in the user's home, outside Claude's configuration directory.
 
 File format is inferred from `.json`, `.jsonc`, and `.toml`. An explicit `format` is available when a vendor uses JSONC content in a `.json` file. Undeclared plugin and MCP locations stay unavailable; they are not guessed from directory names.
 

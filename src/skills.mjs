@@ -23,20 +23,22 @@ export function createSkillService({ sourceRoot: SOURCE_ROOT, ignoreFile, loadAg
       const name = item.declaredName || path.basename(item.dir)
       const bindings = []
       for (const agent of agents.filter((entry) => (entry.detected || entry.configured) && agentSkillRoots(entry).length)) {
-        const candidates = await Promise.all(agentSkillRoots(agent).map(async (root) => {
+        const roots = agentSkillRoots(agent)
+        if (!roots.some(root => root.target)) continue
+        const candidates = await Promise.all(roots.map(async (root) => {
           const destination = path.join(root.path, relative)
-          return { destination, target: Boolean(root.target), state: await bindingState(item.dir, destination) }
+          return { destination, target: Boolean(root.target), scope: root.scope, state: await bindingState(item.dir, destination) }
         }))
-        const target = candidates.find((entry) => entry.target) || candidates[0]
+        const target = candidates.find((entry) => entry.target)
         const inherited = [
-          ...candidates.filter((entry) => !entry.target && entry.state === 'linked'),
-          ...linkScan.links.filter(entry => entry.agent === agent.name && entry.source === sourceReal && !candidates.some(candidate => candidate.destination === entry.destination)),
+          ...candidates.filter((entry) => !entry.target && entry.scope !== 'user' && entry.state === 'linked'),
+          ...linkScan.links.filter(entry => entry.agent === agent.name && entry.scope !== 'user' && entry.source === sourceReal && !candidates.some(candidate => candidate.destination === entry.destination)),
         ]
         bindings.push({
           agent: agent.name,
           state: target.state === 'not-linked' && inherited.length ? 'inherited' : target.state,
           destination: displayPath(target.destination),
-          destinations: [...new Set([...candidates.filter((entry) => entry.state === 'linked'), ...inherited].map((entry) => displayPath(entry.destination)))],
+          destinations: [...new Set([...candidates.filter((entry) => entry.scope !== 'user' && entry.state === 'linked'), ...inherited].map((entry) => displayPath(entry.destination)))],
           inheritedDestinations: inherited.map((entry) => displayPath(entry.destination)),
         })
       }
@@ -50,6 +52,7 @@ export function createSkillService({ sourceRoot: SOURCE_ROOT, ignoreFile, loadAg
         path: displayPath(item.dir),
         managed: true,
         origin: 'shared-library',
+        sharedLinks: [...new Set(linkScan.links.filter(entry => entry.scope === 'user' && entry.source === sourceReal).map(entry => displayPath(entry.destination)))],
         bindings,
         linked,
         agentCount: bindings.length,

@@ -5,6 +5,56 @@ import path from 'node:path'
 import os from 'node:os'
 import { createWorkspace } from '../src/core.mjs'
 
+test('shared discovery never enables private Agent links or becomes a writable target', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-private-skills-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const shared = path.join(root, 'user/.agents/skills')
+  const source = path.join(shared, 'review')
+  await fs.mkdir(source, { recursive: true })
+  await fs.writeFile(path.join(source, 'SKILL.md'), '---\nname: review\n---\nReview code.\n')
+  const records = []
+  for (const name of ['first', 'second', 'reader-only']) {
+    const config = path.join(root, name)
+    await fs.mkdir(config)
+    records.push({ name, commands: [name], probeInstallation: false,
+      configDir: { macos: config, windows: config, linux: config },
+      ...(name === 'reader-only' ? {} : { skillDir: 'skills' }),
+      extraSkillDirs: [{ id: 'shared', scope: 'user', path: shared }],
+    })
+  }
+  await fs.writeFile(path.join(root, 'agents.catalog.json'), JSON.stringify(records))
+  const workspace = createWorkspace({ root })
+  const unmanaged = (await workspace.detectUnmanagedSkills()).items
+  assert.equal(unmanaged.length, 1)
+  assert.equal(unmanaged[0].sourceKind, 'shared')
+  assert.equal((await workspace.importSkills([{ agent: unmanaged[0].agent, path: source }])).results[0].ok, true)
+  await assert.rejects(fs.lstat(source), { code: 'ENOENT' })
+
+  await workspace.setSkillLink('first', 'review', true)
+  let managed = (await workspace.detectSkills()).items[0]
+  assert.deepEqual(managed.bindings.map(binding => [binding.agent, binding.state]), [['first', 'linked'], ['second', 'not-linked']])
+  assert.deepEqual(managed.sharedLinks, [])
+  await assert.rejects(fs.lstat(source), { code: 'ENOENT' })
+  await assert.rejects(fs.lstat(path.join(root, 'second/skills/review')), { code: 'ENOENT' })
+
+  // Preexisting global references remain inventory, not private associations.
+  await fs.symlink(path.join(root, 'skills/review'), source, 'dir')
+  managed = (await workspace.detectSkills()).items[0]
+  assert.deepEqual(managed.bindings.map(binding => binding.state), ['linked', 'not-linked'])
+  assert.deepEqual(managed.sharedLinks, [source])
+  assert.deepEqual(managed.bindings.map(binding => binding.inheritedDestinations), [[], []])
+  assert.equal(managed.linked, 1)
+  assert.equal((await workspace.detectUnmanagedSkills()).items.length, 0)
+  assert.deepEqual((await workspace.countAgentSkills(await workspace.loadAgents())).map(agent => agent.totalSkills), [1, 1, 1])
+
+  await workspace.setSkillLink('first', 'review', false)
+  managed = (await workspace.detectSkills()).items[0]
+  assert.deepEqual(managed.bindings.map(binding => binding.state), ['not-linked', 'not-linked'])
+  assert.equal(managed.linked, 0)
+  assert.deepEqual(managed.sharedLinks, [source])
+  assert.equal(await fs.realpath(source), await fs.realpath(path.join(root, 'skills/review')))
+})
+
 test('a shared Skill directory is inventoried once, keeps old ignore choices, and imports from its own root', async t => {
   const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-shared-skills-'))
   t.after(() => fs.rm(workspaceRoot, { recursive: true, force: true }))

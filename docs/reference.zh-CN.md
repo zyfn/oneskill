@@ -10,7 +10,7 @@
 | --- | --- |
 | QwenWork | `~/.qwenworkcn/skills`（本机观察到的 macOS 兼容位置） |
 | Qwen Code | `~/.qwen/skills` |
-| Codex | `~/.agents/skills` |
+| Codex | `~/.codex/skills`（或 `$CODEX_HOME/skills`） |
 | Claude Code | `~/.claude/skills` |
 | Qoder | `~/.qoder/skills` |
 | Qoder CLI | `~/.qoder/skills` |
@@ -67,7 +67,7 @@ MCP 配置数量包含 Agent 主配置与已发现插件的声明。相同 Agent
 
 链接指向共享包，不复制内容。目标已被占用时报告冲突，不覆盖已有文件。移动或重命名包后，扫描会提示指向管理库的失效链接。可以选择新位置重新链接，或仅移除失效引用；指向其他来源的链接不参与此操作。多级目录能否被加载取决于目标 Agent。
 
-写入同一个 Skill 目录的 Agent 共用一个连接控件和一条链接，例如 Qoder 与 Qoder CLI。从其他扫描目录读取到的链接显示为“其他位置已链接”的只读状态；链接和取消链接仅操作该控件配置的目标目录，不删除其他目录的链接。共享目录的可见范围由各 Agent 自身决定。
+写入同一个 Skill 目录的 Agent 共用一个链接控制，例如 Qoder 与 Qoder CLI。Codex 写入 `~/.codex/skills` 或 `$CODEX_HOME/skills`。`~/.agents/skills` 等共享来源中的引用在文件区展示，不自动点亮 Agent 目录开关，也不计入已链接数量；Agent 自身目录中其他位置的引用仍可只读查看。链接和取消链接只修改配置的目标目录，共享来源保留。客户端自行决定读取哪些兼容目录，目录链接不提供运行时隔离。
 
 ## 导入与恢复
 

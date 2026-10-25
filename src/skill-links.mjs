@@ -47,7 +47,7 @@ export async function inspectSkillLinks(sourceRoot, agents) {
         const canonicalTarget = await canonicalPath(target)
         if (!roots.some(base => within(base, canonicalTarget))) continue
         const source = await fs.realpath(destination)
-        links.push({ agent: agent.name, destination, source })
+        links.push({ agent: agent.name, destination, source, scope: root.scope })
         continue
       } catch (error) { if (error.code !== 'ENOENT') continue }
       if (!target) continue

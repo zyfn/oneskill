@@ -130,16 +130,14 @@
       "windows": "${USERPROFILE}/.codex"
     },
     "configDirEnv": "CODEX_HOME",
-    "skillDir": "~/.agents/skills",
+    "skillDir": "skills",
     "extraSkillDirs": [
       {
-        "id": "legacy",
-        "scope": "compatibility",
-        "ignorePrefix": "",
-        "path": "skills"
+        "id": "shared",
+        "scope": "user",
+        "path": "~/.agents/skills"
       }
     ],
-    "skillLinkIgnorePrefix": "@shared/",
     "pluginDirs": [
       "plugins/cache"
     ],
@@ -157,7 +155,7 @@
         "https://learn.chatgpt.com/docs/extend/mcp?surface=cli"
       ],
       "notes": [
-        "CODEX_HOME/skills and plugins/cache are retained for existing local installations."
+        "oneskill writes Codex Skill links to CODEX_HOME/skills (default ~/.codex/skills). ~/.agents/skills is scanned only as a shared source; this directory policy does not isolate client skill discovery."
       ]
     }
   },
