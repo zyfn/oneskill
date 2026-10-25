@@ -12,7 +12,7 @@ oneskill 是面向编程 Agent 的本地 Skill 管理工具。将 Skill 集中�
 
 ## 运行原理
 
-![一份 Skill 管理库，通过符号链接供多个 Agent 读取](docs/architecture.svg)
+![Web、CLI 与 Codex 共用本地工作区服务，Agent 目录中的符号链接指向 Skill 管理库](docs/architecture.svg)
 
 1. **集中保存文件**：将已有 Skill 纳入 `~/.oneskill/skills/`。oneskill 会校验内容、保留原包备份，再将它从原位置移走。
 2. **选择接入的 Agent**：在 Skill 详情中打开对应开关，oneskill 会在该 Agent 配置的 Skill 目录里创建符号链接，指向管理库中的包。仅纳入管理不会创建链接。

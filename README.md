@@ -12,7 +12,7 @@ oneskill is a local Skill manager for coding Agents. Keep packages in `~/.oneski
 
 ## How it works
 
-![One Skill library, read by multiple Agents through symbolic links](docs/architecture.svg)
+![Web, CLI and Codex share one local Workspace service; Agent directory links point to the Skill library](docs/architecture.svg)
 
 1. **Bring the files together.** Import an existing Skill into `~/.oneskill/skills/`. oneskill verifies the package, backs up the original, and moves it out of its former location.
 2. **Choose the connections.** Enable an Agent in the Skill inspector. oneskill creates a symbolic link in that Agent's configured Skill directory, pointing to the package in your library. Importing alone creates no links.

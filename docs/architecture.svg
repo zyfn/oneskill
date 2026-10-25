@@ -1,74 +1,136 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1184" height="552" viewBox="0 0 1184 552" role="img" aria-labelledby="title description">
-  <title id="title">One Skill library. Many Agents.</title>
-  <desc id="description">Skill packages live in the user's .oneskill/skills library. Selected Agents, illustrated by Codex, Claude Code and Cursor, read the same packages through symbolic links in their configured Skill directories. Web, CLI and the Codex plugin manage the library through one local Workspace service.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title description">
+  <title id="title">oneskill architecture — a local workspace, shared by three interfaces</title>
+  <desc id="description">Web, CLI and the Codex plugin sit above and connect to one local Workspace service. That service manages a canonical Skill library and references in Agent directories. Agent symbolic links point directly back to library packages; reading Skill files does not pass through the service.</desc>
   <defs>
     <style>
-      :root{--canvas:#fafbfc;--paper:#fff;--ink:#202b39;--muted:#687687;--blue:#527eaf;--folder:#edf3fb;--edge:#c8d8eb;--wire:#91add0;--rule:#e4e9f0}
-      @media(prefers-color-scheme:dark){:root{--canvas:#111922;--paper:#1c2a3a;--ink:#e8eef6;--muted:#a2b0c1;--blue:#97bce9;--folder:#1a2e46;--edge:#38516e;--wire:#7398c6;--rule:#2b3b4e}}
-      text{font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--ink)}
-      .display{font-size:36px;font-weight:650;letter-spacing:-1.1px}
-      .body{font-size:16px;fill:var(--muted)}
-      .eyebrow{font-size:11px;font-weight:650;letter-spacing:1.6px;fill:var(--muted)}
-      .agent{font-size:20px;font-weight:600;letter-spacing:-.3px}
+      text{font-family:Helvetica,Arial,ui-sans-serif,system-ui,sans-serif;fill:#282b29}
+      .display{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:40px;font-weight:400;letter-spacing:-1px}
+      .meta{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;letter-spacing:1.25px;fill:#7e8da0}
+      .client{font-size:23px;font-weight:600;letter-spacing:-.5px}
+      .body{font-size:14px;fill:#697b90}
       .mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
-      .path{font-size:13px;fill:var(--muted)}
-      .wire{fill:none;stroke:var(--wire);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-      .icon{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-      .brand{fill:var(--blue)}
-      #agent-codex path{fill:var(--ink)}
+      .icon{fill:none;stroke:#56677d;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+      .operation{fill:none;stroke:#8295ae;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round}
+      .rule{stroke:#d3deeb;stroke-width:1}
+      .reference{fill:none;stroke:#c46b42;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:5 5}
+      #mark-openai path{fill:#343935}
     </style>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="m1 1 6 3-6 3" fill="none" stroke="var(--wire)" stroke-width="1.5"/></marker>
-    <symbol id="oneskill-mark" viewBox="0 0 64 64"><title>oneskill</title>
+    <marker id="operation-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="m1 1 6 3-6 3" fill="none" stroke="#8295ae" stroke-width="1.3"/></marker>
+    <marker id="reference-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="m1 1 6 3-6 3" fill="none" stroke="#c46b42" stroke-width="1.4"/></marker>
+    <symbol id="mark-oneskill" viewBox="0 0 64 64" fill="#5B78A4"><title>oneskill</title>
   <path d="M15 10C22 10 22 22 34 26C39 28 46 28 56 28V37C38 37 27 40 23 48C21 52 21 57 15 57C10 57 9 53 11 48C14 41 20 35 29 32C21 29 14 23 11 17C9 13 11 10 15 10Z"/></symbol>
-    <symbol id="agent-codex" viewBox="0 0 28 28"><path d="M25.9489 10.854C26.5806 8.48721 25.968 5.85728 24.1111 4.0005C22.2544 2.14371 19.6244 1.53106 17.2576 2.16271C15.5236 0.432283 12.9397 -0.352139 10.4032 0.32755C7.86677 1.00724 6.02142 2.97849 5.38482 5.34396C3.01935 5.9804 1.0481 7.82591 0.368566 10.3624C-0.311124 12.8988 0.473299 15.4826 2.20372 17.2166C1.57208 19.5834 2.18473 22.2134 4.04152 24.0701C5.89829 25.927 8.52823 26.5396 10.8951 25.9079C12.6291 27.6384 15.213 28.4228 17.7493 27.7431C20.2857 27.0634 22.1311 25.0921 22.7677 22.7267C25.1333 22.0903 27.1046 20.2447 27.7841 17.7083C28.4638 15.1718 27.6794 12.5881 25.9489 10.854ZM16.3108 4.19745C18.4392 2.96691 21.208 3.2621 23.029 5.08306C24.3143 6.36844 24.8391 8.12667 24.6041 9.79791L18.6092 6.33677C18.3724 6.20006 18.0806 6.20006 17.8438 6.33677L10.8241 10.3897V7.66464C10.8241 7.48081 10.9226 7.30904 11.0817 7.21712L16.3107 4.1976L16.3108 4.19745ZM14.0764 10.2797L17.3288 12.1575V15.9131L14.0764 17.7909L10.8239 15.9131V12.1575L14.0764 10.2797ZM6.67376 7.18129C6.67221 4.72282 8.31227 2.47243 10.7998 1.80602C12.5555 1.3355 14.3406 1.76015 15.6705 2.7993L9.67567 6.26046C9.43886 6.39717 9.29303 6.64989 9.29303 6.92332V15.0291L6.93297 13.6665C6.77386 13.5745 6.67422 13.4032 6.67422 13.2196L6.67376 7.18144V7.18129ZM1.84704 10.7583C2.31757 9.00254 3.57778 7.66881 5.14261 7.0367V13.9588C5.14261 14.2323 5.28843 14.485 5.52524 14.6217L12.545 18.6747L10.1849 20.0373C10.0259 20.1292 9.82765 20.1298 9.66856 20.0379L4.43913 17.0193C2.30923 15.7914 1.18049 13.2458 1.84689 10.7585L1.84704 10.7583ZM11.8419 23.8732C9.71352 25.1038 6.94471 24.8085 5.12376 22.9876C3.83838 21.7022 3.31362 19.944 3.54858 18.2727L9.54344 21.7339C9.7802 21.8706 10.0721 21.8706 10.3089 21.7339L17.3286 17.6809V20.406C17.3286 20.5899 17.2301 20.7617 17.071 20.8535L11.842 23.8731L11.8419 23.8732ZM21.479 20.8894C21.4805 23.3479 19.8404 25.5983 17.3529 26.2646C15.5971 26.7352 13.812 26.3105 12.4822 25.2713L18.477 21.8102C18.7139 21.6735 18.8597 21.4207 18.8597 21.1473V13.0416L21.2198 14.4042C21.3788 14.4961 21.4785 14.6675 21.4785 14.8511L21.479 20.8892V20.8894ZM26.3055 17.3123C25.835 19.0681 24.5748 20.4018 23.0099 21.034V14.1118C23.0099 13.8384 22.8641 13.5857 22.6273 13.4489L15.6075 9.39599L17.9676 8.03337C18.1266 7.94146 18.3249 7.94083 18.484 8.03275L23.7134 11.0513C25.8434 12.2792 26.972 14.8249 26.3056 17.3122L26.3055 17.3123Z" fill="currentColor"/></symbol>
-    <symbol id="agent-claude" viewBox="0 0 95 95"><path d="M18.3673 62.8496L36.7852 52.5218L37.0888 51.6172L36.7852 51.1134H35.8744L32.7879 50.9257L22.2634 50.644L13.1556 50.2684L4.30088 49.799L2.07454 49.3295L0 46.5598L0.202395 45.1984L2.07454 43.9309L4.75627 44.1656L10.6763 44.5882L19.5817 45.1984L26.0077 45.574L35.5708 46.5598H37.0888L37.2912 45.9495L36.7852 45.574L36.3804 45.1984L27.1715 38.9548L17.2035 32.3826L11.9919 28.58L9.20895 26.6553L7.79219 24.8714L7.18501 20.9281L9.71494 18.1114L13.1556 18.3461L14.0158 18.5808L17.5071 21.2567L24.9451 27.0309L34.6601 34.1665L36.0768 35.3401L36.6473 34.955L36.7346 34.6828L36.0768 33.6031L30.8146 24.0734L25.1981 14.3558L22.6682 10.3186L22.0104 7.92443C21.7556 6.9197 21.6056 6.08846 21.6056 5.06081L24.4897 1.11746L26.1089 0.601074L30.005 1.11746L31.6242 2.5258L34.0529 8.06526L37.949 16.75L44.0208 28.58L45.7918 32.1009L46.7532 35.3401L47.1073 36.3259H47.7145V35.7626L48.2205 29.0964L49.1313 20.9281L50.0421 10.4125L50.3457 7.45498L51.813 3.88719L54.7477 1.96247L57.0247 3.04219L58.8968 5.71803L58.6438 7.45498L57.5307 14.6844L55.3549 25.9981L53.9382 33.6031H54.7477L55.7091 32.6173L59.5546 27.5473L65.9806 19.4728L68.8142 16.2806L72.1537 12.7597L74.2788 11.0697H78.3267L81.2614 15.4825L79.9459 20.0361L75.7968 25.2939L72.3561 29.7537L67.4227 36.3633L64.3615 41.6776L64.636 42.116L65.3735 42.0531L76.5051 39.659L82.5264 38.5792L89.7114 37.3587L92.9497 38.8609L93.3039 40.4101L92.0389 43.5554L84.3479 45.4332L75.3414 47.264L61.9295 50.4213L61.7809 50.5407L61.9563 50.8007L68.0046 51.3482L70.5851 51.489H76.9099L88.6994 52.3809L91.7859 54.3996L93.6075 56.8876L93.3039 58.8124L88.5476 61.2065L82.1722 59.7043L67.2456 56.1365L62.1351 54.869H61.4268V55.2915L65.677 59.4696L73.5198 66.5113L83.2854 75.6185L83.7914 77.8719L82.5264 79.6558L81.2108 79.468L72.6091 72.9896L69.2695 70.0791L61.7809 63.7415H61.275V64.3988L62.9953 66.9338L72.1537 80.6885L72.6091 84.9135L71.9513 86.2749L69.5731 87.1199L66.9926 86.6505L61.5786 79.0924L56.0633 70.6424L51.6106 63.0374L51.0728 63.3769L48.4229 91.6736L47.2085 93.1288L44.375 94.2086L41.9969 92.4247L40.7319 89.5141L41.9969 83.7399L43.5148 76.2288L44.7292 70.2668L45.8424 62.8496L46.5222 60.3717L46.4622 60.206L45.919 60.2972L40.3271 67.9665L31.8265 79.468L25.0969 86.6505L23.4778 87.3077L20.6948 85.8524L20.9478 83.2705L22.5164 80.9702L31.8265 69.1402L37.443 61.7699L41.0628 57.5391L41.0276 56.9272L40.8277 56.9102L16.0904 73.0366L11.6883 73.5999L9.76554 71.816L10.0185 68.9054L10.9293 67.9665L18.3673 62.8496Z" fill="#D97757"/></symbol>
-    <symbol id="agent-cursor" viewBox="0 0 512 512"><path d="m512 325.5c0 7.124 0 14.24-.041 21.364-.034 5.999-.103 11.998-.268 17.99-.356 13.068-1.124 26.245-3.448 39.169-2.359 13.109-6.205 25.306-12.266 37.222-5.958 11.703-13.746 22.419-23.029 31.709-9.29 9.29-20 17.072-31.71 23.03-11.909 6.061-24.113 9.907-37.222 12.266-12.923 2.324-26.101 3.092-39.169 3.448-5.999.165-11.991.233-17.99.268-7.123.048-14.24.041-21.364.041h-139c-7.124 0-14.24 0-21.364-.041-5.999-.035-11.998-.103-17.99-.268-13.068-.356-26.245-1.124-39.169-3.448-13.109-2.359-25.306-6.205-37.2219-12.266-11.7033-5.958-22.4194-13.746-31.7095-23.03-9.29-9.29-17.0717-19.999-23.0296-31.709-6.0608-11.909-9.90707-24.113-12.26557-37.222-2.32422-12.924-3.0921-26.101-3.448618-39.169-.164546-5.999-.2331071-11.991-.2673876-17.99-.0274244-7.124-.0274244-14.24-.0274244-21.364v-139c0-7.124 0-14.24.0411366-21.364.0342805-5.999.1028414-11.998.2673884-17.99.356517-13.068 1.124405-26.245 3.448615-39.169 2.3585-13.1091 6.20478-25.3061 12.26556-37.222 5.958-11.7034 13.7465-22.4195 23.0297-31.7095 9.29-9.29 19.9992-17.0717 31.7094-23.0296 11.9091-6.06084 24.1129-9.90711 37.2222-12.26561 12.923-2.32422 26.101-3.092104 39.169-3.448622 5.999-.164546 11.991-.233107 17.99-.2673875 7.117-.0342805 14.233-.0342805 21.357-.0342805h139c7.124 0 14.24 0 21.364.0411366 5.999.0342805 11.998.1028414 17.99.2673884 13.068.356517 26.245 1.124405 39.169 3.448615 13.109 2.3585 25.306 6.20478 37.222 12.26556 11.703 5.958 22.419 13.7465 31.709 23.0297 9.29 9.29 17.072 19.9992 23.03 31.7094 6.061 11.9091 9.907 24.1129 12.266 37.2222 2.324 12.923 3.092 26.101 3.448 39.169.165 5.999.233 11.991.268 17.99.048 7.123.041 14.24.041 21.364v139z" fill="#14120b"/><path d="m186.5 4h139c7.125 0 14.231-.00004 21.341.04102 5.985.0342 11.952.10221 17.903.26562h.001c13.003.35475 25.943 1.11709 38.569 3.3877 12.775 2.29827 24.592 6.03146 36.118 11.89356v-.001c10.974 5.5867 21.052 12.8384 29.848 21.457l.847.8379c8.993 8.993 16.525 19.3594 22.292 30.6934v.001c5.678 11.1575 9.36 22.6023 11.674 34.9208l.219 1.195c2.129 11.837 2.932 23.95 3.316 36.132l.072 2.438c.164 5.958.232 11.919.266 17.904v.004c.048 7.107.041 14.207.041 21.337v129.344l-.007-.007v9.656c0 7.125 0 14.231-.041 21.341-.034 5.985-.102 11.952-.266 17.903v.001c-.354 13.003-1.117 25.943-3.387 38.569-2.227 12.376-5.8 23.853-11.351 35.037l-.543 1.08c-5.766 11.327-13.306 21.701-22.293 30.695-8.993 8.993-19.361 16.526-30.695 22.293-11.518 5.861-23.342 9.595-36.116 11.893-11.837 2.129-23.95 2.932-36.132 3.316l-2.438.072c-5.958.164-11.919.232-17.904.266h-.004c-7.107.048-14.207.041-21.337.041h-139c-7.125 0-14.231 0-21.341-.041-5.985-.034-11.952-.102-17.903-.266h-.001c-13.003-.355-25.944-1.117-38.57-3.388-12.7742-2.298-24.5914-6.031-36.1165-11.893h.001c-10.974-5.587-21.0534-12.837-29.8496-21.456l-.8467-.838c-8.7118-8.712-16.0531-18.713-21.7461-29.634l-.5459-1.06-.5439-1.081c-5.371-10.816-8.8905-21.919-11.12991-33.84l-.21973-1.196c-2.27061-12.626-3.03294-25.566-3.38769-38.569v-.001c-.16341-5.958-.23142-11.918-.26563-17.903-.02736-7.112-.02734-14.219-.02734-21.341v-139c0-7.125-.00004-14.231.04102-21.341.0342-5.985.10221-11.952.26562-17.903v-.001c.35476-13.003 1.117-25.944 3.3877-38.57 2.29828-12.7744 6.03156-24.5916 11.89356-36.1166l-.001-.001c5.7666-11.327 13.3073-21.6999 22.294-30.6934 8.9933-8.9933 19.3607-16.5261 30.6953-22.2929 11.5173-5.8615 23.3406-9.59619 36.1148-11.89458 11.837-2.12877 23.951-2.93016 36.133-3.31445l2.438-.07227c5.958-.16342 11.919-.23142 17.904-.26562l-.001-.00098c7.104-.03421 14.211-.0332 21.335-.0332z" stroke="#edecec" stroke-opacity=".2" stroke-width="8"/><path d="m415.035 156.35-151.503-87.4695c-4.865-2.8094-10.868-2.8094-15.733 0l-151.4969 87.4695c-4.0897 2.362-6.6146 6.729-6.6146 11.459v176.383c0 4.73 2.5249 9.097 6.6146 11.458l151.5039 87.47c4.865 2.809 10.868 2.809 15.733 0l151.504-87.47c4.089-2.361 6.614-6.728 6.614-11.458v-176.383c0-4.73-2.525-9.097-6.614-11.459zm-9.516 18.528-146.255 253.32c-.988 1.707-3.599 1.01-3.599-.967v-165.872c0-3.314-1.771-6.379-4.644-8.044l-143.645-82.932c-1.707-.988-1.01-3.599.968-3.599h292.509c4.154 0 6.75 4.503 4.673 8.101h-.007z" fill="#edecec"/></symbol>
+    <symbol id="mark-openai" viewBox="0 0 28 28"><path d="M25.9489 10.854C26.5806 8.48721 25.968 5.85728 24.1111 4.0005C22.2544 2.14371 19.6244 1.53106 17.2576 2.16271C15.5236 0.432283 12.9397 -0.352139 10.4032 0.32755C7.86677 1.00724 6.02142 2.97849 5.38482 5.34396C3.01935 5.9804 1.0481 7.82591 0.368566 10.3624C-0.311124 12.8988 0.473299 15.4826 2.20372 17.2166C1.57208 19.5834 2.18473 22.2134 4.04152 24.0701C5.89829 25.927 8.52823 26.5396 10.8951 25.9079C12.6291 27.6384 15.213 28.4228 17.7493 27.7431C20.2857 27.0634 22.1311 25.0921 22.7677 22.7267C25.1333 22.0903 27.1046 20.2447 27.7841 17.7083C28.4638 15.1718 27.6794 12.5881 25.9489 10.854ZM16.3108 4.19745C18.4392 2.96691 21.208 3.2621 23.029 5.08306C24.3143 6.36844 24.8391 8.12667 24.6041 9.79791L18.6092 6.33677C18.3724 6.20006 18.0806 6.20006 17.8438 6.33677L10.8241 10.3897V7.66464C10.8241 7.48081 10.9226 7.30904 11.0817 7.21712L16.3107 4.1976L16.3108 4.19745ZM14.0764 10.2797L17.3288 12.1575V15.9131L14.0764 17.7909L10.8239 15.9131V12.1575L14.0764 10.2797ZM6.67376 7.18129C6.67221 4.72282 8.31227 2.47243 10.7998 1.80602C12.5555 1.3355 14.3406 1.76015 15.6705 2.7993L9.67567 6.26046C9.43886 6.39717 9.29303 6.64989 9.29303 6.92332V15.0291L6.93297 13.6665C6.77386 13.5745 6.67422 13.4032 6.67422 13.2196L6.67376 7.18144V7.18129ZM1.84704 10.7583C2.31757 9.00254 3.57778 7.66881 5.14261 7.0367V13.9588C5.14261 14.2323 5.28843 14.485 5.52524 14.6217L12.545 18.6747L10.1849 20.0373C10.0259 20.1292 9.82765 20.1298 9.66856 20.0379L4.43913 17.0193C2.30923 15.7914 1.18049 13.2458 1.84689 10.7585L1.84704 10.7583ZM11.8419 23.8732C9.71352 25.1038 6.94471 24.8085 5.12376 22.9876C3.83838 21.7022 3.31362 19.944 3.54858 18.2727L9.54344 21.7339C9.7802 21.8706 10.0721 21.8706 10.3089 21.7339L17.3286 17.6809V20.406C17.3286 20.5899 17.2301 20.7617 17.071 20.8535L11.842 23.8731L11.8419 23.8732ZM21.479 20.8894C21.4805 23.3479 19.8404 25.5983 17.3529 26.2646C15.5971 26.7352 13.812 26.3105 12.4822 25.2713L18.477 21.8102C18.7139 21.6735 18.8597 21.4207 18.8597 21.1473V13.0416L21.2198 14.4042C21.3788 14.4961 21.4785 14.6675 21.4785 14.8511L21.479 20.8892V20.8894ZM26.3055 17.3123C25.835 19.0681 24.5748 20.4018 23.0099 21.034V14.1118C23.0099 13.8384 22.8641 13.5857 22.6273 13.4489L15.6075 9.39599L17.9676 8.03337C18.1266 7.94146 18.3249 7.94083 18.484 8.03275L23.7134 11.0513C25.8434 12.2792 26.972 14.8249 26.3056 17.3122L26.3055 17.3123Z" fill="currentColor"/></symbol>
+    <symbol id="mark-claude" viewBox="0 0 95 95"><path d="M18.3673 62.8496L36.7852 52.5218L37.0888 51.6172L36.7852 51.1134H35.8744L32.7879 50.9257L22.2634 50.644L13.1556 50.2684L4.30088 49.799L2.07454 49.3295L0 46.5598L0.202395 45.1984L2.07454 43.9309L4.75627 44.1656L10.6763 44.5882L19.5817 45.1984L26.0077 45.574L35.5708 46.5598H37.0888L37.2912 45.9495L36.7852 45.574L36.3804 45.1984L27.1715 38.9548L17.2035 32.3826L11.9919 28.58L9.20895 26.6553L7.79219 24.8714L7.18501 20.9281L9.71494 18.1114L13.1556 18.3461L14.0158 18.5808L17.5071 21.2567L24.9451 27.0309L34.6601 34.1665L36.0768 35.3401L36.6473 34.955L36.7346 34.6828L36.0768 33.6031L30.8146 24.0734L25.1981 14.3558L22.6682 10.3186L22.0104 7.92443C21.7556 6.9197 21.6056 6.08846 21.6056 5.06081L24.4897 1.11746L26.1089 0.601074L30.005 1.11746L31.6242 2.5258L34.0529 8.06526L37.949 16.75L44.0208 28.58L45.7918 32.1009L46.7532 35.3401L47.1073 36.3259H47.7145V35.7626L48.2205 29.0964L49.1313 20.9281L50.0421 10.4125L50.3457 7.45498L51.813 3.88719L54.7477 1.96247L57.0247 3.04219L58.8968 5.71803L58.6438 7.45498L57.5307 14.6844L55.3549 25.9981L53.9382 33.6031H54.7477L55.7091 32.6173L59.5546 27.5473L65.9806 19.4728L68.8142 16.2806L72.1537 12.7597L74.2788 11.0697H78.3267L81.2614 15.4825L79.9459 20.0361L75.7968 25.2939L72.3561 29.7537L67.4227 36.3633L64.3615 41.6776L64.636 42.116L65.3735 42.0531L76.5051 39.659L82.5264 38.5792L89.7114 37.3587L92.9497 38.8609L93.3039 40.4101L92.0389 43.5554L84.3479 45.4332L75.3414 47.264L61.9295 50.4213L61.7809 50.5407L61.9563 50.8007L68.0046 51.3482L70.5851 51.489H76.9099L88.6994 52.3809L91.7859 54.3996L93.6075 56.8876L93.3039 58.8124L88.5476 61.2065L82.1722 59.7043L67.2456 56.1365L62.1351 54.869H61.4268V55.2915L65.677 59.4696L73.5198 66.5113L83.2854 75.6185L83.7914 77.8719L82.5264 79.6558L81.2108 79.468L72.6091 72.9896L69.2695 70.0791L61.7809 63.7415H61.275V64.3988L62.9953 66.9338L72.1537 80.6885L72.6091 84.9135L71.9513 86.2749L69.5731 87.1199L66.9926 86.6505L61.5786 79.0924L56.0633 70.6424L51.6106 63.0374L51.0728 63.3769L48.4229 91.6736L47.2085 93.1288L44.375 94.2086L41.9969 92.4247L40.7319 89.5141L41.9969 83.7399L43.5148 76.2288L44.7292 70.2668L45.8424 62.8496L46.5222 60.3717L46.4622 60.206L45.919 60.2972L40.3271 67.9665L31.8265 79.468L25.0969 86.6505L23.4778 87.3077L20.6948 85.8524L20.9478 83.2705L22.5164 80.9702L31.8265 69.1402L37.443 61.7699L41.0628 57.5391L41.0276 56.9272L40.8277 56.9102L16.0904 73.0366L11.6883 73.5999L9.76554 71.816L10.0185 68.9054L10.9293 67.9665L18.3673 62.8496Z" fill="#D97757"/></symbol>
+    <symbol id="mark-cursor" viewBox="0 0 512 512"><path d="m512 325.5c0 7.124 0 14.24-.041 21.364-.034 5.999-.103 11.998-.268 17.99-.356 13.068-1.124 26.245-3.448 39.169-2.359 13.109-6.205 25.306-12.266 37.222-5.958 11.703-13.746 22.419-23.029 31.709-9.29 9.29-20 17.072-31.71 23.03-11.909 6.061-24.113 9.907-37.222 12.266-12.923 2.324-26.101 3.092-39.169 3.448-5.999.165-11.991.233-17.99.268-7.123.048-14.24.041-21.364.041h-139c-7.124 0-14.24 0-21.364-.041-5.999-.035-11.998-.103-17.99-.268-13.068-.356-26.245-1.124-39.169-3.448-13.109-2.359-25.306-6.205-37.2219-12.266-11.7033-5.958-22.4194-13.746-31.7095-23.03-9.29-9.29-17.0717-19.999-23.0296-31.709-6.0608-11.909-9.90707-24.113-12.26557-37.222-2.32422-12.924-3.0921-26.101-3.448618-39.169-.164546-5.999-.2331071-11.991-.2673876-17.99-.0274244-7.124-.0274244-14.24-.0274244-21.364v-139c0-7.124 0-14.24.0411366-21.364.0342805-5.999.1028414-11.998.2673884-17.99.356517-13.068 1.124405-26.245 3.448615-39.169 2.3585-13.1091 6.20478-25.3061 12.26556-37.222 5.958-11.7034 13.7465-22.4195 23.0297-31.7095 9.29-9.29 19.9992-17.0717 31.7094-23.0296 11.9091-6.06084 24.1129-9.90711 37.2222-12.26561 12.923-2.32422 26.101-3.092104 39.169-3.448622 5.999-.164546 11.991-.233107 17.99-.2673875 7.117-.0342805 14.233-.0342805 21.357-.0342805h139c7.124 0 14.24 0 21.364.0411366 5.999.0342805 11.998.1028414 17.99.2673884 13.068.356517 26.245 1.124405 39.169 3.448615 13.109 2.3585 25.306 6.20478 37.222 12.26556 11.703 5.958 22.419 13.7465 31.709 23.0297 9.29 9.29 17.072 19.9992 23.03 31.7094 6.061 11.9091 9.907 24.1129 12.266 37.2222 2.324 12.923 3.092 26.101 3.448 39.169.165 5.999.233 11.991.268 17.99.048 7.123.041 14.24.041 21.364v139z" fill="#14120b"/><path d="m186.5 4h139c7.125 0 14.231-.00004 21.341.04102 5.985.0342 11.952.10221 17.903.26562h.001c13.003.35475 25.943 1.11709 38.569 3.3877 12.775 2.29827 24.592 6.03146 36.118 11.89356v-.001c10.974 5.5867 21.052 12.8384 29.848 21.457l.847.8379c8.993 8.993 16.525 19.3594 22.292 30.6934v.001c5.678 11.1575 9.36 22.6023 11.674 34.9208l.219 1.195c2.129 11.837 2.932 23.95 3.316 36.132l.072 2.438c.164 5.958.232 11.919.266 17.904v.004c.048 7.107.041 14.207.041 21.337v129.344l-.007-.007v9.656c0 7.125 0 14.231-.041 21.341-.034 5.985-.102 11.952-.266 17.903v.001c-.354 13.003-1.117 25.943-3.387 38.569-2.227 12.376-5.8 23.853-11.351 35.037l-.543 1.08c-5.766 11.327-13.306 21.701-22.293 30.695-8.993 8.993-19.361 16.526-30.695 22.293-11.518 5.861-23.342 9.595-36.116 11.893-11.837 2.129-23.95 2.932-36.132 3.316l-2.438.072c-5.958.164-11.919.232-17.904.266h-.004c-7.107.048-14.207.041-21.337.041h-139c-7.125 0-14.231 0-21.341-.041-5.985-.034-11.952-.102-17.903-.266h-.001c-13.003-.355-25.944-1.117-38.57-3.388-12.7742-2.298-24.5914-6.031-36.1165-11.893h.001c-10.974-5.587-21.0534-12.837-29.8496-21.456l-.8467-.838c-8.7118-8.712-16.0531-18.713-21.7461-29.634l-.5459-1.06-.5439-1.081c-5.371-10.816-8.8905-21.919-11.12991-33.84l-.21973-1.196c-2.27061-12.626-3.03294-25.566-3.38769-38.569v-.001c-.16341-5.958-.23142-11.918-.26563-17.903-.02736-7.112-.02734-14.219-.02734-21.341v-139c0-7.125-.00004-14.231.04102-21.341.0342-5.985.10221-11.952.26562-17.903v-.001c.35476-13.003 1.117-25.944 3.3877-38.57 2.29828-12.7744 6.03156-24.5916 11.89356-36.1166l-.001-.001c5.7666-11.327 13.3073-21.6999 22.294-30.6934 8.9933-8.9933 19.3607-16.5261 30.6953-22.2929 11.5173-5.8615 23.3406-9.59619 36.1148-11.89458 11.837-2.12877 23.951-2.93016 36.133-3.31445l2.438-.07227c5.958-.16342 11.919-.23142 17.904-.26562l-.001-.00098c7.104-.03421 14.211-.0332 21.335-.0332z" stroke="#edecec" stroke-opacity=".2" stroke-width="8"/><path d="m415.035 156.35-151.503-87.4695c-4.865-2.8094-10.868-2.8094-15.733 0l-151.4969 87.4695c-4.0897 2.362-6.6146 6.729-6.6146 11.459v176.383c0 4.73 2.5249 9.097 6.6146 11.458l151.5039 87.47c4.865 2.809 10.868 2.809 15.733 0l151.504-87.47c4.089-2.361 6.614-6.728 6.614-11.458v-176.383c0-4.73-2.525-9.097-6.614-11.459zm-9.516 18.528-146.255 253.32c-.988 1.707-3.599 1.01-3.599-.967v-165.872c0-3.314-1.771-6.379-4.644-8.044l-143.645-82.932c-1.707-.988-1.01-3.599.968-3.599h292.509c4.154 0 6.75 4.503 4.673 8.101h-.007z" fill="#edecec"/></symbol>
+
+    <linearGradient id="canvas" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#fbfcff"/><stop offset="1" stop-color="#e7eef7"/></linearGradient>
+    <linearGradient id="glass-pane" x1="0" y1="0" x2=".35" y2="1"><stop stop-color="#fff" stop-opacity=".82"/><stop offset="1" stop-color="#f8fbff" stop-opacity=".42"/></linearGradient>
+    <linearGradient id="workspace-pane" x1="0" y1="0" x2=".5" y2="1"><stop stop-color="#fff" stop-opacity=".84"/><stop offset=".45" stop-color="#fff" stop-opacity=".57"/><stop offset="1" stop-color="#eef5ff" stop-opacity=".52"/></linearGradient>
+    <linearGradient id="glass-rim" x1="0" y1="0" x2=".3" y2="1"><stop stop-color="#fff" stop-opacity=".98"/><stop offset=".4" stop-color="#fff" stop-opacity=".82"/><stop offset="1" stop-color="#b7c9df" stop-opacity=".65"/></linearGradient>
+    <filter id="ambient" x="-60%" y="-100%" width="220%" height="300%"><feGaussianBlur stdDeviation="65"/></filter>
+    <filter id="glass-shadow" x="-20%" y="-50%" width="140%" height="210%"><feDropShadow dx="0" dy="7" stdDeviation="12" flood-color="#7188a5" flood-opacity=".10"/></filter>
+    <filter id="workspace-glass-shadow" x="-10%" y="-80%" width="120%" height="260%"><feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#6984a8" flood-opacity=".14"/></filter>
+    <filter id="frost-grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+    <clipPath id="clip-web"><rect x="144" y="171" width="296" height="84" rx="19"/></clipPath>
+    <clipPath id="clip-cli"><rect x="492" y="171" width="296" height="84" rx="19"/></clipPath>
+    <clipPath id="clip-codex"><rect x="840" y="171" width="296" height="84" rx="19"/></clipPath>
+    <clipPath id="clip-workspace"><rect x="144" y="298" width="992" height="132" rx="25"/></clipPath>
+    <clipPath id="clip-library"><rect x="144" y="510" width="432" height="110" rx="22"/></clipPath>
+    <clipPath id="clip-agents"><rect x="664" y="510" width="472" height="110" rx="22"/></clipPath>
   </defs>
+  <rect width="1280" height="720" fill="url(#canvas)"/>
+  <g filter="url(#ambient)" opacity=".5"><ellipse cx="195" cy="354" rx="290" ry="145" fill="#c3d8f0"/><ellipse cx="1075" cy="267" rx="290" ry="210" fill="#cee0f2"/><ellipse cx="710" cy="665" rx="340" ry="135" fill="#d6d5ed"/></g>
 
-  <rect width="1184" height="552" rx="24" fill="var(--canvas)"/>
-  <text class="display" x="56" y="77">One library.<tspan dx="10" fill="var(--blue)">Many Agents.</tspan></text>
-  <text class="body" x="56" y="109">Keep a single source. Connect only the Agents you choose.</text>
-  <use href="#oneskill-mark" x="975" y="43" width="37" height="37" class="brand"/>
-  <text x="1021" y="72" style="font-size:22px;font-weight:650;letter-spacing:-.8px">oneskill</text>
-  <path d="M56 142h1072" stroke="var(--rule)"/>
+  <text x="56" y="50" class="meta">ONESKILL / SYSTEM OVERVIEW</text>
+  <text x="1224" y="50" class="meta" text-anchor="end">LOCAL FIRST · FILE BASED</text>
+  <text x="56" y="106" class="display">One workspace. Three ways in.</text>
+  <path class="rule" d="M56 128h1168"/>
 
-  <text class="eyebrow" x="56" y="184">YOUR SKILL LIBRARY</text>
-  <path d="M72 208h83q10 0 17 9l12 15h200q16 0 16 16v168q0 16-16 16H72q-16 0-16-16V224q0-16 16-16Z" fill="var(--folder)" stroke="var(--edge)" stroke-width="1.3"/>
-  <path d="M57 248h342" stroke="var(--edge)" stroke-width="1.1"/>
-  <text class="mono" x="80" y="284" style="font-size:18px;font-weight:550;fill:var(--blue)">~/.oneskill/skills/</text>
-  <rect x="80" y="306" width="296" height="100" rx="12" fill="var(--paper)" stroke="var(--edge)"/>
-  <g transform="translate(99 338)" class="icon" style="stroke:var(--blue)">
-    <path d="M1 0h17l8 8v27H1zM18 0v9h8M7 18h13M7 24h10"/>
+  <text x="56" y="162" class="meta">01 / INTERFACES</text>
+  <g filter="url(#glass-shadow)"><rect x="144" y="171" width="296" height="84" rx="19" fill="url(#glass-pane)"/></g>
+  <rect x="144.5" y="171.5" width="295" height="83" rx="18.5" fill="none" stroke="url(#glass-rim)" stroke-width="1.3"/>
+  <rect x="145.5" y="172.5" width="293" height="81" rx="17.5" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width=".7"/>
+  <g clip-path="url(#clip-web)"><rect x="144" y="171" width="296" height="84" filter="url(#frost-grain)" opacity=".025"/></g>
+  <g filter="url(#glass-shadow)"><rect x="492" y="171" width="296" height="84" rx="19" fill="url(#glass-pane)"/></g>
+  <rect x="492.5" y="171.5" width="295" height="83" rx="18.5" fill="none" stroke="url(#glass-rim)" stroke-width="1.3"/>
+  <rect x="493.5" y="172.5" width="293" height="81" rx="17.5" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width=".7"/>
+  <g clip-path="url(#clip-cli)"><rect x="492" y="171" width="296" height="84" filter="url(#frost-grain)" opacity=".025"/></g>
+  <g filter="url(#glass-shadow)"><rect x="840" y="171" width="296" height="84" rx="19" fill="url(#glass-pane)"/></g>
+  <rect x="840.5" y="171.5" width="295" height="83" rx="18.5" fill="none" stroke="url(#glass-rim)" stroke-width="1.3"/>
+  <rect x="841.5" y="172.5" width="293" height="81" rx="17.5" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width=".7"/>
+  <g clip-path="url(#clip-codex)"><rect x="840" y="171" width="296" height="84" filter="url(#frost-grain)" opacity=".025"/></g>
+  <g transform="translate(168 192)" class="icon">
+    <rect width="42" height="30" rx="4"/>
+    <path d="M0 8h42M6 4h.1m4 0h.1m4 0h.1M14 35h14M21 30v5"/>
   </g>
-  <text x="141" y="348" class="mono" style="font-size:16px;font-weight:600">code-review/</text>
-  <text x="141" y="376" style="font-size:13px;fill:var(--muted)">SKILL.md + supporting files</text>
+  <text x="230" y="210" class="client">Web</text>
+  <text x="230" y="233" class="body">Browser interface</text>
+  <g transform="translate(516 192)" class="icon">
+    <rect width="42" height="30" rx="4"/>
+    <path d="m9 8 7 7-7 7m13 0h10"/>
+  </g>
+  <text x="578" y="210" class="client">CLI</text>
+  <text x="578" y="233" class="body">Terminal commands</text>
+  <use href="#mark-openai" x="864" y="190" width="34" height="34"/>
+  <text x="920" y="210" class="client">Codex plugin</text>
+  <text x="920" y="233" class="body">Embedded UI + tools</text>
 
-  <text x="540" y="273" text-anchor="middle" style="font-size:17px;font-weight:550;fill:var(--blue)">Read the same files</text>
-  <text x="540" y="298" text-anchor="middle" style="font-size:14px;fill:var(--muted)">through symbolic links</text>
-  <path class="wire" d="M824 224h-64c-66 0-66 96-140 96M824 320H620M824 416h-64c-66 0-66-96-140-96"/>
-  <path class="wire" d="M620 320H409" marker-end="url(#arrow)"/>
-  <circle cx="620" cy="320" r="4" fill="var(--canvas)" stroke="var(--wire)" stroke-width="1.7"/>
-  <g fill="var(--canvas)" stroke="var(--wire)" stroke-width="1.7"><circle cx="824" cy="224" r="4"/><circle cx="824" cy="320" r="4"/><circle cx="824" cy="416" r="4"/></g>
+  <path class="operation" d="M292 255v17h348m348-17v17H640"/>
+  <path class="operation" d="M640 255v38" marker-end="url(#operation-arrow)"/>
+  <circle cx="640" cy="272" r="3" fill="#8295ae"/>
 
-  <text class="eyebrow" x="860" y="184">YOUR AGENTS</text>
-  <use href="#agent-codex" x="860" y="206" width="36" height="36"/>
-  <text class="agent" x="917" y="224">Codex</text>
-  <text class="mono path" x="917" y="248">~/.codex/skills/</text>
-  <use href="#agent-claude" x="860" y="302" width="36" height="36"/>
-  <text class="agent" x="917" y="320">Claude Code</text>
-  <text class="mono path" x="917" y="344">~/.claude/skills/</text>
-  <use href="#agent-cursor" x="860" y="398" width="36" height="36"/>
-  <text class="agent" x="917" y="416">Cursor</text>
-  <text class="mono path" x="917" y="440">~/.cursor/skills/</text>
+  <g filter="url(#workspace-glass-shadow)"><rect x="144" y="298" width="992" height="132" rx="25" fill="url(#workspace-pane)"/></g>
+  <rect x="144.5" y="298.5" width="991" height="131" rx="24.5" fill="none" stroke="url(#glass-rim)" stroke-width="1.3"/>
+  <rect x="145.5" y="299.5" width="989" height="129" rx="23.5" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width=".7"/>
+  <g clip-path="url(#clip-workspace)"><rect x="144" y="298" width="992" height="132" filter="url(#frost-grain)" opacity=".025"/></g>
+  <use href="#mark-oneskill" x="179" y="331" width="51" height="51"/>
+  <text x="248" y="354" style="font-size:30px;font-weight:600;letter-spacing:-1px;fill:#252e39">oneskill</text>
+  <text x="248" y="381" style="font-size:14px;fill:#6b7888">Local Workspace service</text>
+  <path d="M585 326v76" stroke="#aebfd5" stroke-opacity=".45"/>
+  <text x="620" y="351" style="font-size:17px;font-weight:550;fill:#2c3744">Discover</text>
+  <text x="620" y="378" style="font-size:13px;fill:#718091">Agents + resources</text>
+  <text x="798" y="351" style="font-size:17px;font-weight:550;fill:#2c3744">Import</text>
+  <text x="798" y="378" style="font-size:13px;fill:#718091">Verified packages</text>
+  <text x="976" y="351" style="font-size:17px;font-weight:550;fill:#2c3744">Connect</text>
+  <text x="976" y="378" style="font-size:13px;fill:#718091">Directory links</text>
 
-  <path d="M56 475h1072" stroke="var(--rule)"/>
-  <g class="icon" transform="translate(56 501)"><rect width="22" height="17" rx="3"/><path d="M0 5h22M5 2.5h.1m3 0h.1"/></g>
-  <text x="90" y="516" style="font-size:15px;font-weight:550">Web</text>
-  <path d="M152 498v22M262 498v22" stroke="var(--rule)"/>
-  <g class="icon" transform="translate(180 501)"><rect width="22" height="17" rx="3"/><path d="m5 5 4 4-4 4m7 0h5"/></g>
-  <text x="214" y="516" style="font-size:15px;font-weight:550">CLI</text>
-  <g class="icon" transform="translate(290 501)"><rect width="22" height="18" rx="4"/><path d="M11 0v-4M6 6v4m10-4v4m-8 4h6"/></g>
-  <text x="324" y="516" style="font-size:15px;font-weight:550">Codex plugin</text>
-  <path class="wire" d="M588 510h174" marker-end="url(#arrow)"/>
-  <text x="1128" y="516" text-anchor="end" style="font-size:15px;fill:var(--muted)">One local Workspace service</text>
+  <g filter="url(#glass-shadow)"><rect x="144" y="510" width="432" height="110" rx="22" fill="url(#glass-pane)"/></g>
+  <rect x="144.5" y="510.5" width="431" height="109" rx="21.5" fill="none" stroke="url(#glass-rim)" stroke-width="1.3"/>
+  <rect x="145.5" y="511.5" width="429" height="107" rx="20.5" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width=".7"/>
+  <g clip-path="url(#clip-library)"><rect x="144" y="510" width="432" height="110" filter="url(#frost-grain)" opacity=".025"/></g>
+  <g filter="url(#glass-shadow)"><rect x="664" y="510" width="472" height="110" rx="22" fill="url(#glass-pane)"/></g>
+  <rect x="664.5" y="510.5" width="471" height="109" rx="21.5" fill="none" stroke="url(#glass-rim)" stroke-width="1.3"/>
+  <rect x="665.5" y="511.5" width="469" height="107" rx="20.5" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width=".7"/>
+  <g clip-path="url(#clip-agents)"><rect x="664" y="510" width="472" height="110" filter="url(#frost-grain)" opacity=".025"/></g>
+  <path class="operation" d="M372 430v73" marker-end="url(#operation-arrow)"/>
+  <path class="operation" d="M907 430v73" marker-end="url(#operation-arrow)"/>
+  <text x="393" y="471" class="body" style="font-size:12px">read / import</text>
+  <text x="928" y="471" class="body" style="font-size:12px">scan / link</text>
+  <text x="56" y="486" class="meta">02 / FILESYSTEM</text>
+
+  <g transform="translate(176 521)" class="icon" style="stroke:#7c95b5">
+    <path d="M0 0h20l10 10v31H0zM20 0v11h10M7 21h15M7 28h11"/>
+  </g>
+  <text x="224" y="542" style="font-size:22px;font-weight:550;letter-spacing:-.35px">Skill library</text>
+  <text x="224" y="573" class="mono" style="font-size:18px">~/.oneskill/skills/</text>
+  <text x="224" y="599" class="body" style="font-size:13px">Skill packages + supporting files</text>
+
+  <text x="696" y="542" style="font-size:22px;font-weight:550;letter-spacing:-.35px">Agent directories</text>
+  <use href="#mark-openai" x="696" y="571" width="24" height="24"/>
+  <text x="730" y="589" style="font-size:15px;font-weight:550">Codex</text>
+  <use href="#mark-claude" x="824" y="571" width="24" height="24"/>
+  <text x="858" y="589" style="font-size:15px;font-weight:550">Claude Code</text>
+  <use href="#mark-cursor" x="1004" y="571" width="24" height="24"/>
+  <text x="1038" y="589" style="font-size:15px;font-weight:550">Cursor</text>
+
+  <path class="reference" d="M907 620v26H372v-26" marker-end="url(#reference-arrow)"/>
+  <rect x="506" y="632" width="266" height="28" rx="14" fill="#f6f9ff" fill-opacity=".9"/>
+  <text x="639" y="651" text-anchor="middle" style="font-size:13px;fill:#a85e38">Symbolic links point to the source</text>
+
+  <path class="rule" d="M56 677h1168"/>
+  <path class="operation" d="M56 700h22"/>
+  <text x="88" y="704" class="body" style="font-size:11px">workspace operations</text>
+  <path class="reference" d="M260 700h22"/>
+  <text x="292" y="704" class="body" style="font-size:11px">filesystem reference</text>
+  <text x="1224" y="704" class="meta" text-anchor="end" style="font-size:10px;letter-spacing:.5px">One canonical source · ordinary files</text>
 </svg>
