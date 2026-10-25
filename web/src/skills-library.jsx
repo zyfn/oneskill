@@ -28,11 +28,6 @@ export function SkillsLibrary({ rows, skills, folders, agents, selected, onSelec
       onChoose={chooseFolder} folderAction={folderAction} /> : null}
     <div className="library-main">
       {!folders.length ? <div className="library-toolbar library-toolbar-folder">{folderAction}</div> : null}
-      {activeFolder ? <div className="library-toolbar">
-        <div className="library-heading-row">
-          <span className="library-scope-path" title={activeFolder}>{activeFolder}</span>
-        </div>
-      </div> : null}
       <span className="sr-only" aria-live="polite">{t('common.result', { count: visible.length })}</span>
       {visible.length ? <div className="skill-list-scroll"><SkillList rows={visible} groups={groups} active={selected} onSelect={onSelect} /></div>
         : <div className="library-empty"><FolderIcon size={28} /><h3>{query ? t('common.noMatches') : skills.length ? t('skills.emptyCollection') : t('empty.skills')}</h3><p>{query ? t('common.tryAgain') : t('common.noManaged')}</p><button type="button" className="quiet-button" onClick={query ? onClearSearch : onReviewUnmanaged}>{t(query ? 'common.clearSearch' : 'skills.reviewUnmanaged')}</button></div>}

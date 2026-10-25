@@ -4,7 +4,7 @@ const messages = {
   en: {
     workspace: { justScanned: 'Just scanned', scannedAgo: 'Scanned {count} min ago', notScanned: 'Not scanned', stale: 'Showing the last successful scan', incomplete: 'Some sources could not be read', scanDetails: 'Scan details', limitReached: 'Scan limit reached', scanIncomplete: 'This inventory is incomplete', scanLimit: 'The scan reached its limit. Some entries may be missing.', scanScope: 'Files are checked periodically while this workspace is open. Resource counts describe discovered files, not active connections.' },
     resources: { enabledDeclaration: 'Enabled in file', disabledDeclaration: 'Disabled in file', filterAgent: 'Filter by Agent', pluginScope: 'Found on disk. This package may be a cached version; its enabled state has not been verified.', mcpScope: 'Configuration declaration. This view does not test whether the server is enabled or connected.' },
-    integrity: { count: count => `${count} broken library link${count === 1 ? '' : 's'}`, review: 'Review', description: 'These links point to a Skill that moved or was removed. Choose its current library location to reconnect, or remove only the broken link.', missingSource: 'Missing source', chooseFor: 'Replacement Skill for {path}', chooseSkill: 'Choose a library Skill', repair: 'Reconnect', remove: 'Remove broken link', needsReview: 'Needs review' },
+    integrity: { count: count => `${count} broken library link${count === 1 ? '' : 's'}`, review: 'Review', description: 'These links point to a Skill that moved or was removed. Choose its current library location to reconnect, or remove only the broken link.', missingSource: 'Missing source', chooseFor: 'Replacement Skill for {path}', chooseSkill: 'Choose a library Skill', repair: 'Reconnect', remove: 'Remove broken link', linkIssue: 'Link issue' },
     mcp: {
       introduction: 'MCP configurations found in Agent and plugin files.',
       inventoryHint: 'Discovered configurations, including cached plugin declarations. Not a live connection count.',
@@ -125,7 +125,7 @@ const messages = {
   zh: {
     workspace: { justScanned: '刚刚扫描', scannedAgo: '{count} 分钟前扫描', notScanned: '尚未扫描', stale: '当前显示上次成功的扫描结果', incomplete: '部分来源未能读取', scanDetails: '扫描详情', limitReached: '已达到扫描上限', scanIncomplete: '当前清单扫描不完整', scanLimit: '已达到扫描上限，可能还有未列出的条目。', scanScope: '工作区打开期间会定期检查文件。资源数量代表发现的文件，不代表已启用或在线连接。' },
     resources: { enabledDeclaration: '配置中已启用', disabledDeclaration: '配置中已停用', filterAgent: '按 Agent 筛选', pluginScope: '从磁盘发现的插件包，可能来自历史缓存；尚未验证是否启用。', mcpScope: '从配置文件读取的声明；这里不检查服务器是否启用或连接成功。' },
-    integrity: { count: '{count} 条管理库链接已失效', review: '检查', description: '这些链接指向已移动或删除的 Skill。选择管理库中的新位置重新链接，或仅移除失效链接。', missingSource: '原位置不存在', chooseFor: '为 {path} 选择新的 Skill', chooseSkill: '选择管理库中的 Skill', repair: '重新链接', remove: '移除失效链接', needsReview: '需处理' },
+    integrity: { count: '{count} 条管理库链接已失效', review: '检查', description: '这些链接指向已移动或删除的 Skill。选择管理库中的新位置重新链接，或仅移除失效链接。', missingSource: '原位置不存在', chooseFor: '为 {path} 选择新的 Skill', chooseSkill: '选择管理库中的 Skill', repair: '重新链接', remove: '移除失效链接', linkIssue: '链接异常' },
     mcp: {
       introduction: '查看 Agent 与插件文件中的 MCP 配置。',
       inventoryHint: '扫描发现的配置数量，可能包含插件缓存声明，不代表当前连接数。',

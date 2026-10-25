@@ -16,6 +16,20 @@ async function fixture(t) {
   return { root, target: path.join(config, 'skills'), workspace: createWorkspace({ root }) }
 }
 
+test('new Agent references point at the library entity and survive retiring its directory alias', async t => {
+  const f = await fixture(t)
+  const canonical = path.join(f.root, 'library')
+  const alias = path.join(f.root, 'skills')
+  await fs.rename(alias, canonical)
+  await fs.symlink(canonical, alias, 'dir')
+  await f.workspace.setSkillLink('fixture', 'alpha', true)
+  const destination = path.join(f.target, 'alpha')
+  assert.match((await fs.readlink(destination)).split(path.sep).join('/'), /\/library\/alpha$/)
+  await fs.unlink(alias)
+  assert.equal(await fs.realpath(destination), await fs.realpath(path.join(canonical, 'alpha')))
+  assert.match(await fs.readFile(path.join(destination, 'SKILL.md'), 'utf8'), /Review code/)
+})
+
 test('moving a library package exposes the old broken link and allows explicit repair', async t => {
   const f = await fixture(t)
   await f.workspace.setSkillLink('fixture', 'alpha', true)

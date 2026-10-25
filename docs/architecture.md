@@ -50,6 +50,8 @@ The HTTP service binds to loopback and checks local write authorization. It is i
 
 Skill controls represent writable filesystem targets. Agents with the same canonical target share one connection control in the inspector. Codex's target is its own configuration root's `skills/` child. Additional roots with `scope: "user"` are shared discovery sources; references there are excluded from Agent binding states and linked counts. Agents without a writable target do not receive bindings. References at other paths within an Agent's own target, or in non-shared compatibility roots, retain the read-only `inherited` state. Link/unlink changes only the configured target and preserves all shared sources. Unmanaged packages found through a shared root are inventoried once with a shared-directory source.
 
+New Agent links point directly at the canonical library package. Before retiring directory aliases during a data cleanup, inspect existing dependent links and retarget them to the same canonical package; removing an intermediate alias first can break other Agents' references.
+
 ## Verification
 
 `npm run check` checks all Node module syntax, executes fixture tests, and builds the Web UI. CI tests Node 20/22/24 on Linux and exercises discovery, configuration, workspace isolation, and real npm startup on macOS and Windows. Tests include an HTTP request that changes a link in an isolated workspace. Successful CI does not replace visual acceptance or a platform's actual Agent installation checks.

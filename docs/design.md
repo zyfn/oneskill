@@ -16,6 +16,8 @@ Use Geist and semantic type tokens from `web/src/index.css`: page title 28 px, d
 
 Skills use compact rows with a name, one line of description, and connection context. Plugins and MCP share one compact card component: an icon, title, supporting description, and optional version or declaration state. Cards sit directly on the canvas below Agent headings, without an enclosing card; use two columns on desktop and one on narrow screens. Hover and selection use a light blue tint. Agent tables retain aligned numeric columns. All inventories share typography, spacing, and color tokens edited at their source.
 
+Skill rows do not repeat collection names; directory context belongs in the collection navigation. A link issue label identifies actual broken or conflicting references, with the affected Agent and location available in its hint.
+
 Only linked Agent targets appear in the Skill preview. Conflicts have an explicit attention label. A selected Skill shows its directory-link controls near the top of the inspector; paths and the full document are secondary disclosures. The inspector's connection branches reuse the Confluence motif. Shared discoveries never activate an Agent's directory indicator. Read-only references elsewhere within an Agent's own directory show their source rather than an inoperable switch.
 
 ## Changes and recovery

@@ -314,8 +314,6 @@ button:active:not(:disabled) { transform: scale(.985); }
 .collection-select:focus-visible { outline-offset:-2px; }
 .collection-row[data-trail="true"] .collection-label { color:#3f6086; }
 .library-main { display:flex; flex-direction:column; min-width:0; min-height:0; }
-.library-heading-row { display:flex; align-items:center; gap:10px; min-width:0; min-height:36px; }
-.library-scope-path { min-width:0; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted-foreground); font-size:var(--type-meta); font-weight:400; }
 .library-empty { display:flex; min-height:320px; flex-direction:column; align-items:flex-start; justify-content:center; gap:12px; padding:32px 18px; }
 .library-empty > svg { color:var(--muted-foreground); margin-bottom:6px; }
 .library-empty h3 { font-size:var(--type-section); font-weight:550; }
@@ -361,7 +359,6 @@ button:active:not(:disabled) { transform: scale(.985); }
   .skills-library[data-collections="open"] { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); gap:12px; }
   .collection-rail { max-height:154px; padding:0 0 12px; border-right:0; border-bottom:1px solid var(--border); }
   .collection-rail-heading { min-height:32px; margin-bottom:4px; }
-  .library-heading-row { min-height:32px; }
   .collection-folders { margin-top:4px; }
 }
 /* Narrow desktop panes keep labels intact and scroll within the inventory. */
@@ -400,13 +397,12 @@ button:active:not(:disabled) { transform: scale(.985); }
 .header-scope-tabs .scope-tab-count { font-size:11px; opacity:.65; }
 .library-toolbar { display:flex; align-items:center; gap:12px; flex-shrink:0; min-height:30px; margin-bottom:8px; }
 .library-toolbar-folder { justify-content:flex-end; }
-.library-heading-row { min-height:30px; }
 .skills-library, .skills-inbox { height:100%; }
 .skill-list-scroll { flex:1; min-height:0; overflow:auto; padding:0 2px; scrollbar-width:thin; }
 .skill-list { display:grid; gap:0; }
 .skill-list > [role=listitem]:last-child .skill-list-row { border-bottom-color:transparent; }
 .skill-list-row {
-  display:grid; grid-template-columns:minmax(0,1fr) 110px auto 16px; align-items:center; gap:20px;
+  display:grid; grid-template-columns:minmax(0,1fr) auto 16px; align-items:center; gap:20px;
   width:100%; min-width:0; min-height:68px; padding:10px 12px;
   border:1px solid transparent; border-bottom-color:var(--border); border-radius:10px;
   background:transparent; text-align:left;
@@ -418,7 +414,6 @@ button:active:not(:disabled) { transform: scale(.985); }
 .skill-list-copy { display:block; min-width:0; }
 .skill-list-copy strong { display:block; color:var(--foreground); font-size:var(--type-title); font-weight:580; line-height:1.5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .skill-list-copy > span { display:block; white-space:nowrap; text-overflow:ellipsis; margin-top:3px; color:var(--muted-foreground); font-size:var(--type-meta); line-height:1.6; overflow:hidden; overflow-wrap:anywhere; }
-.skill-list-category { min-width:0; color:var(--muted-foreground); font-size:var(--type-label); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .skill-agent-preview { display:flex; align-items:center; gap:16px; }
 .agent-presence { position:relative; display:flex; align-items:center; width:20px; height:23px; }
 .agent-presence i { position:absolute; width:6px; height:6px; right:-5px; bottom:0; background:#a8adb7; border-radius:50%; }
@@ -566,8 +561,6 @@ html[data-host-theme=dark] .notebook-app::before { background:var(--background);
   .app-route-button { min-width:82px; padding-inline:12px; gap:6px; }
   .navigation-tools { gap:8px; }
   .navigation-tools .scope-tab { min-width:35px; padding-inline:7px; }
-  .skill-list-category { display:none; }
-  .skill-list-row { grid-template-columns:minmax(0,1fr) auto 16px; }
 }
 @media(max-width:760px) {
   :root { --page-gutter:20px; }
