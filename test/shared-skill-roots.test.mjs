@@ -33,7 +33,6 @@ test('shared discovery never enables private Agent links or becomes a writable t
   await workspace.setSkillLink('first', 'review', true)
   let managed = (await workspace.detectSkills()).items[0]
   assert.deepEqual(managed.bindings.map(binding => [binding.agent, binding.state]), [['first', 'linked'], ['second', 'not-linked']])
-  assert.deepEqual(managed.sharedLinks, [])
   await assert.rejects(fs.lstat(source), { code: 'ENOENT' })
   await assert.rejects(fs.lstat(path.join(root, 'second/skills/review')), { code: 'ENOENT' })
 
@@ -41,7 +40,6 @@ test('shared discovery never enables private Agent links or becomes a writable t
   await fs.symlink(path.join(root, 'skills/review'), source, 'dir')
   managed = (await workspace.detectSkills()).items[0]
   assert.deepEqual(managed.bindings.map(binding => binding.state), ['linked', 'not-linked'])
-  assert.deepEqual(managed.sharedLinks, [source])
   assert.deepEqual(managed.bindings.map(binding => binding.inheritedDestinations), [[], []])
   assert.equal(managed.linked, 1)
   assert.equal((await workspace.detectUnmanagedSkills()).items.length, 0)
@@ -51,7 +49,6 @@ test('shared discovery never enables private Agent links or becomes a writable t
   managed = (await workspace.detectSkills()).items[0]
   assert.deepEqual(managed.bindings.map(binding => binding.state), ['not-linked', 'not-linked'])
   assert.equal(managed.linked, 0)
-  assert.deepEqual(managed.sharedLinks, [source])
   assert.equal(await fs.realpath(source), await fs.realpath(path.join(root, 'skills/review')))
 })
 

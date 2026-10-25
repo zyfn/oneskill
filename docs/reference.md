@@ -67,7 +67,7 @@ Each skill package contains a `SKILL.md`. Parent folders define collections; sel
 
 Links refer to the shared package instead of duplicating its contents. Destination conflicts are reported without overwriting existing files. After moving or renaming a package, review the broken-link notice. Select the package’s new library location to reconnect the old link, or remove only the broken reference. Links to sources outside this library are not eligible for this operation. Nested-directory loading depends on the target Agent.
 
-Agents writing to the same Skill directory share one connection control and one link, such as Qoder and Qoder CLI. Codex writes to `~/.codex/skills` or `$CODEX_HOME/skills`. References discovered in shared roots such as `~/.agents/skills` appear under Files and do not enable Agent directory switches or increase linked counts. References elsewhere in an Agent's own target remain read-only. Linking and unlinking change only the configured target and preserve shared roots. Each Agent determines which compatibility directories it reads; directory links do not provide runtime isolation.
+Agents writing to the same Skill directory share one connection control and one link, such as Qoder and Qoder CLI. Codex writes to `~/.codex/skills` or `$CODEX_HOME/skills`. References discovered in shared roots such as `~/.agents/skills` do not enable Agent directory switches or increase linked counts. References elsewhere in an Agent's own target remain read-only. Linking and unlinking change only the configured target and preserve shared roots. Each Agent determines which compatibility directories it reads; directory links do not provide runtime isolation.
 
 ## Import and recovery
 

@@ -52,7 +52,6 @@ export function createSkillService({ sourceRoot: SOURCE_ROOT, ignoreFile, loadAg
         path: displayPath(item.dir),
         managed: true,
         origin: 'shared-library',
-        sharedLinks: [...new Set(linkScan.links.filter(entry => entry.scope === 'user' && entry.source === sourceReal).map(entry => displayPath(entry.destination)))],
         bindings,
         linked,
         agentCount: bindings.length,
