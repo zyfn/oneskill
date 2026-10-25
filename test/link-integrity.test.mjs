@@ -49,6 +49,34 @@ test('only broken links into this library can be removed; changed links remain i
   assert.equal((await fs.lstat(path.join(f.target, 'external'))).isSymbolicLink(), true)
 })
 
+test('a failed link repair preserves its old reference and the library package for a later retry', async t => {
+  const f = await fixture(t)
+  await f.workspace.setSkillLink('fixture', 'alpha', true)
+  await fs.rename(path.join(f.root, 'skills/alpha'), path.join(f.root, 'skills/beta'))
+  const issue = (await f.workspace.workspaceData()).linkIssues[0]
+  const destination = path.join(f.target, 'alpha')
+  const previous = await fs.readlink(destination)
+  const symlink = fs.symlink, rename = fs.rename
+  let rejected = false
+  const rejectOnce = target => {
+    if (target !== destination || rejected) return
+    rejected = true
+    throw Object.assign(new Error('simulated replacement failure'), { code: 'EACCES' })
+  }
+  const create = t.mock.method(fs, 'symlink', async (target, file, type) => { rejectOnce(file); return symlink(target, file, type) })
+  const replace = t.mock.method(fs, 'rename', async (source, target) => { rejectOnce(target); return rename(source, target) })
+  await assert.rejects(f.workspace.resolveSkillLink(issue.id, 'beta'), { code: 'EACCES' })
+  assert.equal(rejected, true)
+  assert.equal(await fs.readlink(destination), previous)
+  await assert.rejects(fs.realpath(destination), { code: 'ENOENT' })
+  assert.match(await fs.readFile(path.join(f.root, 'skills/beta/SKILL.md'), 'utf8'), /Review code/)
+  assert.deepEqual(await fs.readdir(f.target), ['alpha'])
+  create.mock.restore()
+  replace.mock.restore()
+  await f.workspace.resolveSkillLink(issue.id, 'beta')
+  assert.equal(await fs.realpath(destination), await fs.realpath(path.join(f.root, 'skills/beta')))
+})
+
 test('nested destination aliases cannot redirect link creation or removal', async t => {
   const f = await fixture(t)
   await fs.mkdir(path.join(f.root, 'skills', 'group'))

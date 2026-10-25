@@ -72,7 +72,21 @@ export async function resolveSkillLink({ sourceRoot, agents, issueId, skillRelat
   if (path.resolve(path.dirname(destination), previous) !== issue.target || await fs.realpath(destination).then(() => true, error => { if (error.code === 'ENOENT') return false; throw error })) throw new WorkspaceError('SOURCE_CHANGED', 'This link changed. Rescan before continuing.', 409)
   if (!source) { await fs.unlink(destination); return { changed: true, state: 'removed' } }
   const temporary = path.join(path.dirname(destination), `.oneskill-link-${randomUUID()}`)
-  try { await fs.symlink(source, temporary, 'dir'); await fs.rename(temporary, destination) }
+  try {
+    // Check link-creation permissions before changing the old reference.
+    await fs.symlink(source, temporary, 'dir')
+    if (process.platform === 'win32') {
+      // Windows cannot rename over an existing directory link. Creating the
+      // replacement directly also refuses a path occupied after the unlink.
+      await fs.unlink(destination)
+      try { await fs.symlink(source, destination, 'dir') }
+      catch (error) {
+        try { await fs.symlink(previous, destination, 'dir') }
+        catch (restoreError) { error.message += ` Previous link to ${displayPath(issue.target)} could not be restored: ${restoreError.message}` }
+        throw error
+      }
+    } else await fs.rename(temporary, destination)
+  }
   finally { await fs.rm(temporary, { force: true }) }
   return { changed: true, state: 'linked' }
 }

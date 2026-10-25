@@ -1,7 +1,7 @@
 {
   "name": "oneskill",
   "private": true,
-  "version": "0.3.8",
+  "version": "0.3.9",
   "license": "MIT",
   "type": "module",
   "description": "Local-first Agent capability workspace",
