@@ -63,18 +63,18 @@ MCP configuration counts include Agent files and discovered plugin declarations.
 
 ## Library and links
 
-Each skill package contains a `SKILL.md`. Parent folders define collections; selecting a collection includes its descendants. **All skills** includes every package, including those directly under `skills/`. Nested branches expand on demand, and the collection navigation can be collapsed entirely.
+Each skill package contains a `SKILL.md`. Parent folders define collections; selecting a collection includes its descendants. **All skills** includes every package, including those directly under `skills/`. Nested branches expand on demand; the collection rail stays visible when collections exist.
 
-Links refer to the shared package instead of duplicating its contents. Destination conflicts are reported without overwriting existing files. Before moving or renaming a linked package, unlink it, move it, rescan, and link the new location. Nested-directory loading depends on the target Agent.
+Links refer to the shared package instead of duplicating its contents. Destination conflicts are reported without overwriting existing files. After moving or renaming a package, review the broken-link notice. Select the package’s new library location to reconnect the old link, or remove only the broken reference. Links to sources outside this library are not eligible for this operation. Nested-directory loading depends on the target Agent.
 
-Agents writing to the same Skill directory share one column and one link, such as Qoder and Qoder CLI. Links read from additional scan roots appear as read-only availability. Linking and unlinking only change the column's configured target; links in other directories are preserved. Each Agent determines which shared directories it reads.
+Agents writing to the same Skill directory share one connection control and one link, such as Qoder and Qoder CLI. Links read from additional scan roots appear as read-only availability. Linking and unlinking only change the control’s configured target; links in other directories are preserved. Each Agent determines which shared directories it reads.
 
 ## Import and recovery
 
-**Skills → Unmanaged** lists packages in Agent skill directories that are outside the shared library.
+**Skills → Unmanaged** lists real packages in Agent skill directories that are outside the shared library. References pointing into the library are existing links, so they do not create duplicate unmanaged entries.
 
-- **Manage here** imports the complete package, preserves parent directories, backs up the original, and links it back to its source Agent.
-- **Manage multiple** opens the batch import workflow.
+- **Add to library** moves the complete package into the library, preserves parent directories, and backs up the original. Its old location is left empty; use Agent switches to create connections separately.
+- **Select** enables checkboxes within the current filtered list. Import, ignore, or restore up to 100 visible entries in one operation.
 - **Ignore** hides a package from the unmanaged list without changing its files or Agent access.
 - **Ignored → Restore** returns it to the unmanaged list. Ignored packages remain inspectable and are excluded from batch imports.
 
@@ -83,9 +83,13 @@ An existing library package is reused only if its content and permissions match.
 Imports save original packages in the source Agent's `.oneskill-backups/import-*/original`. Each backup includes a `restore.json` with the relevant paths. To restore manually:
 
 1. Inspect the recorded source and destination paths.
-2. Remove the corresponding Agent symlink.
+2. Check that the original location is empty. If you have since created a link there, verify and remove only that reference; preserve real files.
 3. Move the original backup to its recorded location.
 4. Keep the shared copy if other Agents still use it.
+
+## Shared operations
+
+The shared operation contract also exposes `setSkillsIgnored` for an atomic preference update across selected Skill IDs, and `resolveSkillLink` for a broken entry from `getWorkspace.linkIssues`. Pass its `issueId` and a managed `skillId` to reconnect; omit `skillId` to remove only that broken link. All writes require a unique `requestId` and accept `expectedRevision`. A successful receipt describes the completed write independently of the following scan.
 
 ## Storage
 
@@ -97,7 +101,7 @@ Imports save original packages in the source Agent's `.oneskill-backups/import-*
 | `skills.ignore.json` | Local import protection and persistent ignore rules, excluded from Git. |
 | Agent `.oneskill-backups/` | Original packages and import restore records. |
 | `web/dist/` | Generated browser assets; excluded from Git. |
-| Browser local storage | Language and collection-navigation visibility preferences. Skill contents are not stored here. |
+| Browser local storage | Language preference. Skill contents are not stored here. |
 
 Ignore rules identify an Agent and a relative package directory:
 

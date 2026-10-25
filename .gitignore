@@ -26,3 +26,4 @@ migrate.ignore.*.tmp
 # Generated local plugin packages and workspace preferences
 dist/
 skills.ignore.json
+skills-lock.json

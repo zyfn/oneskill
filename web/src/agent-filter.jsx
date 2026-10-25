@@ -1,47 +1,50 @@
-import { useEffect, useRef } from 'react'
-import { ScopeTabs, ScopeTab } from '@/scope-tabs'
+import { Select } from 'radix-ui'
+import { CaretDownIcon, CheckIcon, SquaresFourIcon } from '@phosphor-icons/react'
 import { AgentIcon } from '@/capability-icon'
+import { resourceGroupKey } from '@/capability-model'
 import { useLocale } from '@/i18n'
 
-export function AgentFilter({ agents, source, selected, onChange }) {
-  const { t, locale } = useLocale()
-  const strip = useRef(null)
-  const reveal = (item) => {
-    const container = strip.current
-    if (!container || !item) return
-    const bounds = container.getBoundingClientRect()
-    const target = item.getBoundingClientRect()
-    const inset = 28
-    if (target.left < bounds.left + inset) container.scrollLeft += target.left - bounds.left - inset
-    else if (target.right > bounds.right - inset) container.scrollLeft += target.right - bounds.right + inset
-  }
-  useEffect(() => {
-    reveal(strip.current?.querySelector('[data-state="checked"]'))
-  }, [selected])
-  useEffect(() => {
-    const container = strip.current
-    if (!container) return
-    const updateEdges = () => {
-      container.dataset.moreLeft = String(container.scrollLeft > 1)
-      container.dataset.moreRight = String(container.scrollWidth - container.clientWidth - container.scrollLeft > 1)
-    }
-    const observer = new ResizeObserver(updateEdges)
-    observer.observe(container)
-    for (const item of container.querySelectorAll('[role="radio"]')) observer.observe(item)
-    container.addEventListener('scroll', updateEdges, { passive: true })
-    updateEdges()
-    return () => {
-      observer.disconnect()
-      container.removeEventListener('scroll', updateEdges)
-    }
-  }, [agents, source, locale])
-  const counts = new Map()
-  for (const item of source) counts.set(item.agent, (counts.get(item.agent) || 0) + 1)
-  return <ScopeTabs ref={strip} className="agent-filter" onFocusCapture={(event) => reveal(event.target.closest('[role="radio"]'))} label={t('import.agent')} value={selected} onChange={onChange}>
-    <ScopeTab value="all" count={source.length}><span>{t('agent.all')}</span></ScopeTab>
+function AgentMarks({ names = [], agents }) {
+  const marks = new Map(names.map(name => {
+    const agent = agents.find(entry => entry.name === name) || { name }
+    return [agent.logo || name, agent]
+  }))
+  return <span className="filter-agent-marks" aria-hidden="true">
+    {marks.size ? [...marks].map(([key, agent]) => <AgentIcon key={key} agent={agent} size={17} />) : <SquaresFourIcon size={17} />}
+  </span>
+}
 
-    {agents.filter((agent) => (agent.detected ?? agent.installed) || counts.has(agent.name)).map((agent) => <ScopeTab key={agent.name} value={agent.name} count={counts.get(agent.name) || 0}>
-      <AgentIcon agent={agent} size={19} /><span>{agent.name}</span>
-    </ScopeTab>)}
-  </ScopeTabs>
+export function AgentFilter({ source, agents, selected, onChange }) {
+  const { t } = useLocale()
+  const groups = new Map()
+  for (const item of source) {
+    const key = resourceGroupKey(item)
+    const group = groups.get(key) || { names: item.agents || [item.agent], count: 0 }
+    group.count++; groups.set(key, group)
+  }
+  if (selected !== 'all' && !groups.has(selected)) groups.set(selected, { names: selected.split('+'), count: 0 })
+  const options = [['all', { names: [], label: t('agent.all') }], ...groups]
+  const current = groups.get(selected)
+  return <Select.Root value={selected} onValueChange={onChange}>
+    <Select.Trigger className="agent-filter-trigger" data-scoped={selected !== 'all' || undefined} aria-label={t('resources.filterAgent')}>
+      <Select.Value>
+        <span className="filter-agent-value"><AgentMarks names={current?.names} agents={agents} /><span>{current ? current.names.join(' / ') : t('agent.all')}</span></span>
+      </Select.Value>
+      <Select.Icon asChild><CaretDownIcon size={13} /></Select.Icon>
+    </Select.Trigger>
+    <Select.Portal>
+      <Select.Content className="agent-filter-menu" position="popper" align="start" sideOffset={7} collisionPadding={12}>
+        <Select.Viewport className="agent-filter-options">
+          <Select.Group>
+            {options.map(([key, group]) => <Select.Item key={key} value={key} className="agent-filter-option" textValue={group.label || group.names.join(' / ')}>
+              <AgentMarks names={group.names} agents={agents} />
+              <span className="filter-agent-label"><Select.ItemText>{group.label || group.names.join(' / ')}</Select.ItemText></span>
+              {group.count !== undefined ? <span className="filter-agent-count">{group.count}</span> : null}
+              <span className="filter-agent-check"><Select.ItemIndicator><CheckIcon size={14} weight="bold" /></Select.ItemIndicator></span>
+            </Select.Item>)}
+          </Select.Group>
+        </Select.Viewport>
+      </Select.Content>
+    </Select.Portal>
+  </Select.Root>
 }

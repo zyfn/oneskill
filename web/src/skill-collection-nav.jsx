@@ -1,5 +1,5 @@
 import { useId, useMemo } from 'react'
-import { CaretRightIcon, FolderIcon, SidebarSimpleIcon, SquaresFourIcon } from '@phosphor-icons/react'
+import { CaretRightIcon, FolderIcon, SquaresFourIcon } from '@phosphor-icons/react'
 import { collectionHierarchy } from '@/skill-folders.mjs'
 import { useLocale } from '@/i18n'
 
@@ -20,12 +20,12 @@ function DirectoryBranch({ entry, active, expanded, onExpand, onChoose, approxim
   </li>
 }
 
-export function SkillCollectionNav({ id, visible, folders, active, count, approximate, expanded, onExpand, onChoose, onHide, hideButtonRef, folderAction }) {
+export function SkillCollectionNav({ folders, active, count, approximate, expanded, onExpand, onChoose, folderAction }) {
   const { t } = useLocale()
   const tree = useMemo(() => collectionHierarchy(folders), [folders])
   const countHint = approximate ? t('common.incompleteScan') : undefined
-  return <nav id={id} className="collection-rail" aria-label={t('skills.collections')} hidden={!visible}>
-    <div className="collection-rail-heading"><div className="collection-heading-label"><h2>{t('skills.collections')}</h2>{folderAction}</div><span className="collection-tools"><button ref={hideButtonRef} type="button" className="collection-toggle" aria-label={t('skills.hideCollections')} title={t('skills.hideCollections')} aria-expanded="true" aria-controls={id} onClick={onHide}><SidebarSimpleIcon size={16} /></button></span></div>
+  return <nav className="collection-rail" aria-label={t('skills.collections')}>
+    <div className="collection-rail-heading"><div className="collection-heading-label"><h2>{t('skills.collections')}</h2>{folderAction}</div></div>
     <button type="button" className="collection-all" aria-pressed={active === null} onClick={() => onChoose(null)}><SquaresFourIcon size={16} /><span>{t('skills.allSkills')}</span><span className="collection-count" title={countHint}>{count}{approximate ? '+' : ''}</span></button>
     <ul className="collection-folders">{tree.map((entry) => <DirectoryBranch key={entry.path} entry={entry} active={active} expanded={expanded} onExpand={onExpand} onChoose={onChoose} approximate={approximate} countHint={countHint} />)}</ul>
   </nav>

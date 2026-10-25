@@ -23,6 +23,8 @@ export function createWorkspaceClient(transport, host = {}) {
     },
     importSkills: skillIds => call('importSkills', { ...mutation(), skillIds }),
     setSkillIgnored: (skillId, ignored) => call('setSkillIgnored', { ...mutation(), skillId, ignored }),
+    setSkillsIgnored: (skillIds, ignored) => call('setSkillsIgnored', { ...mutation(), skillIds, ignored }),
+    resolveSkillLink: (issueId, skillId) => call('resolveSkillLink', { ...mutation(), issueId, ...(skillId ? { skillId } : {}) }),
     openFolder(value) {
       const resources = [{ id: 'library', path: snapshot?.source }, ...(snapshot?.agents || []).map(item => ({ ...item, path: item.root || item.dir })), ...(snapshot?.skills || []), ...(snapshot?.plugins || []), ...(snapshot?.mcp || []), ...(snapshot?.hooks || [])]
       const resource = resources.find(item => item.id === value || item.path === value || item.manifest === value || item.paths?.includes(value))

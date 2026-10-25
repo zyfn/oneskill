@@ -1,120 +1,42 @@
-import { useId, useMemo, useRef, useState } from 'react'
-import { FolderIcon, SidebarSimpleIcon, LinkIcon, LinkBreakIcon, WarningCircleIcon } from '@phosphor-icons/react'
-import { AgentIcon } from '@/capability-icon'
+import { useMemo, useState } from 'react'
+import { FolderIcon } from '@phosphor-icons/react'
 import { OpenFolderButton } from '@/open-folder-button'
 import { SkillCollectionNav } from '@/skill-collection-nav'
-import { skillCategory, skillCollections, belongsToCollection } from '@/skill-folders.mjs'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { useLocale } from '@/i18n'
+import { belongsToCollection } from '@/skill-folders.mjs'
 import { skillTargets } from '@/skill-targets.mjs'
+import { SkillList } from '@/skill-list'
+import { useLocale } from '@/i18n'
 
-function SkillLinkButton({ skill, binding, agentLabel = binding.agent, busy, onChange }) {
+export function SkillsLibrary({ rows, skills, folders, agents, selected, onSelect, onClose, source, onOpenFolder, query, onClearSearch, onReviewUnmanaged, approximate = false }) {
   const { t } = useLocale()
-  const linked = binding.state === 'linked' || binding.state === 'inherited'
-  const blocked = ['broken', 'conflict'].includes(binding.state)
-  const inherited = binding.state === 'inherited'
-  const pending = busy === `${binding.agent}:${skill.relative}`
-  const label = blocked ? `${agentLabel}: ${t(`skills.${binding.state}`)}` : inherited ? `${agentLabel}: ${t('skills.linked')} · ${skill.name}` : t(linked ? 'skills.unlinkFor' : 'skills.linkFor', { name: skill.name, agent: agentLabel })
-  return <Tooltip>
-    <TooltipTrigger asChild>
-      <button type="button" className="skill-link" data-linked={linked || undefined} data-inherited={inherited || undefined} data-blocked={blocked || undefined} data-pending={pending || undefined}
-        disabled={blocked || Boolean(busy)} aria-disabled={inherited || undefined} aria-label={label} aria-pressed={linked} aria-busy={pending} onClick={inherited ? undefined : () => onChange(skill, binding)}>
-        {blocked ? <WarningCircleIcon size={17} /> : linked || inherited ? <LinkIcon size={19} weight={linked ? 'bold' : 'regular'} /> : <LinkBreakIcon size={19} />}
-      </button>
-    </TooltipTrigger>
-    <TooltipContent>{inherited ? `${t('skills.inheritedHint')} · ${binding.inheritedDestinations.join(', ')}` : blocked ? label : pending ? t('common.saving') : `${linked ? t('skills.linked') : t('skills.notLinked')} · ${t('skills.linkHint')} · ${binding.destination}`}</TooltipContent>
-  </Tooltip>
-}
-
-export function SkillsLibrary({ rows, skills, agents, selected, onSelect, onLinkChange, onClose, source, onOpenFolder, query, onClearSearch, onReviewUnmanaged, approximate = false }) {
-  const { t } = useLocale()
-  const [busy, setBusy] = useState('')
   const [folder, setFolder] = useState(null)
-  const [collectionsOpen, setCollectionsOpen] = useState(() => {
-    try {
-      const saved = localStorage.getItem('oneskill-collections-open')
-      if (saved !== null) return saved !== 'false'
-    } catch {}
-    return window.matchMedia('(min-width: 768px)').matches
-  })
   const [expanded, setExpanded] = useState(() => new Set())
-  const navId = useId()
-  const showButton = useRef(null)
-  const hideButton = useRef(null)
-  const matrix = useRef(null)
-  const { folders } = useMemo(() => skillCollections(skills), [skills])
-  const activeFolder = folders.some((entry) => entry.path === folder) ? folder : null
-  const showCollections = folders.length > 0 && collectionsOpen
-  const visible = rows.filter((skill) => belongsToCollection(skill, activeFolder))
-  const detected = useMemo(() => skillTargets(agents), [agents])
-  const revealParents = (value) => {
-    if (!value) return
-    const parts = value.split('/')
-    setExpanded((current) => new Set([...current, ...parts.slice(0, -1).map((_part, index) => parts.slice(0, index + 1).join('/'))]))
+  const activeFolder = folders.some(entry => entry.path === folder) ? folder : null
+  const visible = useMemo(() => rows.filter(skill => belongsToCollection(skill, activeFolder)), [rows, activeFolder])
+  const groups = useMemo(() => skillTargets(agents), [agents])
+  const chooseFolder = next => {
+    setFolder(next); onClose(false)
+    if (next) {
+      const parts = next.split('/')
+      setExpanded(current => new Set([...current, ...parts.slice(0, -1).map((_part, index) => parts.slice(0, index + 1).join('/'))]))
+    }
   }
-  const chooseFolder = (next) => {
-    setFolder(next); revealParents(next); onClose(false)
-    if (window.matchMedia('(max-width: 760px)').matches) toggleCollections(false)
-  }
-  const toggleBranch = (path) => setExpanded((current) => { const next = new Set(current); next.has(path) ? next.delete(path) : next.add(path); return next })
-  const toggleCollections = (open) => {
-    setCollectionsOpen(open)
-    try { localStorage.setItem('oneskill-collections-open', String(open)) } catch {}
-    if (open) revealParents(activeFolder)
-    requestAnimationFrame(() => {
-      matrix.current?.scrollTo({ left: 0 })
-      const target = open ? hideButton : showButton
-      target.current?.focus({ preventScroll: true })
-    })
-  }
-  const changeLink = async (skill, binding) => {
-    setBusy(`${binding.agent}:${skill.relative}`)
-    try { await onLinkChange(binding.agent, skill.relative, binding.state !== 'linked') }
-    finally { setBusy('') }
-  }
-  const ancestors = activeFolder?.split('/').slice(0, -1).map((_part, index) => activeFolder.split('/').slice(0, index + 1).join('/')) || []
-  const showScopePath = activeFolder && (!showCollections || ancestors.some((parent) => !expanded.has(parent)))
   const folderAction = <OpenFolderButton path={source} label={t('skills.libraryFolder')} onOpenFolder={onOpenFolder} compact />
-  const heading = <div className="library-heading-row">
-    {!showCollections ? <span className="library-icon-actions">{folders.length > 0 ? <button ref={showButton} type="button" className="collection-show" aria-label={t('skills.showCollections')} title={t('skills.showCollections')} aria-expanded="false" aria-controls={navId} onClick={() => toggleCollections(true)}><SidebarSimpleIcon size={16} /></button> : folderAction}</span> : null}
-    {showScopePath ? <span className="library-scope-path" title={activeFolder}>{activeFolder}</span> : null}
-    <span className="matrix-legend"><span><LinkIcon size={14} weight="bold" />{t('skills.linked')}</span><span><LinkBreakIcon size={14} />{t('skills.notLinked')}</span></span>
-  </div>
-
-  return <section className="skills-surface skills-library" data-collections={showCollections ? 'open' : 'closed'} aria-label={t('skills.managedTitle')}>
-    {folders.length > 0 ? <SkillCollectionNav id={navId} visible={showCollections} folders={folders} active={activeFolder} count={skills.length} approximate={approximate} expanded={expanded} onExpand={toggleBranch} onChoose={chooseFolder} onHide={() => toggleCollections(false)} hideButtonRef={hideButton} folderAction={showCollections ? folderAction : null} /> : null}
+  return <section className="skills-surface skills-library" data-collections={folders.length ? 'open' : 'closed'} aria-label={t('skills.managedTitle')}>
+    {folders.length > 0 ? <SkillCollectionNav folders={folders} active={activeFolder} count={skills.length} approximate={approximate} expanded={expanded}
+      onExpand={path => setExpanded(current => { const next = new Set(current); next.has(path) ? next.delete(path) : next.add(path); return next })}
+      onChoose={chooseFolder} folderAction={folderAction} /> : null}
     <div className="library-main">
+      {!folders.length ? <div className="library-toolbar library-toolbar-folder">{folderAction}</div> : null}
+      {activeFolder ? <div className="library-toolbar">
+        <div className="library-heading-row">
+          <span className="library-scope-path" title={activeFolder}>{activeFolder}</span>
+        </div>
+      </div> : null}
       <span className="sr-only" aria-live="polite">{t('common.result', { count: visible.length })}</span>
-      <div ref={matrix} className="matrix-scroll" tabIndex={0} role="region" aria-label={t('skills.bindings')}
-        onScroll={(event) => { event.currentTarget.dataset.scrolled = String(event.currentTarget.scrollTop > 4) }}>
-        <table className="skill-matrix library-matrix" style={{ minWidth: `${Math.max(460, 280 + detected.length * 80)}px` }}>
-          <thead><tr>
-            <th scope="col" className="skill-name-column" aria-label={t('skills.column')}>{heading}</th>
-            {detected.map(group => <th scope="col" key={group.key}><span className="matrix-agent-heading" data-shared={group.names.length > 1 || undefined} title={group.names.length > 1 ? `${t('skills.sharedTarget')} · ${group.agent.dir}` : group.agent.dir}><AgentIcon agent={group.agent} size={22} /><span className="matrix-agent-name" title={group.label}>{group.label}</span></span></th>)}
-          </tr></thead>
-          <tbody>{visible.map((skill) => {
-            const category = skillCategory(skill)
-            return <tr key={skill.path} data-selected={selected?.path === skill.path || undefined}>
-              <th scope="row" className="skill-name-column">
-                <button type="button" className="skill-name-button" aria-label={t('skills.view', { name: skill.name })} aria-expanded={selected?.path === skill.path} onClick={(event) => onSelect(skill, event.currentTarget)}>
-                  <span className="skill-copy"><span className="skill-title-line"><span className="skill-title" title={skill.name}>{skill.name}</span>{category !== activeFolder && category ? <span className="skill-location" title={category}>{category}</span> : null}</span><span className="skill-description">{skill.description}</span></span>
-                </button>
-              </th>
-              {detected.map(group => {
-                const binding = skill.bindings?.find((entry) => entry.agent === group.agent.name)
-                return <td key={group.key}>{binding ? <SkillLinkButton skill={skill} binding={binding} agentLabel={group.label} busy={busy} onChange={changeLink} /> : <span className="text-muted-foreground">—</span>}</td>
-              })}
-            </tr>
-          })}</tbody>
-        </table>
-        {!visible.length ? <div className="library-empty">
-          <FolderIcon size={28} />
-          <h3>{query ? t('common.noMatches') : skills.length ? t('skills.emptyCollection') : t('empty.skills')}</h3>
-          <p>{query ? t('common.tryAgain') : t('common.noManaged')}</p>
-          <button type="button" className="quiet-button" onClick={query ? onClearSearch : onReviewUnmanaged}>{t(query ? 'common.clearSearch' : 'skills.reviewUnmanaged')}</button>
-        </div> : null}
-      </div>
-      {!detected.length && visible.length ? <p className="library-no-agents">{t('skills.noAgents')}</p> : null}
+      {visible.length ? <div className="skill-list-scroll"><SkillList rows={visible} groups={groups} active={selected} onSelect={onSelect} /></div>
+        : <div className="library-empty"><FolderIcon size={28} /><h3>{query ? t('common.noMatches') : skills.length ? t('skills.emptyCollection') : t('empty.skills')}</h3><p>{query ? t('common.tryAgain') : t('common.noManaged')}</p><button type="button" className="quiet-button" onClick={query ? onClearSearch : onReviewUnmanaged}>{t(query ? 'common.clearSearch' : 'skills.reviewUnmanaged')}</button></div>}
+      {!groups.length && visible.length ? <p className="library-no-agents">{t('skills.noAgents')}</p> : null}
     </div>
   </section>
 }

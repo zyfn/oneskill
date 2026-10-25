@@ -11,7 +11,7 @@ oneskill is a local Skill manager for coding Agents. Keep shared packages in one
 ## Features
 
 - **A shared library:** Browse collections, search Skills, read `SKILL.md`, and manage Agent connections.
-- **Existing Skills, organized:** Import packages from Agent directories with backups and conflict checks, or ignore packages that should stay where they are.
+- **Explicit import and linking:** Move existing packages into the library with backups and conflict checks, then choose which Agents to connect. Ignore packages that should stay where they are.
 - **Local inventories:** Inspect Agent installation status and discovered Skills, plugins, and MCP configuration.
 - **Three entrypoints, one workspace:** Use the Web UI, CLI, or Codex plugin with the same data and operations. Web and the plugin share the same responsive interface, with English and Simplified Chinese support.
 - **Files stay local:** No cloud account or database is required. Your library remains a directory of ordinary Skill packages.
@@ -48,13 +48,15 @@ npm start
 
 On macOS, you can also double-click `oneskill.command`.
 
-1. **Add Skills.** Place packages containing `SKILL.md` under `~/.oneskill/skills/`, or open **Skills → Unmanaged** and choose **Manage here**. **Manage multiple** imports several packages in one workflow.
-2. **Organize the library.** Create folders under `skills/`, then select **Rescan**. Collections follow the directory tree; **All skills** includes packages at the library root and in nested folders. Collapse the collection navigation when you need more room.
-3. **Connect Agents.** Select a link control in the library matrix. Agent products that write to the same directory share one column and one link. Links read from other scanned directories also appear as linked. Their tooltips show the source; those cells are read-only.
-4. **Review or ignore local packages.** The unmanaged list shows each package's source Agent and its actions. **Ignore** hides a package without changing its files; use **Ignored → Restore** to bring it back.
+To open the interface manually, copy the complete access URL printed in the terminal. Opening only the local host and port does not authorize a new browser session.
+
+1. **Add Skills.** Place packages containing `SKILL.md` under `~/.oneskill/skills/`, or open **Skills → Unmanaged** and choose **Add to library**. Importing moves the package away from its original location and retains a backup; it does not automatically connect any Agent. **Select** manages, ignores, or restores up to 100 visible packages without leaving the filtered list.
+2. **Organize the library.** Collections follow the folder tree. If a linked package moves, the broken-link notice lets you reconnect its old reference to the new location or remove only that broken reference. **All skills** includes the library root and nested collections.
+3. **Connect Agents.** Select a Skill and use its Agent connection switches in the inspector. Agent products that write to the same directory share one link. Links read from other scanned directories also appear as linked. Their tooltips show the source; those controls are read-only.
+4. **Review or ignore local packages.** The unmanaged list shows real packages outside the library, with their Agent or shared-directory source. Shared directories are listed once even when several Agents use them. A link pointing into the library is an existing reference and does not create another unmanaged entry. **Ignore** hides a package without changing its files; use **Ignored → Restore** to bring it back.
 5. **Edit the source.** Open a Skill's folder and edit its files. Connected Agents read the same source package, subject to their own reload and discovery behavior.
 
-The **Agents** page separates installed and not-installed entries. **Plugins** and **MCP** are searchable, read-only configuration inventories. MCP counts include Agent configuration and plugin declarations, with repeated cached versions merged within each plugin scope; different plugins remain separate. These counts may include inactive declarations and do not represent live connections.
+The **Agents** page separates installed and not-installed entries. **Plugins** and **MCP** are separate pages with searchable, read-only cards and an Agent filter. A configuration root shared by multiple Agents contributes one entry to the global count and appears under their combined filter. MCP counts include Agent configuration and plugin declarations; repeated declarations within a plugin scope are merged, while different plugins remain separate. These counts may include inactive declarations and do not represent live connections.
 
 ### CLI
 
@@ -109,11 +111,11 @@ For the plugin, install the generated package after choosing the workspace. The 
 ![oneskill architecture: Web, CLI and Codex share one local Workspace service and filesystem operations](docs/architecture.svg)
 
 1. **Discover.** Load Agent definitions for the current operating system and inspect their declared locations. CLI installation checks require `--version` to exit successfully with a recognized version; desktop applications and extensions use installation metadata. A configuration directory alone is not installation evidence.
-2. **Read.** Scan the Skill library and configured Agent roots, then publish a shared workspace snapshot. External filesystem changes appear after **Rescan**; this is not a filesystem watcher. Inventory counts describe discovered entries, subject to scan limits.
-3. **Change through one service.** Web uses authenticated local HTTP; the CLI and MCP adapter connect to the same service. Operations share parameter validation and errors. Writes are serialized, target directories are locked, and request receipts prevent the same completed request from being applied twice.
-4. **Keep ordinary files.** Linking creates a filesystem reference from the configured Agent target to the library package. Unlinking removes that reference and preserves the source. Importing verifies the copied package, backs up the original, and replaces its old location with a link. Conflicting content is not overwritten.
+2. **Read.** Scan the library and configured Agent roots. While the workspace is visible, polling refreshes snapshots older than 30 seconds; **Rescan** checks immediately. The footer shows the last successful scan and unreadable sources. Inventory counts describe discovered entries, subject to scan limits.
+3. **Change through one service.** Web, CLI, and the MCP adapter share validation and errors. Writes are serialized and targets locked. Successful writes are recorded before the next scan, so a refresh failure cannot change a committed result. Unchanged rescans preserve the revision, and entrypoints verify the service version.
+4. **Keep ordinary files.** Linking creates a filesystem reference from the configured Agent target to the library package. Unlinking removes that reference and preserves the source. Importing verifies the library copy, moves the original into a backup, and leaves its old location empty. Connect Agents separately with their switches. Conflicting content is not overwritten.
 
-Multiple Agents may read a shared directory, so one physical link can be visible to more than one Agent. oneskill shows this relationship rather than claiming independent controls for the same path. Links found in additional scan roots are read-only in that Agent's matrix cell.
+Multiple Agents may read a shared directory, so one physical link can be visible to more than one Agent. oneskill shows this relationship rather than claiming independent controls for the same path. Links found in additional scan roots remain read-only in the Skill inspector.
 
 The service listens on `127.0.0.1` and is intended for one local user. Access credentials, service metadata, locks, and request receipts are kept separately from the Skill library. An interrupted write is not blindly replayed: rescan and inspect the files before retrying.
 

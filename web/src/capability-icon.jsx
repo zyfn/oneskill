@@ -1,4 +1,4 @@
-import { LightningIcon, NotebookIcon, PlugsConnectedIcon, PuzzlePieceIcon, RobotIcon } from '@phosphor-icons/react'
+import { NotebookIcon, PlugsConnectedIcon, PuzzlePieceIcon, RobotIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 
 function PluginIcon({ item, className, size }) {
@@ -9,7 +9,7 @@ function PluginIcon({ item, className, size }) {
 
 export function CapabilityIcon({ route, item, className, size = 24 }) {
   if (route === 'plugins') return <PluginIcon item={item} className={className} size={size} />
-  const Icon = { skills: NotebookIcon, mcp: PlugsConnectedIcon, hooks: LightningIcon, import: NotebookIcon, agents: RobotIcon }[route] || NotebookIcon
+  const Icon = { skills: NotebookIcon, mcp: PlugsConnectedIcon, agents: RobotIcon }[route] || NotebookIcon
   return <Icon className={className} size={size} weight="regular" aria-hidden="true" />
 }
 

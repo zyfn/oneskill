@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { CheckIcon, CopyIcon, FolderOpenIcon, LinkBreakIcon, LinkIcon, XIcon } from '@phosphor-icons/react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { CheckIcon, CopyIcon, FolderOpenIcon, XIcon } from '@phosphor-icons/react'
 import { AgentIcon, CapabilityIcon } from '@/capability-icon'
 import { StatusPill } from '@/status-pill'
 import { describeItem, itemKey } from '@/capability-model'
@@ -7,6 +7,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { folderErrorKey, getSkill } from '@/api'
 import { skillCategory } from '@/skill-folders.mjs'
 import { skillTargets } from '@/skill-targets.mjs'
+import { SkillBindingAction } from '@/skill-binding-action'
+import { SkillSource } from '@/skill-source'
 import { useLocale } from '@/i18n'
 
 function DetailRow({ label, children }) {
@@ -14,6 +16,14 @@ function DetailRow({ label, children }) {
   return <div className="detail-row grid grid-cols-[70px_minmax(0,1fr)] gap-3 py-2.5 text-[13px] leading-5">
     <dt className="text-muted-foreground">{label}</dt><dd className="min-w-0 break-words">{children}</dd>
   </div>
+}
+
+function SkillJunctionMark() {
+  return <svg viewBox="0 0 36 38" width="34" height="36" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M18 8v10m0 0c0 4-3 6-7 6H7v5m11-11v11m0-11c0 4 3 6 7 6h4v5" />
+    <circle cx="18" cy="6" r="2.5" fill="currentColor" stroke="none" />
+    <circle cx="7" cy="32" r="3" /><circle cx="18" cy="32" r="3" /><circle cx="29" cy="32" r="3" />
+  </svg>
 }
 
 function CopyPath({ label, value, displayValue, onOpenFolder }) {
@@ -61,89 +71,90 @@ function CopyPath({ label, value, displayValue, onOpenFolder }) {
   </div>
 }
 
-function SkillBindings({ item, agents, onLinkChange }) {
+function SkillBindings({ item, agents, readOnly, busy, onChange }) {
   const { t } = useLocale()
-  const [busy, setBusy] = useState('')
-  const [error, setError] = useState('')
-  const change = async (binding) => {
-    setBusy(binding.agent)
-    setError('')
-    try {
-      const success = await onLinkChange(binding.agent, item.relative, binding.state !== 'linked')
-      if (!success) setError(t('skills.linkFailed'))
-    } finally { setBusy('') }
-  }
-  return <section className="mt-6 border-t border-border pt-5">
-    <h3 className="mb-2 text-[12px] font-medium">{t('skills.bindings')}</h3>
-    {skillTargets(agents).map(group => {
-      const binding = item.bindings.find(entry => entry.agent === group.agent.name)
-      if (!binding) return null
-      const blocked = ['conflict', 'broken'].includes(binding.state)
-      const linked = binding.state === 'linked'
-      const inherited = binding.state === 'inherited'
-      return <div key={binding.agent} className="flex min-h-12 items-center justify-between gap-3 border-b border-border/60 py-2 last:border-0">
-        <div className="flex min-w-0 items-center gap-2.5"><AgentIcon agent={group.agent} size={20} /><div className="min-w-0"><span className="block truncate text-xs" title={group.agent.dir}>{group.label}</span>
-          {blocked ? <span className="text-[10px] text-warning">{t(`skills.${binding.state}`)}</span> : null}
-        </div></div>
-        {inherited ? <span className="text-xs text-muted-foreground" title={`${t('skills.inheritedHint')} · ${binding.inheritedDestinations.join(', ')}`}>{t('skills.linked')}</span> : <button type="button" className="quiet-button flex items-center gap-1.5" disabled={Boolean(busy) || blocked} onClick={() => change(binding)} aria-label={t(linked ? 'skills.unlinkFor' : 'skills.linkFor', { name: item.name, agent: group.label })}>
-          {linked ? <LinkBreakIcon size={13} /> : <LinkIcon size={13} />}
-          {busy === binding.agent ? t('common.saving') : linked ? t('common.unlink') : t('common.link')}
-        </button>}
+  const rows = skillTargets(agents).map(group => ({ group, binding: item.bindings?.find(entry => entry.agent === group.agent.name) })).filter(row => row.binding)
+  return <section className="detail-bindings" data-count={rows.length}>
+    <h3>{t('skills.bindings')}</h3>
+    {rows.map(({ group, binding }) => {
+      const linked = ['linked', 'inherited'].includes(binding.state)
+      const pending = busy === `${binding.agent}:${item.relative}`
+      const needsStatus = ['broken', 'conflict'].includes(binding.state) || pending
+      return <div key={group.key} className="detail-binding-row" data-state={binding.state}>
+        <span className="detail-binding-agent"><AgentIcon agent={group.agent} size={19} /><span>{group.label}</span></span>
+        {readOnly ? <span className="binding-status" title={binding.state === 'inherited' ? t('skills.inheritedHint') : undefined}>{t(['broken', 'conflict'].includes(binding.state) ? `skills.${binding.state}` : linked ? 'skills.linked' : 'skills.notLinked')}</span>
+          : <span className="detail-binding-control"><span className={`binding-status${needsStatus ? '' : ' sr-only'}`}>{t(pending ? 'common.saving' : ['broken', 'conflict'].includes(binding.state) ? `skills.${binding.state}` : linked ? 'skills.linked' : 'skills.notLinked')}</span><SkillBindingAction skill={item} binding={binding} group={group} busy={busy} onChange={onChange} /></span>}
       </div>
     })}
-    {error ? <p role="alert" className="mt-3 text-xs leading-5 text-warning">{error}</p> : null}
   </section>
 }
 
 function SkillContent({ id }) {
+  const [open, setOpen] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   useEffect(() => {
+    if (!open || result) return
     let active = true
     getSkill(id).then(value => { if (active) setResult(value) }).catch(failure => { if (active) setError(failure.message) })
     return () => { active = false }
-  }, [id])
-  return <section className="skill-document">
-    <h3>SKILL.md</h3>
+  }, [id, open, result])
+  return <details className="skill-document" onToggle={event => setOpen(event.currentTarget.open)}>
+    <summary>SKILL.md</summary>
     {error ? <p role="alert">{error}</p> : result ? <pre>{result.content}</pre> : <p aria-busy="true">…</p>}
-  </section>
+  </details>
 }
 
-function DetailContent({ route, item, agents, onClose, onLinkChange, onOpenFolder, wide, scoped }) {
+function DetailContent({ route, item, agents, onClose, onBindingChange, bindingBusy, onOpenFolder, scoped }) {
   const { locale, t } = useLocale()
+  const [descriptionOpen, setDescriptionOpen] = useState(false)
+  const descriptionId = useId()
   const description = describeItem(route, item, locale)
-  const isCapability = ['plugins', 'mcp', 'hooks'].includes(route)
+  const descriptionNeedsToggle = description.length > (route === 'skills' ? 80 : 160)
+  const isCapability = ['plugins', 'mcp'].includes(route)
   const paths = [...new Set(item.paths?.length ? item.paths : [item.path || item.dir].filter(Boolean))]
   return <div className="detail-content h-full overflow-y-auto" data-route={route}>
     <div className="detail-topline">
       <div className="detail-heading">
-        {route !== 'skills' ? <span className="detail-icon">{route === 'agents' ? <AgentIcon agent={item} size={28} /> : <CapabilityIcon route={route} item={item} size={28} />}</span> : null}
+        {route === 'skills' ? <span className="detail-skill-mark"><SkillJunctionMark /></span>
+          : <span className="detail-icon">{route === 'agents' ? <AgentIcon agent={item} size={28} /> : <CapabilityIcon route={route} item={item} size={28} />}</span>}
         <h2 id="detail-title">{item.name}</h2>
       </div>
       <button type="button" className="detail-close icon-button" onClick={onClose} aria-label={t('common.close')}><XIcon size={19} /></button>
     </div>
     {item.version ? <p className="mt-2 font-mono text-[11px] text-muted-foreground">{item.version}</p> : null}
-    {description ? <p className="mt-5 whitespace-pre-line break-words text-[13px] leading-[1.9] text-muted-foreground">{description}</p> : null}
+    {description ? <div className="detail-description">
+      <p id={descriptionId} data-expanded={descriptionOpen || !descriptionNeedsToggle}>{description}</p>
+      {descriptionNeedsToggle ? <button type="button" className="description-toggle quiet-button" aria-expanded={descriptionOpen} aria-controls={descriptionId} onClick={() => setDescriptionOpen(open => !open)}>
+        {t(descriptionOpen ? 'skills.lessDescription' : 'skills.fullDescription')}
+      </button> : null}
+    </div> : null}
     {isCapability && (!scoped || item.capabilities?.length) ? <div className="detail-context" aria-label={t('common.source')}>
-      {item.agent && !scoped ? <span className="detail-owner"><AgentIcon agent={agents.find((agent) => agent.name === item.agent)} size={16} />{item.agent}</span> : null}
+      {item.agent && !scoped ? <span className="detail-owner"><AgentIcon agent={agents.find((agent) => agent.name === item.agent)} size={16} />{(item.agents || [item.agent]).join(' / ')}</span> : null}
       {item.capabilities?.length ? <span className="detail-capabilities">{item.capabilities.join(' · ')}</span> : null}
     </div> : !isCapability && (route === 'agents' || !item.managed) ? <dl className="detail-meta">
       {route === 'agents' ? <div className="detail-status"><StatusPill status={item.installed ? 'installed' : 'not-installed'} /></div> : null}
       {route === 'skills' && !item.managed ? <>
         <DetailRow label={t('common.status')}>{t(item.ignored ? 'skills.ignoredStatus' : 'skills.unmanagedStatus')}</DetailRow>
-        <DetailRow label={t('common.source')}><span className="detail-owner"><AgentIcon agent={agents.find((agent) => agent.name === item.agent)} size={16} />{item.agent}{skillCategory(item) ? <span className="text-muted-foreground">/ {skillCategory(item)}</span> : null}</span></DetailRow>
+        <DetailRow label={t('common.source')}><span className="detail-owner"><SkillSource skill={item} agents={agents} size={16} />{skillCategory(item) ? <span className="text-muted-foreground">/ {skillCategory(item)}</span> : null}</span></DetailRow>
       </> : null}
     </dl> : null}
-    <section className="detail-files">
+    {route === 'agents' ? <section className="agent-evidence"><h3>{t('agent.evidence')}</h3>
+      {(item.detection?.evidence || []).map((evidence, index) => <div key={index}><strong>{t(`agent.evidence_${evidence.kind}`)}</strong><code>{evidence.path || evidence.executablePath}</code>{evidence.probe ? <p>{evidence.probe.runnable ? evidence.probe.version : t('agent.versionFailed')}{evidence.probe.error ? ` · ${typeof evidence.probe.error === 'string' ? evidence.probe.error : JSON.stringify(evidence.probe.error)}` : ''}</p> : null}</div>)}
+      {!item.detection?.evidence?.length ? <p>{t('agent.noEvidence')}</p> : null}
+    </section> : null}
+    {route === 'plugins' ? <p className="resource-scope-note">{t('resources.pluginScope')}</p> : route === 'mcp' ? <p className="resource-scope-note">{t('resources.mcpScope')}</p> : null}
+    {route === 'skills' && item.managed && item.bindings?.length ? <SkillBindings item={item} agents={agents} readOnly={!onBindingChange} onChange={onBindingChange} busy={bindingBusy} /> : null}
+    <details className="detail-files" open={route !== 'skills'}>
+      <summary>{t(route === 'skills' ? 'skills.files' : 'common.details')}</summary>
       {paths.map((path) => <CopyPath key={path} label={route === 'agents' ? t('agent.directory') : route === 'skills' ? t('skills.skillFolder') : t('common.details')} value={path} onOpenFolder={route === 'agents' && !(item.skillsDirectoryExists ?? item.configured ?? item.installed) ? undefined : onOpenFolder} />)}
       {item.manifest && !paths.includes(item.manifest) ? <CopyPath label={t('common.manifest')} value={item.manifest} displayValue={item.path && item.manifest.startsWith(`${item.path}/`) ? item.manifest.slice(item.path.length + 1) : undefined} onOpenFolder={onOpenFolder} /> : null}
-    </section>
-    {route === 'skills' && item.managed && !wide && item.bindings?.length ? <SkillBindings item={item} agents={agents} onLinkChange={onLinkChange} /> : null}
+    </details>
     {route === 'skills' && item.id ? <SkillContent id={item.id} /> : null}
   </div>
 }
 
-export function DetailSheet({ scoped, route, item, agents = [], wide, onClose, onLinkChange, onOpenFolder }) {
+export function DetailSheet({ scoped, route, item, agents = [], wide, onClose, onBindingChange, bindingBusy, onOpenFolder }) {
   const { t } = useLocale()
   useEffect(() => {
     if (!item || !wide) return
@@ -154,10 +165,10 @@ export function DetailSheet({ scoped, route, item, agents = [], wide, onClose, o
     return () => document.removeEventListener('keydown', escape)
   }, [item, wide, onClose])
   if (!item) return null
-  const content = <DetailContent key={itemKey(item)} route={route} item={item} agents={agents} onClose={onClose} onLinkChange={onLinkChange} onOpenFolder={onOpenFolder} wide={wide} scoped={scoped} />
-  if (wide) return <aside id="capability-detail" aria-labelledby="detail-title" className="detail-paper">{content}</aside>
+  const content = <DetailContent key={itemKey(item)} route={route} item={item} agents={agents} onClose={onClose} onBindingChange={onBindingChange} bindingBusy={bindingBusy} onOpenFolder={onOpenFolder} scoped={scoped} />
+  if (wide) return <aside id="capability-detail" aria-labelledby="detail-title" className="detail-paper" data-route={route}>{content}</aside>
   return <Sheet open onOpenChange={(open) => { if (!open) onClose() }}>
-    <SheetContent id="capability-detail" showCloseButton={false} className="notebook-detail-sheet gap-0 p-0" onCloseAutoFocus={(event) => event.preventDefault()}>
+    <SheetContent id="capability-detail" showCloseButton={false} className="notebook-detail-sheet gap-0 p-0" data-route={route} onCloseAutoFocus={(event) => event.preventDefault()}>
       <SheetHeader className="sr-only"><SheetTitle>{item.name}</SheetTitle><SheetDescription>{t('common.detailDescription')}</SheetDescription></SheetHeader>
       {content}
     </SheetContent>

@@ -1,54 +1,41 @@
 # Interface conventions
 
-oneskill is a local capability workspace. The primary task is to keep one skill library and choose which Agents can access each package. The interface should make that relationship visible before showing configuration detail.
+oneskill is a local Skill library with explicit Agent connections. The working interface uses an editorial library layout: the original blue-gray canvas and translucent working surfaces, restrained blue interaction states, and a small Confluence mark. The same React interface serves Web and Codex.
 
-## Hierarchy
+## Product hierarchy
 
-- The application sidebar changes the capability type: Agents, Skills, Plugins, or MCP.
-- Agents has two installation views, **Installed** and **Not installed**. Failed CLI checks belong to Not installed; the interface does not add a separate diagnostic group.
-- Skills has two views: **Library** for everyday use and **Unmanaged** for review. Ignored items are a recoverable state inside Unmanaged.
-- Collections navigate real directory structure. Selecting a parent includes descendants; root packages appear in All skills. The collection rail can be hidden completely and remembers that preference. Nested branches expand on demand, with bounded indentation; collapsing a branch preserves the current selection.
-- The page introduction sits beside the title when space allows. A collapsed collection toggle, the active collection path, and link legend share the first matrix header. Keep column semantics accessible without repeating a visible Skill label. On mobile, collection navigation defaults closed; an expanded navigation sits above the matrix.
-- Skill names and descriptions are primary. Agent link controls are aligned secondary actions. Agent names sit below their icons.
-- A detail panel belongs to the selected item. Repeating the selection or pressing Escape closes it. Avoid repeating information already evident from the selected scope.
+- **Skills** is the default route and the brand's home destination. Library and Unmanaged share the same header, inspector, and list rhythm.
+- **Agents** lists installation evidence and discovered resource counts. Installed and Not installed remain the only two views; selecting an Agent opens its evidence and paths.
+- **Plugins** and **MCP** have separate top-level routes. Both show read-only inventories in compact cards. Neither a cached package nor an MCP declaration establishes activation or server health.
+- Two-way filters sit immediately before search. Resource ownership uses a compact select rather than another full row of capsules.
+- Collections reflect real directories. Parent selection includes descendants; root packages belong to All skills. The rail stays visible when collections exist.
 
-## Typography
+## Working surfaces
 
-The source of truth is `web/src/index.css`. Use Geist and the semantic size variables instead of ad hoc values.
+Use Geist and semantic type tokens from `web/src/index.css`: page title 28 px, detail title 20–21 px, item title 14 px, supporting text 13 px, labels 12 px. Keep filter labels at least 12 px at narrow widths.
 
-| Role | Variable | Size |
-| --- | --- | --- |
-| Wordmark | `--type-brand` | Shares the 28 px page-title size, accompanied by a 32 px mark |
-| Page title | `--type-page` | 28 px |
-| Detail title | `--type-detail` | 22 px |
-| Section title | `--type-section` | 16 px |
-| Item title | `--type-title` | 14 px |
-| Body | `--type-body` | 14 px |
-| Supporting text | `--type-meta` | 13 px |
-| Small label/count | `--type-label` | 12 px |
+Skills use compact rows with a name, one line of description, and connection context. Plugins and MCP share one compact card component: an icon, title, supporting description, and optional version or declaration state. Cards sit directly on the canvas below Agent headings, without an enclosing card; use two columns on desktop and one on narrow screens. Hover and selection use a light blue tint. Agent tables retain aligned numeric columns. All inventories share typography, spacing, and color tokens edited at their source.
 
-Use weight and space to establish hierarchy. Descriptions should remain readable; only supporting paths may use the smallest size. Counts use tabular numerals.
+Only linked Agents appear in the Skill preview. Conflicts have an explicit attention label. A selected Skill shows its connection controls near the top of the inspector; paths and the full document are secondary disclosures. The inspector's connection branches reuse the Confluence motif. Read-only links show a source status rather than an inoperable switch.
 
-Skill, plugin, and MCP item names share 14 px, weight 580, line-height 1.5, and normal letter spacing. Their descriptions share 13 px, weight 400, and line-height 1.6. View and Agent filter labels use 14 px / 500; their counts remain 12 px / 400. Keep these shared rules out of per-component font utilities.
+## Changes and recovery
 
-## Surfaces and controls
+Unmanaged selection happens within the current filtered list. Bulk import, ignore, and restore act on at most 100 visible items. The list preserves the search, source filter, and partial failure results. Import receipts expose original backup locations.
 
-The canvas moves from neutral gray at the top into a muted blue-gray lower area. It is a fixed background; scrolling content must not introduce a separate bottom stripe.
+Adding a Skill to the library moves it away from its original directory and retains a verified backup. It does not connect any Agent automatically. Agent switches handle connections as a separate action. A real package outside the library is unmanaged; an existing link pointing into the library remains a reference to a managed package.
 
-Outer groups use a translucent surface and a restrained blur. Inner rows use a soft, gray-white surface with more opacity. Do not apply the same material depth to search, language switching, and every small button. Top-level scope and language choices share rounded capsules, a soft pale surface, and a muted blue selected label and border. Do not add decorative left accent bars, rainbow optics, or bright white selection outlines.
+Broken links pointing into this library appear in a review disclosure above the list. Reconnecting requires an explicit managed Skill choice; removing a broken link never removes the shared source. Real folders, healthy links, and references outside this library are not eligible. The backend rechecks ownership and rejects nested destination aliases.
 
-Plugins and MCP place their item cards directly on the canvas; Agent labels and spacing provide grouping without another card around them. Page titles do not display aggregate counts.
+The footer shows the library location and last successful scan for the visible inventory. Agents summarizes Skills, Plugins, and MCP; hidden CLI-only inventories do not mark these pages as failed. A disclosure distinguishes unreadable files from scan limits. Polling visible workspaces refreshes expired snapshots; stale results are identified, and writes are blocked until a successful scan. A committed write stays successful if refreshing the interface fails.
 
-A muted blue border and tint identify selection. Hover affects the whole row, including the rounded ends; keyboard focus stays visible. Actions must distinguish idle, pending, completed, and failed states without relying only on color.
+## Navigation and feedback
 
-Agent filters remain one horizontal row with overflow edge fades and no visible scrollbar. Collection and matrix scrolling must stay inside their panes when a detail panel is open.
+The transparent Confluence mark in `logo.svg` is shared with `web/public/logo.svg` and the plugin icon. Vendor marks identify vendors, not connection status.
 
-Use the single oneskill mark in `logo.svg`; `web/public/logo.svg` contains the same asset for the browser. Vendor marks identify vendors. Plugins use a supplied icon when available and the standard plugin icon otherwise.
+The header displays the static Confluence logo and wordmark. A transparent glass capsule glides between routes with a soft, brief CSS stretch; a fine outline and stronger blue label keep selection legible on the original blue-gray background. Inactive routes stay muted. Reduced-motion preferences disable the transition and stretch.
 
-The official mark is **Confluence**, rendered in muted slate blue `#5B78A4` on a transparent background.
+There is no shader dependency, canvas renderer, mirrored entrance, or decorative connection animation. The navigation lens uses native elements, CSS gradients, backdrop blur, and one bounded selection transition. Ordinary loading and focus feedback remain available. Web and the self-contained MCP App use the same CSS tokens and components.
 
-## Product copy and acceptance
+## Acceptance
 
-Describe the action and its actual scope. “Installed” requires program, desktop app, or extension installation evidence. CLI commands are checked with `--version`; failed checks appear under Not installed, with diagnostics retained in CLI JSON. Configuration folders only locate resources. Version success does not prove sign-in or session health. See [Agent discovery](agent-discovery.md). “Linked” refers to a filesystem symlink, not a network connection. Unmanaged rows show the source Agent; internal directory names belong in path details. A directory name does not establish that a skill is Agent-provided.
-
-Check English and Chinese, desktop widths of 1280–1920 px, long names, empty collections, search with no results, selected details, inline failures, and real link/import/ignore/restore behavior. README screenshots remain in English.
+Check English and Chinese at desktop and narrow widths, long names, empty/search states, selected details, readable focus states, inline failures, and scan diagnostics. Exercise link/unlink, broken-link repair/removal, filtered bulk import, ignore, and restore in an isolated workspace. Verify both the rendered state and resulting filesystem contents. Installed plugin assets must match the source build.

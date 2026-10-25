@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { WarningCircleIcon, XIcon } from '@phosphor-icons/react'
-import { AppSidebar, routes } from '@/app-sidebar'
+import { AppNavigation, routes } from '@/app-navigation'
 import { getWorkspace, openFolder, updateSkillLink, workspaceHost, heartbeat } from '@/api'
 import { itemKey } from '@/capability-model'
 import { CapabilityView } from '@/capability-view'
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { LocaleContext, translate } from '@/i18n'
+import { WorkspaceStatus } from '@/workspace-status'
 
-const validRoutes = new Set([...routes.map((route) => route.key), 'import'])
+const validRoutes = new Set(routes.map((route) => route.key))
 function routeFromLocation() {
   const hash = window.location.hash.replace(/^#\/?/, '')
-  return validRoutes.has(hash) ? hash : workspaceHost().embedded ? 'skills' : 'agents'
+  return validRoutes.has(hash) ? hash : 'skills'
 }
 
 export default function App() {
@@ -27,24 +27,27 @@ export default function App() {
     try { return window.localStorage.getItem('oneskill-locale') === 'zh' ? 'zh' : 'en' } catch { return 'en' }
   })
   const selectionTrigger = useRef(null)
+  const loadSequence = useRef(0)
   const t = useCallback((key, values) => translate(locale, key, values), [locale])
 
   const load = useCallback(async (force = false, quiet = false) => {
+    const sequence = ++loadSequence.current
     if (!quiet) { force ? setRefreshing(true) : setLoading(true); setError('') }
     try {
-      setData(await getWorkspace(force))
+      const next = await getWorkspace(force)
+      if (sequence === loadSequence.current) { setData(next); setError('') }
       return true
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : String(requestError))
+      if (sequence === loadSequence.current) setError(requestError instanceof Error ? requestError.message : String(requestError))
       return false
     } finally {
-      if (!quiet) { setLoading(false); setRefreshing(false) }
+      if (sequence === loadSequence.current) { setLoading(false); setRefreshing(false) }
     }
   }, [])
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
-    const timer = setInterval(() => { heartbeat().catch(() => {}); load(false, true) }, 20000)
+    const timer = setInterval(() => { if (document.visibilityState === 'visible') { heartbeat().catch(() => {}); load(false, true) } }, 20000)
     const visible = () => { if (document.visibilityState === 'visible') load(false, true) }
     document.addEventListener('visibilitychange', visible)
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', visible) }
@@ -74,6 +77,11 @@ export default function App() {
     })
   }, [])
   const refresh = async () => { setSelection(null); await load(true) }
+  const afterMutation = async () => {
+    const refreshed = await load(false, true)
+    if (!refreshed) setError(t('common.savedRefreshFailed'))
+    return refreshed
+  }
   const changeLink = async (agent, skill, linked) => {
     setError('')
     try {
@@ -82,8 +90,7 @@ export default function App() {
       setError(requestError instanceof Error ? requestError.message : String(requestError))
       return false
     }
-    setSelection(null)
-    await load(true)
+    await afterMutation()
     return true
   }
   const revealFolder = (value) => openFolder(value)
@@ -91,12 +98,9 @@ export default function App() {
   return (
     <LocaleContext.Provider value={{ locale, setLocale, t }}>
       <TooltipProvider delayDuration={300}>
-      <SidebarProvider style={{ '--sidebar-width': '13.25rem' }} className="notebook-app">
-        <AppSidebar route={route} onNavigate={navigate} onRefresh={refresh} refreshing={refreshing} />
-        <SidebarInset className="app-canvas h-dvh min-w-0 overflow-hidden bg-transparent">
-          <div className="mobile-bar flex h-14 shrink-0 items-center px-4 sm:hidden">
-            <SidebarTrigger /><span className="ml-2 text-sm font-semibold tracking-tight">oneskill</span>
-          </div>
+      <div className="notebook-app">
+        <AppNavigation route={route} onNavigate={navigate} onRefresh={refresh} refreshing={refreshing} />
+        <main className="app-canvas">
           {error ? (
             <div role="alert" className="error-banner mx-5 mt-4 flex shrink-0 items-start gap-2 rounded-xl border border-warning-border bg-warning-muted px-4 py-3 text-xs text-warning sm:mx-8">
               <WarningCircleIcon size={17} className="shrink-0" />
@@ -108,9 +112,10 @@ export default function App() {
           <CapabilityView key={route} route={route} data={data} loading={loading} refreshing={refreshing} hasError={Boolean(error)}
             selected={selection}
             onSelect={(item, trigger) => { selectionTrigger.current = trigger; setSelection((current) => current && itemKey(current) === itemKey(item) ? null : item) }}
-            onClose={closeSelection} onRefresh={refresh} onNavigate={navigate} onLinkChange={changeLink} onOpenFolder={revealFolder} />
-        </SidebarInset>
-      </SidebarProvider>
+            onClose={closeSelection} onRefresh={afterMutation} onLinkChange={changeLink} onOpenFolder={revealFolder} />
+          {data ? <WorkspaceStatus data={data} route={route} onRefresh={refresh} refreshing={refreshing} /> : null}
+        </main>
+      </div>
       </TooltipProvider>
     </LocaleContext.Provider>
   )
