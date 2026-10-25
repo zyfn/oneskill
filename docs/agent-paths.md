@@ -31,5 +31,5 @@ The catalog explicitly selects macOS or native Windows before any path access. `
 
 - Catalog references identify published roots, configuration fields, and known filesystem contracts. The macOS host has been exercised locally; Windows selection, path expansion, command policy, and installation metadata use controlled fixtures until acceptance on a real Windows host.
 - Unknown resource locations display as unavailable. Filesystem conventions do not establish whether a CLI is installed, signed in, or healthy.
-- Codex's former config-relative Skills, Cline's older personal Skills, and locally observed QwenWork child paths remain compatibility read rules. They are not silently promoted to official current conventions.
+- Cline's older personal Skills and locally observed QwenWork child paths remain compatibility read rules. They are not silently promoted to official current conventions. Codex's writable target is its configuration root's `skills/` child; shared sources remain separate from its directory-link state.
 - Arbitrary project roots, command-line overrides, config-driven extra directories, every plugin-bundled capability, JSON5/YAML configurations, and JavaScript extensions are outside the current normalized inventory. Source content and secret-bearing transport settings are not exposed.

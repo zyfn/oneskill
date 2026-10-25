@@ -142,34 +142,34 @@ test('real version execution captures output, exit failures, and bounded output'
   const executable = path.join(f.bin, 'claude')
   f.context.runVersionCommand = runVersionCommand
   const scan = async (code) => {
-    await fs.writeFile(executable, `#!${process.execPath}\n${code}\n`, { mode: 0o755 })
+    await fs.writeFile(executable, `#!/bin/sh\n${code}\n`, { mode: 0o755 })
     f.context.versionCache.clear()
     return discoverAgent(preset('claude'), path.join(f.config, 'skills'), f.config, f.context)
   }
-  const success = await scan("if(process.argv[2]!=='--version')process.exit(9); console.log('fixture-cli 3.4.5')")
+  const success = await scan('[ "$1" = "--version" ] || exit 9\nprintf "fixture-cli 3.4.5\\n"')
   assert.equal(success.version, '3.4.5')
   assert.equal(success.configured, false)
-  const failed = await scan("console.error('dependency missing');process.exit(17)")
+  const failed = await scan('printf "dependency missing\\n" >&2\nexit 17')
   assert.equal(failed.detected, false)
   assert.equal(failed.runnable, false)
   assert.equal(failed.detection.evidence[0].probe.error.code, '17')
-  const misleading = await scan("console.log('fixture-cli 3.4.5');process.exit(17)")
+  const misleading = await scan('printf "fixture-cli 3.4.5\\n"\nexit 17')
   assert.equal(misleading.detected, false)
   assert.equal(misleading.version, null)
   assert.equal(misleading.status, 'unavailable')
-  const oversized = await scan("process.stdout.write('x'.repeat(1000000))")
+  const oversized = await scan('while :; do printf "0123456789abcdef0123456789abcdef"; done')
   assert.equal(oversized.detected, false)
   assert.equal(oversized.detection.evidence[0].probe.error.code, 'OUTPUT_LIMIT')
 })
 
 test('a timed-out version probe kills descendants and finishes without configuration changes', { skip: process.platform === 'win32' }, async (t) => {
   const f = await fixture(t)
-  const childPidFile = path.join(f.root, 'child.pid')
+  const childPidFile = path.join(f.bin, 'child.pid')
   const executable = path.join(f.bin, 'claude')
-  const childSource = 'setInterval(()=>{},1000)'
-  await fs.writeFile(executable, `#!${process.execPath}\nconst child=require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(childSource)}],{stdio:'inherit'});require('node:fs').writeFileSync(${JSON.stringify(childPidFile)},String(child.pid));setInterval(()=>{},1000)\n`, { mode: 0o755 })
+  // A shell fixture starts its descendant without waiting for a second Node
+  // interpreter to initialize under concurrent test load.
+  await fs.writeFile(executable, '#!/bin/sh\n/bin/sleep 60 &\nprintf "%s" "$!" > "${0%/*}/child.pid"\nwait\n', { mode: 0o755 })
   f.context.runVersionCommand = runVersionCommand
-  // Allow process startup under concurrent test load before exercising cleanup.
   f.context.versionTimeoutMs = 4000
   const start = Date.now()
   const result = await discoverAgent(preset('claude'), path.join(f.config, 'skills'), f.config, f.context)

@@ -1,6 +1,7 @@
-# 源目录内容不随仓库分发，只保留空目录骨架
-skills/*
-!skills/.gitkeep
+# User data belongs in ~/.oneskill, never in the source distribution.
+skills/
+.oneskill/
+.oneskill-backups/
 
 # 构建产物与依赖不入库；Web 启动时按需构建
 node_modules

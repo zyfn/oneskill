@@ -6,7 +6,9 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
-oneskill is a local Skill manager for coding Agents. Keep shared packages in one library, organize them with folders, and connect them to Agent directories through symbolic links. Edit a package once instead of maintaining separate copies for every Agent.
+[![Check](https://github.com/zyfn/oneskill/actions/workflows/check.yml/badge.svg)](https://github.com/zyfn/oneskill/actions/workflows/check.yml)
+
+oneskill is a local Skill manager for coding Agents. Keep packages in `~/.oneskill/skills/`, organize them with folders, and connect them to Agent directories through symbolic links. Edit a package once instead of maintaining separate copies for every Agent.
 
 ## Features
 
@@ -36,7 +38,17 @@ cd oneskill
 npm ci
 npm --prefix web ci
 npm run build
+npm start
 ```
+
+The first start creates your workspace and an empty Skill library in your home directory:
+
+| Platform | Workspace | Skill library |
+| --- | --- | --- |
+| macOS | `~/.oneskill/` | `~/.oneskill/skills/` |
+| Windows | `%USERPROFILE%\.oneskill\` | `%USERPROFILE%\.oneskill\skills\` |
+
+The source checkout and plugin cache contain application code, not your library. Starting from another directory or reinstalling the plugin uses the same default workspace. Personal packages, Agent overrides, preferences, and import backups are excluded from the distributed source and plugin package.
 
 ## Usage
 

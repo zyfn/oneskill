@@ -35,6 +35,7 @@ const mime = file => ({ '.html': 'text/html; charset=utf-8', '.js': 'text/javasc
 
 export async function startWorkspaceServer({ workspace = createWorkspace(), runtimeRoot, webRoot = WEB_ROOT, port = 0, idleTimeout = 120000, openFolder, onClose, appVersion = APP_VERSION } = {}) {
   const location = await workspaceLocation(workspace.root, runtimeRoot)
+  await fs.mkdir(workspace.sourceRoot, { recursive: true, mode: 0o700 })
   await fs.mkdir(location.directory, { recursive: true, mode: 0o700 })
   const release = await acquireLock(path.join(location.directory, 'owner.lock'), { timeout: 1000 })
   const service = createWorkspaceService({ workspace, location, openFolder })

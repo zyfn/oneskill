@@ -7,6 +7,17 @@ import { promisify } from 'node:util'
 import { execFile } from 'node:child_process'
 import { createWorkspace, PROJECT_ROOT } from '../src/core.mjs'
 
+test('the default library follows the user home, independent of the checkout or current directory', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-default-home-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const script = `import { createWorkspace } from ${JSON.stringify(new URL('../src/core.mjs', import.meta.url).href)}; const workspace = createWorkspace(); console.log(JSON.stringify({ root: workspace.root, skills: workspace.sourceRoot }));`
+  const { stdout } = await promisify(execFile)(process.execPath, ['--input-type=module', '-e', script], {
+    cwd: root, env: { ...process.env, HOME: root, USERPROFILE: root },
+  })
+  assert.deepEqual(JSON.parse(stdout), { root: path.join(root, '.oneskill'), skills: path.join(root, '.oneskill', 'skills') })
+  assert.deepEqual(await fs.readdir(root), [])
+})
+
 test('Agent logos retain their image formats when embedded for Web and MCP Apps', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-logos-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
@@ -60,7 +71,8 @@ test('CLI workspace selection uses application presets without copying source or
   const run = promisify(execFile)
   const { stdout } = await run(process.execPath, [path.join(PROJECT_ROOT, 'src/cli.mjs'), 'agents', '--workspace', root, '--runtime-dir', path.join(root, 'runtime'), '--idle-timeout', '1000'])
   assert.deepEqual(JSON.parse(stdout).map(agent => agent.name), ['fixture'])
-  assert.deepEqual((await fs.readdir(root)).filter(name => name !== 'runtime').sort(), ['agents.catalog.json', 'agents.local.json'])
+  assert.deepEqual((await fs.readdir(root)).filter(name => name !== 'runtime').sort(), ['agents.catalog.json', 'agents.local.json', 'skills'])
+  assert.ok((await fs.stat(path.join(root, 'skills'))).isDirectory())
   await assert.rejects(run(process.execPath, [path.join(PROJECT_ROOT, 'src/cli.mjs'), 'agents', '--workspace']), error => /requires a value/.test(error.stderr))
   await fs.unlink(path.join(root, 'agents.catalog.json'))
   const discoveryContext = createDiscoveryContext({ home: root, env: { APPDATA: path.join(root, 'roaming'), LOCALAPPDATA: path.join(root, 'local') }, standardBinDirs: [], applicationRoots: [], extensionRoots: [] })

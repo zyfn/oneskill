@@ -11,7 +11,7 @@ export async function workspaceLocation(root = defaultWorkspaceRoot(), runtimeRo
   const runtimeStat = await fs.lstat(runtimeRoot)
   if (!runtimeStat.isDirectory() || (process.getuid && runtimeStat.uid !== process.getuid())) throw new Error('The runtime directory must be owned by the current user.')
   if (process.platform !== 'win32') await fs.chmod(runtimeRoot, 0o700)
-  await fs.mkdir(path.resolve(root), { recursive: true })
+  await fs.mkdir(path.resolve(root), { recursive: true, mode: 0o700 })
   const canonical = await fs.realpath(path.resolve(root))
   const workspaceId = digest(canonical)
   return { root: canonical, workspaceId, runtimeRoot, directory: path.join(runtimeRoot, workspaceId) }

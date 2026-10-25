@@ -6,7 +6,9 @@
 
 [English](README.md) · **简体中文**
 
-oneskill 是面向编程 Agent 的本地 Skill 管理工具。将共享包集中存放，用文件夹组织内容，再通过符号链接接入各 Agent 目录，减少重复维护和版本不一致的问题。
+[![Check](https://github.com/zyfn/oneskill/actions/workflows/check.yml/badge.svg)](https://github.com/zyfn/oneskill/actions/workflows/check.yml)
+
+oneskill 是面向编程 Agent 的本地 Skill 管理工具。将 Skill 集中存放在 `~/.oneskill/skills/`，用文件夹组织内容，再通过符号链接接入各 Agent 目录，减少重复维护和版本不一致的问题。
 
 ## 功能
 
@@ -36,7 +38,17 @@ cd oneskill
 npm ci
 npm --prefix web ci
 npm run build
+npm start
 ```
+
+首次启动会在用户主目录创建工作区和空的 Skill 管理库：
+
+| 系统 | 工作区 | Skill 管理库 |
+| --- | --- | --- |
+| macOS | `~/.oneskill/` | `~/.oneskill/skills/` |
+| Windows | `%USERPROFILE%\.oneskill\` | `%USERPROFILE%\.oneskill\skills\` |
+
+源码目录和插件缓存只存放程序，管理库独立保存。从其他目录启动或重新安装插件，默认仍使用同一个工作区。个人 Skill、Agent 覆盖配置、忽略选择和导入备份不会随源码或插件包分发。
 
 ## 使用方式
 

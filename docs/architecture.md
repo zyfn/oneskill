@@ -31,7 +31,7 @@ CLI / MCP ──────────────┘
 
 `createWorkspace({ root })` constructs an independent workspace instance. Its `skills/`, `agents.local.json`, and `skills.ignore.json` belong to that root. Application source, built-in presets, and Web assets remain in the installation directory. A workspace may provide a separate `agents.catalog.json` for fixtures or custom deployments. Definitions are read again on rescan.
 
-The default data directory is `~/.oneskill`. All entrypoints support an explicit data location:
+The default data directory is `~/.oneskill` (`%USERPROFILE%\.oneskill` on Windows), with packages in its `skills/` child. The service creates an empty library on first start. Neither the process working directory nor the plugin installation path selects a data root. Default plugin packages contain no workspace override; the generated server resolves the current user's home at launch. All entrypoints support an explicit data location:
 
 ```bash
 npm run cli -- skills --workspace /path/to/workspace
