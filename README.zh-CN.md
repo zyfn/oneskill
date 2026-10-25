@@ -10,13 +10,105 @@
 
 oneskill 是面向编程 Agent 的本地 Skill 管理工具。将 Skill 集中存放在 `~/.oneskill/skills/`，用文件夹组织内容，再通过符号链接接入各 Agent 目录，减少重复维护和版本不一致的问题。
 
-## 功能
+## 运行原理
 
-- **共享管理库**：按目录浏览和搜索 Skill，查看 `SKILL.md`，调整各 Agent 的接入关系。
-- **迁移与链接分开管理**：将已有 Skill 移入管理库，保留备份并检查冲突，再按需连接 Agent；需要留在原位置的包可以忽略。
-- **本地资源概览**：查看 Agent 安装状态，以及已发现的 Skill、插件和 MCP 配置。
-- **三个入口，一个工作区**：Web、CLI 和 Codex 插件共用数据与操作。Web 和插件使用相同的响应式界面，支持中英文。
-- **保留普通文件**：无需云端账号或数据库，管理库始终是本地文件夹中的 Skill 包。
+![一份 Skill 管理库，通过符号链接供多个 Agent 读取](docs/architecture.svg)
+
+1. **集中保存文件**：将已有 Skill 纳入 `~/.oneskill/skills/`。oneskill 会校验内容、保留原包备份，再将它从原位置移走。
+2. **选择接入的 Agent**：在 Skill 详情中打开对应开关，oneskill 会在该 Agent 配置的 Skill 目录里创建符号链接，指向管理库中的包。仅纳入管理不会创建链接。
+3. **维护同一份内容**：已接入的 Agent 读取同一份文件。取消接入只移除链接，管理库中的包继续保留。
+
+Web、CLI 和 Codex 插件共用一个本地工作区服务，由当前使用的入口自动启动，文件保存在本机。[技术架构](docs/architecture.md)中进一步说明了扫描、快照、校验与写入恢复。
+
+## 安装
+
+需要 **Git、Node.js 20+ 和 npm**。先选择一种入口；它们共用同一个工作区。
+
+| 入口 | 适合的使用场景 | 需要完成的安装步骤 |
+| --- | --- | --- |
+| Web | 在浏览器中浏览和管理 Skill | 1 + 2 |
+| CLI | 在终端读取 JSON、调用工作区操作 | 1 |
+| Codex 插件 | 在 Codex 内打开界面、通过对话调用工具 | 1 + 2 + 3 |
+
+### 1. 获取程序
+
+```bash
+git clone https://github.com/zyfn/oneskill.git
+cd oneskill
+npm ci
+```
+
+后续命令都在这个源码目录中执行。Skill 管理库独立存放在 `~/.oneskill/skills/`。
+
+### 2. 构建共用界面
+
+使用 **Web 或 Codex 插件**时，安装前端依赖并构建两种界面格式：
+
+```bash
+npm --prefix web ci
+npm run build
+```
+
+这一步生成浏览器界面和 Codex 内嵌界面。只使用 CLI，完成第 1 步即可。
+
+### 3. 安装 Codex 插件
+
+还需要命令行中可用的 **Codex CLI**（`codex` 命令），以及支持本地插件和 MCP Apps 的桌面客户端。
+
+```bash
+npm run build:plugin
+codex plugin marketplace add ./dist/marketplace
+codex plugin add oneskill@oneskill-local
+```
+
+生成的插件包含服务代码、构建好的界面和 Agent 清单。个人 Skill 继续保存在工作区中。
+
+## 使用方式
+
+### Web
+
+完成安装第 1、2 步后，运行：
+
+```bash
+npm start
+```
+
+命令会启动本地服务并打开浏览器。macOS 也可以双击 `oneskill.command`。需要在其他浏览器打开时，复制终端输出的**完整访问链接**；仅输入端口无法为新会话完成授权。
+
+### CLI
+
+完成安装第 1 步后，通过 Node 直接执行命令，结果以 JSON 输出：
+
+```bash
+node src/cli.mjs workspace
+node src/cli.mjs skills
+node src/cli.mjs agents
+node src/cli.mjs plugins
+node src/cli.mjs mcp-inventory
+```
+
+使用 `node src/cli.mjs workspace --refresh` 重新扫描，使用 `node src/cli.mjs help` 查看命令。修改操作使用 `workspace` 返回的 Agent 和 Skill 标识。例如，将以下示例中的标识替换为自己的数据，再建立链接：
+
+```bash
+node src/cli.mjs call setSkillLink '{"agentId":"agent:codex","skillId":"managed:engineering/code-review","linked":true}'
+```
+
+`call` 会为修改操作生成请求标识。参数及其他操作见[操作参考](docs/reference.zh-CN.md)。
+
+### Codex 插件
+
+完成安装第 1～3 步后，重启 Codex 桌面客户端，在侧边栏或更多应用菜单中打开 **oneskill**。插件自动启动本地服务，使用与 Web 相同的界面和管理库。
+
+也可以在对话中让 Codex 调用工具，例如：**“使用 oneskill 查看未管理的 Skill。”** 入口位置由宿主客户端决定；插件更新后，已打开的面板可能需要关闭后重新打开。
+
+## 管理 Skill
+
+1. **添加包**：将包含 `SKILL.md` 的文件夹放入管理库，或选择 **Skills → 未管理 → 纳入管理**。纳入时迁移原包并保留备份，之后再按需连接 Agent。
+2. **接入 Agent**：选择管理库中的 Skill，打开对应的 Agent 目录开关。Codex 的目标为 `~/.codex/skills/`，设置 `CODEX_HOME` 时使用其下的 `skills/`。写入同一物理目录的产品共用一个开关；`~/.agents/skills/` 等共享发现目录与这些开关分开记录。
+3. **整理和编辑**：目录树对应真实文件夹，直接修改库中的文件即可。移动已链接的包后，通过链接异常面板重新关联原引用，或仅删除失效链接。具体重载时机和多级目录支持遵循 Agent 自身的规则。
+4. **让原包留在原处**：在未管理列表选择 **忽略**，通过 **已忽略 → 恢复** 可重新显示。点击 **选择** 可对最多 100 个可见包批量纳入、忽略或恢复。指向管理库的链接属于已有引用，不重复作为未管理包展示。
+
+**Agent** 展示安装状态与本地数量。**插件**和 **MCP** 以可搜索的小卡片展示只读清单。数量代表发现的包与配置声明，可能包含未启用项，不代表 MCP 实时连接数；同一个物理配置根目录在全局只计一次。
 
 ## 界面预览
 
@@ -28,110 +120,16 @@ oneskill 是面向编程 Agent 的本地 Skill 管理工具。将 Skill 集中�
 
 ![Agent 概览与本地能力统计](docs/screenshots/agents.png)
 
-## 安装
+## 工作区与 Agent 配置
 
-需要 **Node.js 20+** 和 npm。Web 界面需要浏览器；Codex 集成需要支持本地插件和 MCP Apps 的桌面客户端。
-
-```bash
-git clone https://github.com/zyfn/oneskill.git
-cd oneskill
-npm ci
-npm --prefix web ci
-npm run build
-npm start
-```
-
-首次启动会在用户主目录创建工作区和空的 Skill 管理库：
+首次使用会在用户主目录创建工作区和空管理库：
 
 | 系统 | 工作区 | Skill 管理库 |
 | --- | --- | --- |
 | macOS | `~/.oneskill/` | `~/.oneskill/skills/` |
 | Windows | `%USERPROFILE%\.oneskill\` | `%USERPROFILE%\.oneskill\skills\` |
 
-源码目录和插件缓存只存放程序，管理库独立保存。从其他目录启动或重新安装插件，默认仍使用同一个工作区。个人 Skill、Agent 覆盖配置、忽略选择和导入备份不会随源码或插件包分发。
-
-## 使用方式
-
-### Web
-
-```bash
-npm start
-```
-
-macOS 也可以双击项目目录中的 `oneskill.command`。
-
-手动打开界面时，请复制终端输出的完整访问链接。仅输入本机地址和端口，无法为新的浏览器会话完成授权。
-
-1. **添加 Skill**：将包含 `SKILL.md` 的包放入 `~/.oneskill/skills/`，或在 **Skills → 未管理** 中选择 **纳入管理**。纳入管理会迁移原包并保留备份，原位置清空，不会自动链接任何 Agent。点击 **选择** 可在当前列表中批量纳入、忽略或恢复，保留搜索与来源筛选。
-2. **整理目录**：在 `skills/` 下建立文件夹。移动已链接的包后，扫描会提示失效链接，可选择新位置重新链接，或仅移除失效链接。目录树保留嵌套层级；**全部 Skills** 包含根目录和所有子目录中的包。
-3. **接入 Agent**：选择 Skill 后，在详情中切换 Agent 目录链接开关。写入相同目录的 Agent 共用一条链接。Codex 写入 `~/.codex/skills/`，设置了 `CODEX_HOME` 时写入其下的 `skills/`。`~/.agents/skills/` 等共享目录用于发现未管理的包，不会自动点亮其他 Agent 的目录开关。
-4. **处理未管理的包**：列表展示管理库外的独立包，以及来源 Agent 或共享目录。多个 Agent 共用的目录只列一次；指向管理库的软链接属于已有引用，不重复列为未管理的 Skill。**忽略** 只隐藏列表项，不修改文件；通过 **已忽略 → 恢复** 可重新显示。
-5. **编辑共享源文件**：打开 Skill 文件夹并直接修改。已接入的 Agent 读取同一份包，具体重载和发现时机遵循 Agent 自身的规则。
-
-**Agent** 页面区分已安装与未安装。**插件**和 **MCP** 使用独立页面，以小卡片展示只读清单，支持搜索和按 Agent 筛选。多个 Agent 共用的配置根目录在全局数量中只计一次，并显示在组合筛选项下。MCP 数量包含 Agent 配置和插件声明；同一插件范围内重复的声明合并统计，不同插件保持独立。这些数量可能包含未启用的声明，不代表当前连接数。
-
-### CLI
-
-CLI 默认输出 JSON，连接与界面相同的本地服务：
-
-```bash
-npm run cli -- workspace
-npm run cli -- workspace --refresh
-npm run cli -- skills
-npm run cli -- agents
-npm run cli -- plugins
-npm run cli -- mcp-inventory
-```
-
-使用工作区返回的标识调用具体操作：
-
-```bash
-npm run cli -- call getSkill '{"skillId":"managed:engineering/code-review"}'
-npm run cli -- call setSkillLink '{"agentId":"agent:codex","skillId":"managed:engineering/code-review","linked":true}'
-```
-
-修改操作未提供请求标识时，`call` 会自动生成。完整命令见 `npm run cli -- help` 和[操作参考](docs/reference.zh-CN.md)。
-
-### Codex 插件
-
-完成项目构建后，打包并安装本地插件：
-
-```bash
-npm run build:plugin
-codex plugin marketplace add ./dist/marketplace
-codex plugin add oneskill@oneskill-local
-```
-
-重启桌面客户端，在左侧导航或更多应用菜单中打开 **oneskill**。插件提供相同的管理界面，也通过 MCP 工具在对话中提供工作区操作。入口位置由宿主客户端决定。
-
-安装包包含服务代码、界面和 Agent 清单，需要 `PATH` 中可用的 Node.js，启动时不安装依赖或构建前端。更新源码后，重新构建界面与插件包、安装插件，并重新加载桌面客户端以使用新版。
-
-### 指定工作区
-
-所有入口默认使用 `~/.oneskill`。管理库存放在其他位置时，为每个入口指定**同一个绝对目录**：
-
-```bash
-npm run cli -- web --open --workspace /absolute/path/to/workspace
-npm run cli -- skills --workspace /absolute/path/to/workspace
-npm run build:plugin -- --workspace /absolute/path/to/workspace
-```
-
-插件选择工作区后，需要安装生成的包。工作区数据独立于源码目录和插件缓存保存。
-
-## 运行原理
-
-![oneskill 架构：Web、CLI 与 Codex 共用本地工作区服务和文件操作](docs/architecture.svg)
-
-1. **发现 Agent**：按当前操作系统加载 Agent 定义，检查声明的命令与路径。CLI 只有在 `--version` 成功退出并返回可识别版本时才算检测通过；桌面应用和扩展检查安装信息。配置目录本身不证明 Agent 已安装。
-2. **读取资源**：扫描管理库和已配置的 Agent 目录，生成共享工作区快照。页面可见期间会轮询工作区，超过 30 秒的快照会重新扫描；也可手动立即扫描。页脚展示扫描时间与读取诊断，数量代表扫描范围内已发现的条目。
-3. **统一执行操作**：Web 通过带鉴权的本地 HTTP 访问服务，CLI 与 MCP 适配器连接同一服务。所有入口共用参数校验和错误模型；写入排队执行，目标目录加锁，写入完成后先记录成功回执，再独立刷新清单。扫描失败不会把已成功写入误报为失败。
-4. **保留文件结构**：链接操作在配置的 Agent 目标目录中建立指向管理库的符号链接；取消链接只移除该引用，保留共享源包。纳入管理时校验库中的副本、备份原包，原位置不再保留 Skill 或自动创建链接；之后通过 Agent 开关按需连接。遇到不同内容不会覆盖。
-
-多个 Agent 可能读取同一个共享目录，因此一条物理引用可能对多个 Agent 可见。共享来源扫描与 Agent 目标目录中的关联分别记录；开关管理目录引用，不改变客户端自己的兼容读取规则，也不保证 Skill 只能被某个 Agent 发现。
-
-服务仅监听 `127.0.0.1`，面向本机单个用户。访问凭证、服务信息、锁和请求记录与管理库分开存放。写入中断后不会盲目重放，请先重新扫描并检查文件，再决定是否重试。
-
-## 工作区与 Agent 配置
+源码目录和插件缓存存放程序。个人 Skill、覆盖配置、忽略选择和导入备份不会随源码或插件包分发。
 
 ```text
 ~/.oneskill/
@@ -163,6 +161,22 @@ npm run build:plugin -- --workspace /absolute/path/to/workspace
 相对资源路径基于当前系统选定的配置根目录。已有 JSON、JSONC、TOML 和插件清单读取器可通过配置复用；新的私有格式仍需实现对应扫描器。支持范围见 [Agent 扫描说明](docs/agent-discovery.md)和[参考文档](docs/reference.zh-CN.md)。
 
 检测到 Agent 安装不代表支持它的全部资源格式。Skill 加载及多级目录支持遵循各 Agent 的规则。Windows 可能需要开发者模式或相应的符号链接权限，原生桌面行为仍需按平台验证。
+
+### 指定其他工作区
+
+管理库存放在其他位置时，为所有入口指定**同一个绝对目录**：
+
+```bash
+node src/cli.mjs web --open --workspace /absolute/path/to/workspace
+node src/cli.mjs skills --workspace /absolute/path/to/workspace
+npm run build:plugin -- --workspace /absolute/path/to/workspace
+```
+
+Codex 插件需要在选定目录后安装生成的包。默认插件包使用当前用户的 `~/.oneskill/`。
+
+### 更新程序
+
+在源码目录运行 `git pull` 和 `npm ci`。Web 与插件用户再重复安装第 2 步构建界面；插件用户还需重复第 3 步，并重新打开 Codex 客户端。
 
 ## 开发与贡献
 

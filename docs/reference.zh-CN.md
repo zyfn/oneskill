@@ -95,10 +95,10 @@ MCP 配置数量包含 Agent 主配置与已发现插件的声明。相同 Agent
 
 | 位置 | 用途 |
 | --- | --- |
-| `skills/` | 统一管理库；除 `.gitkeep` 外，内容不进入 Git。 |
-| `agents.catalog.json` | Agent 命令、图标、独立配置根目录、资源声明和官方来源。 |
-| `agents.local.json` | 本地 Agent 定义与预设覆盖，不随 Git 分发。 |
-| `skills.ignore.json` | 本地导入保护与持久化忽略规则，不随 Git 分发。 |
+| `~/.oneskill/skills/` | 用户的统一管理库，与源码目录分开保存。 |
+| 安装目录的 `agents.catalog.json` | 内置 Agent 命令、图标、配置根目录、资源声明和官方来源。 |
+| `~/.oneskill/agents.local.json` | 本地 Agent 定义与预设覆盖。 |
+| `~/.oneskill/skills.ignore.json` | 本地导入保护与持久化忽略规则。 |
 | Agent 的 `.oneskill-backups/` | 原包与导入恢复记录。 |
 | `web/dist/` | 构建后的浏览器资源，不进入 Git。 |
 | 浏览器本地存储 | 语言偏好，不保存 Skill 内容。 |

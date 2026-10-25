@@ -10,13 +10,105 @@
 
 oneskill is a local Skill manager for coding Agents. Keep packages in `~/.oneskill/skills/`, organize them with folders, and connect them to Agent directories through symbolic links. Edit a package once instead of maintaining separate copies for every Agent.
 
-## Features
+## How it works
 
-- **A shared library:** Browse collections, search Skills, read `SKILL.md`, and manage Agent connections.
-- **Explicit import and linking:** Move existing packages into the library with backups and conflict checks, then choose which Agents to connect. Ignore packages that should stay where they are.
-- **Local inventories:** Inspect Agent installation status and discovered Skills, plugins, and MCP configuration.
-- **Three entrypoints, one workspace:** Use the Web UI, CLI, or Codex plugin with the same data and operations. Web and the plugin share the same responsive interface, with English and Simplified Chinese support.
-- **Files stay local:** No cloud account or database is required. Your library remains a directory of ordinary Skill packages.
+![One Skill library, read by multiple Agents through symbolic links](docs/architecture.svg)
+
+1. **Bring the files together.** Import an existing Skill into `~/.oneskill/skills/`. oneskill verifies the package, backs up the original, and moves it out of its former location.
+2. **Choose the connections.** Enable an Agent in the Skill inspector. oneskill creates a symbolic link in that Agent's configured Skill directory, pointing to the package in your library. Importing alone creates no links.
+3. **Edit one source.** Connected Agents read the same files. Removing a connection removes its link and keeps the library package.
+
+Web, CLI, and the Codex plugin share one local Workspace service, started automatically by the entrypoint you use. Files stay on your machine. The [technical architecture](docs/architecture.md) covers discovery, snapshots, validation, and write recovery.
+
+## Installation
+
+You need **Git, Node.js 20+, and npm**. Choose an entrypoint below; each uses the same workspace.
+
+| Entrypoint | Use it for | Installation steps |
+| --- | --- | --- |
+| Web | Browse and manage Skills in your browser | 1 + 2 |
+| CLI | Read JSON and run workspace operations from the terminal | 1 |
+| Codex plugin | Open the interface and use workspace tools inside Codex | 1 + 2 + 3 |
+
+### 1. Get the program
+
+```bash
+git clone https://github.com/zyfn/oneskill.git
+cd oneskill
+npm ci
+```
+
+Run the remaining commands from this source directory. Your Skill library is stored separately in `~/.oneskill/skills/`.
+
+### 2. Build the shared interface
+
+For **Web and the Codex plugin**, install the frontend dependencies and build both interface formats:
+
+```bash
+npm --prefix web ci
+npm run build
+```
+
+This prepares the browser interface and the embedded Codex interface. CLI-only use needs just step 1.
+
+### 3. Install the Codex plugin
+
+You also need the **Codex CLI** available as `codex` and a desktop client that supports local plugins and MCP Apps.
+
+```bash
+npm run build:plugin
+codex plugin marketplace add ./dist/marketplace
+codex plugin add oneskill@oneskill-local
+```
+
+The generated plugin contains the server, built interface, and Agent catalog. Your Skill packages remain in your workspace.
+
+## Usage
+
+### Web
+
+After installation steps 1 and 2, run:
+
+```bash
+npm start
+```
+
+The command starts the local service and opens your browser. On macOS, you can also double-click `oneskill.command`. To open the page in another browser, copy the **complete access URL** printed in the terminal; the port alone cannot authorize a new session.
+
+### CLI
+
+After installation step 1, run commands directly with Node. Results are written as JSON:
+
+```bash
+node src/cli.mjs workspace
+node src/cli.mjs skills
+node src/cli.mjs agents
+node src/cli.mjs plugins
+node src/cli.mjs mcp-inventory
+```
+
+Use `node src/cli.mjs workspace --refresh` to rescan and `node src/cli.mjs help` to see the commands. For changes, use the Agent and Skill IDs returned by `workspace`. For example, replace the IDs below with your own before connecting a package:
+
+```bash
+node src/cli.mjs call setSkillLink '{"agentId":"agent:codex","skillId":"managed:engineering/code-review","linked":true}'
+```
+
+`call` generates a request ID for mutations. Input fields and the other operations are documented in the [operation reference](docs/reference.md).
+
+### Codex plugin
+
+After installation steps 1–3, restart the Codex desktop client. Open **oneskill** from its sidebar or additional-app menu. The plugin starts the local service automatically and uses the same interface and library as Web.
+
+You can also ask Codex to use the tools in a conversation, for example: **“Use oneskill to list my unmanaged Skills.”** Sidebar placement depends on the host client. An already-open panel may need to be closed and reopened after a plugin update.
+
+## Work with Skills
+
+1. **Add a package.** Put a folder containing `SKILL.md` in the library, or choose **Skills → Unmanaged → Add to library**. Importing moves the original package with a backup; connect Agents separately afterward.
+2. **Connect an Agent.** Select a library Skill and enable its Agent directory switch. Codex's target is `~/.codex/skills/`, or `$CODEX_HOME/skills`. Products sharing one physical target use one control. Shared discovery roots such as `~/.agents/skills/` remain separate from these switches.
+3. **Organize and edit.** Collections follow the folder tree. Edit the library package directly. If you move a linked package, use the link-issue panel to reconnect its old reference or remove only the broken link. Reload behavior and nested-folder support follow each Agent's rules.
+4. **Leave a package in place.** Use **Ignore** in the unmanaged list; **Ignored → Restore** shows it again. **Select** applies import, ignore, or restore to up to 100 visible packages. A link into the library is an existing reference, not another unmanaged package.
+
+**Agents** shows installation status and local counts. **Plugins** and **MCP** show searchable, read-only cards. Counts describe discovered packages and configuration declarations, including inactive entries; they do not establish a live MCP connection. Shared physical configuration roots are counted once globally.
 
 ## Preview
 
@@ -28,110 +120,16 @@ oneskill is a local Skill manager for coding Agents. Keep packages in `~/.oneski
 
 ![Agent overview with local capability counts](docs/screenshots/agents.png)
 
-## Installation
+## Workspace and Agent configuration
 
-Requires **Node.js 20+** and npm. The Web interface also requires a browser; the Codex integration requires a desktop client that supports local plugins and MCP Apps.
-
-```bash
-git clone https://github.com/zyfn/oneskill.git
-cd oneskill
-npm ci
-npm --prefix web ci
-npm run build
-npm start
-```
-
-The first start creates your workspace and an empty Skill library in your home directory:
+The first use creates a workspace and an empty library in your home directory:
 
 | Platform | Workspace | Skill library |
 | --- | --- | --- |
 | macOS | `~/.oneskill/` | `~/.oneskill/skills/` |
 | Windows | `%USERPROFILE%\.oneskill\` | `%USERPROFILE%\.oneskill\skills\` |
 
-The source checkout and plugin cache contain application code, not your library. Starting from another directory or reinstalling the plugin uses the same default workspace. Personal packages, Agent overrides, preferences, and import backups are excluded from the distributed source and plugin package.
-
-## Usage
-
-### Web
-
-```bash
-npm start
-```
-
-On macOS, you can also double-click `oneskill.command`.
-
-To open the interface manually, copy the complete access URL printed in the terminal. Opening only the local host and port does not authorize a new browser session.
-
-1. **Add Skills.** Place packages containing `SKILL.md` under `~/.oneskill/skills/`, or open **Skills → Unmanaged** and choose **Add to library**. Importing moves the package away from its original location and retains a backup; it does not automatically connect any Agent. **Select** manages, ignores, or restores up to 100 visible packages without leaving the filtered list.
-2. **Organize the library.** Collections follow the folder tree. If a linked package moves, the broken-link notice lets you reconnect its old reference to the new location or remove only that broken reference. **All skills** includes the library root and nested collections.
-3. **Connect Agents.** Select a Skill and use its directory-link switches in the inspector. Agent products that write to the same directory share one link. Codex links use `~/.codex/skills/` or `$CODEX_HOME/skills`. Shared roots such as `~/.agents/skills/` are scanned for unmanaged packages and do not turn on another Agent's directory switch.
-4. **Review or ignore local packages.** The unmanaged list shows real packages outside the library, with their Agent or shared-directory source. Shared directories are listed once even when several Agents use them. A link pointing into the library is an existing reference and does not create another unmanaged entry. **Ignore** hides a package without changing its files; use **Ignored → Restore** to bring it back.
-5. **Edit the source.** Open a Skill's folder and edit its files. Connected Agents read the same source package, subject to their own reload and discovery behavior.
-
-The **Agents** page separates installed and not-installed entries. **Plugins** and **MCP** are separate pages with searchable, read-only cards and an Agent filter. A configuration root shared by multiple Agents contributes one entry to the global count and appears under their combined filter. MCP counts include Agent configuration and plugin declarations; repeated declarations within a plugin scope are merged, while different plugins remain separate. These counts may include inactive declarations and do not represent live connections.
-
-### CLI
-
-The CLI returns JSON and uses the same local service as the interface:
-
-```bash
-npm run cli -- workspace
-npm run cli -- workspace --refresh
-npm run cli -- skills
-npm run cli -- agents
-npm run cli -- plugins
-npm run cli -- mcp-inventory
-```
-
-Use identifiers returned by the workspace for individual operations:
-
-```bash
-npm run cli -- call getSkill '{"skillId":"managed:engineering/code-review"}'
-npm run cli -- call setSkillLink '{"agentId":"agent:codex","skillId":"managed:engineering/code-review","linked":true}'
-```
-
-`call` generates a request identifier for mutations when one is not supplied. See `npm run cli -- help` and the [operation reference](docs/reference.md) for details.
-
-### Codex plugin
-
-After building the project, package and install the local plugin:
-
-```bash
-npm run build:plugin
-codex plugin marketplace add ./dist/marketplace
-codex plugin add oneskill@oneskill-local
-```
-
-Restart the desktop client, then open **oneskill** from its sidebar or additional-app menu. The plugin includes the same interface and exposes workspace operations as MCP tools for use in conversations. Sidebar placement depends on the host client.
-
-The generated package includes the server code, UI, and Agent catalog. It requires Node.js on `PATH`, but does not install dependencies or build the interface when launched. After updating the source, rebuild the Web assets and plugin package, reinstall the plugin, and reload the desktop client to use the new version.
-
-### Choose a workspace
-
-All entrypoints default to `~/.oneskill`. To use an existing library elsewhere, select the **same absolute directory** for each entrypoint:
-
-```bash
-npm run cli -- web --open --workspace /absolute/path/to/workspace
-npm run cli -- skills --workspace /absolute/path/to/workspace
-npm run build:plugin -- --workspace /absolute/path/to/workspace
-```
-
-For the plugin, install the generated package after choosing the workspace. The data directory is separate from the source checkout and plugin cache.
-
-## How it works
-
-![oneskill architecture: Web, CLI and Codex share one local Workspace service and filesystem operations](docs/architecture.svg)
-
-1. **Discover.** Load Agent definitions for the current operating system and inspect their declared locations. CLI installation checks require `--version` to exit successfully with a recognized version; desktop applications and extensions use installation metadata. A configuration directory alone is not installation evidence.
-2. **Read.** Scan the library and configured Agent roots. While the workspace is visible, polling refreshes snapshots older than 30 seconds; **Rescan** checks immediately. The footer shows the last successful scan and unreadable sources. Inventory counts describe discovered entries, subject to scan limits.
-3. **Change through one service.** Web, CLI, and the MCP adapter share validation and errors. Writes are serialized and targets locked. Successful writes are recorded before the next scan, so a refresh failure cannot change a committed result. Unchanged rescans preserve the revision, and entrypoints verify the service version.
-4. **Keep ordinary files.** Linking creates a filesystem reference from the configured Agent target to the library package. Unlinking removes that reference and preserves the source. Importing verifies the library copy, moves the original into a backup, and leaves its old location empty. Connect Agents separately with their switches. Conflicting content is not overwritten.
-
-Multiple Agents may read a shared directory, so one physical reference can be visible to more than one Agent. oneskill keeps shared-source discovery separate from connections in configured Agent targets. The switches manage directory references; they do not override an Agent's own compatibility discovery rules or guarantee exclusive access to a Skill.
-
-The service listens on `127.0.0.1` and is intended for one local user. Access credentials, service metadata, locks, and request receipts are kept separately from the Skill library. An interrupted write is not blindly replayed: rescan and inspect the files before retrying.
-
-## Workspace and Agent configuration
+Source checkouts and plugin caches contain the program. Personal packages, overrides, preferences, and import backups are not included in source or plugin distributions.
 
 ```text
 ~/.oneskill/
@@ -163,6 +161,22 @@ The built-in [Agent catalog](agents.catalog.json) declares commands, icons, macO
 Relative resource paths follow the selected configuration root. Existing JSON, JSONC, TOML, and plugin-manifest readers are configuration-driven; a new proprietary format requires a scanner implementation. See [Agent discovery](docs/agent-discovery.md) and the [reference](docs/reference.md) for supported locations and boundaries.
 
 Agent installation does not guarantee support for every resource format. Skill loading and nested-directory support follow each Agent's own rules. Windows may require Developer Mode or permission to create symbolic links; native desktop behavior still needs platform-specific verification.
+
+### Choose another workspace
+
+To keep the library elsewhere, use the **same absolute directory** for every entrypoint:
+
+```bash
+node src/cli.mjs web --open --workspace /absolute/path/to/workspace
+node src/cli.mjs skills --workspace /absolute/path/to/workspace
+npm run build:plugin -- --workspace /absolute/path/to/workspace
+```
+
+For Codex, install the generated package after choosing the directory. Default plugin packages use the current user's `~/.oneskill/`.
+
+### Update the program
+
+In the source checkout, run `git pull` and `npm ci`. Web and plugin users then repeat the interface build from installation step 2. Plugin users also repeat step 3 and reopen the Codex client.
 
 ## Development
 

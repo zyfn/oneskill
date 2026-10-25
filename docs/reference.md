@@ -95,10 +95,10 @@ The shared operation contract also exposes `setSkillsIgnored` for an atomic pref
 
 | Location | Purpose |
 | --- | --- |
-| `skills/` | Canonical library; excluded from Git except for `.gitkeep`. |
-| `agents.catalog.json` | Agent commands, logos, independent configuration roots, resource declarations, and primary references. |
-| `agents.local.json` | Local Agent definitions and preset overrides, excluded from Git. |
-| `skills.ignore.json` | Local import protection and persistent ignore rules, excluded from Git. |
+| `~/.oneskill/skills/` | Canonical user library, separate from the source checkout. |
+| Installation `agents.catalog.json` | Built-in Agent commands, logos, configuration roots, resource declarations, and primary references. |
+| `~/.oneskill/agents.local.json` | Local Agent definitions and preset overrides. |
+| `~/.oneskill/skills.ignore.json` | Local import protection and persistent ignore rules. |
 | Agent `.oneskill-backups/` | Original packages and import restore records. |
 | `web/dist/` | Generated browser assets; excluded from Git. |
 | Browser local storage | Language preference. Skill contents are not stored here. |
