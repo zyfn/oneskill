@@ -113,6 +113,15 @@ test('shared subdirectories follow a selected root and its documented environmen
   assert.equal(resolveAgentPlatform(record, 'darwin').dir, '~/.example/skills')
 })
 
+test('locally observed plugin directories can be limited to macOS and overridden on Windows', async t => {
+  const f = await fixture(t, [{ name: 'desktop', commands: ['desktop'], configDir: { macos: '~/.desktop', windows: '${USERPROFILE}/.desktop' }, pluginDirs: { macos: ['plugins', 'bin/computer-use'], windows: null } }])
+  assert.deepEqual((await readAgentDefinitions(f.root, { platform: 'darwin' }))[0].resources.plugins, ['plugins', 'bin/computer-use'])
+  assert.deepEqual((await readAgentDefinitions(f.root, { platform: 'win32' }))[0].resources.plugins, [])
+  await f.local([{ name: 'desktop', pluginDirs: { windows: ['plugins'] } }])
+  assert.deepEqual((await readAgentDefinitions(f.root, { platform: 'win32' }))[0].resources.plugins, ['plugins'])
+  assert.deepEqual((await readAgentDefinitions(f.root, { platform: 'darwin' }))[0].resources.plugins, ['plugins', 'bin/computer-use'])
+})
+
 test('a one-platform local path edit preserves the other platform and shared rules', async t => {
   const f = await fixture(t, [{ name: 'known', commands: ['known'], configDir: { macos: '~/.known', windows: '${APPDATA}/Known' }, configDirEnv: 'KNOWN_HOME', skillDir: 'skills', pluginDirs: ['plugins'] }])
   await f.local([{ name: 'known', configDir: { windows: 'D:/Known' } }])

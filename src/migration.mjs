@@ -38,7 +38,8 @@ async function safeParents(root, relative) {
 }
 
 // The caller supplies only a freshly scanned candidate. Originals are retained in
-// a separate backup directory; no existing shared package is ever overwritten.
+// a separate backup directory; imports leave the old location empty. Agent
+// connections are created separately, only through an explicit link operation.
 export async function adoptLocalSkill({ source, agentDir, sharedRoot, backupRoot }) {
   const agentReal = await fs.realpath(agentDir)
   const sourceReal = await fs.realpath(source)
@@ -63,8 +64,6 @@ export async function adoptLocalSkill({ source, agentDir, sharedRoot, backupRoot
   const original = path.join(backup, 'original')
   const stage = path.join(parent, `.oneskill-import-${randomUUID()}`)
   let created = false
-  let moved = false
-  let linked = false
   try {
     if (!existing) {
       await fs.cp(source, stage, { recursive: true, errorOnExist: true, force: false, preserveTimestamps: true })
@@ -76,18 +75,11 @@ export async function adoptLocalSkill({ source, agentDir, sharedRoot, backupRoot
     if (await fingerprint(source) !== sourceHash) throw new Error('Skill changed while importing. Scan again and retry.')
     await fs.writeFile(path.join(backup, 'restore.json'), JSON.stringify({ source, target, original, importedAt: new Date().toISOString() }, null, 2), { flag: 'wx' })
     await fs.rename(source, original)
-    moved = true
-    await fs.symlink(target, source, 'dir')
-    linked = true
     return { relative, target, backup, reused: Boolean(existing) }
   } catch (error) {
-    if (moved && !linked) {
-      if (await stat(source)) throw new Error(`${error.message} Original is safe at ${original}; restore it after clearing the occupied source path.`)
-      await fs.rename(original, source)
-    }
     // A complete shared copy is left available after a later failure. It is safe
     // to retry, and deleting it could disrupt another concurrently linked Agent.
-    if (!moved) await fs.rm(backup, { recursive: true, force: true })
+    await fs.rm(backup, { recursive: true, force: true })
     if (created) error.message += ` Shared copy is available at ${target}.`
     throw error
   } finally {

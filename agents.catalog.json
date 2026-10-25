@@ -22,6 +22,13 @@
       "macos": "skills",
       "windows": null
     },
+    "pluginDirs": {
+      "macos": [
+        "plugins",
+        "bin/computer-use"
+      ],
+      "windows": null
+    },
     "mcp": [
       {
         "file": "mcp.json",
@@ -55,7 +62,7 @@
         "https://docs.qwenwork.cn/install/windows"
       ],
       "notes": [
-        "The macOS Skill target and computer-use MCP files are locally observed compatibility locations, not a published vendor filesystem contract. Windows resource subdirectories remain unconfigured."
+        "The macOS Skill target, plugin directories, and computer-use MCP files are locally observed compatibility locations, not a published vendor filesystem contract. Windows resource subdirectories remain unconfigured."
       ]
     }
   },

@@ -10,8 +10,10 @@ export const operations = {
   refreshWorkspace: define('oneskill_refresh_workspace', 'Rescan the same local workspace. Installation requires successful version evidence.', {}),
   getSkill: define('oneskill_get_skill', 'Read details and SKILL.md for a discovered Skill by its source identifier.', { skillId: id }),
   setSkillLink: define('oneskill_set_skill_link', 'Connect or disconnect a managed Skill and an Agent without replacing real directories.', { ...mutation, agentId: id, skillId: id, linked: z.boolean() }, true),
-  importSkills: define('oneskill_import_skills', 'Adopt selected unmanaged Skills into the library, preserving originals in backups.', { ...mutation, skillIds: z.array(id).min(1).max(100) }, true),
+  importSkills: define('oneskill_import_skills', 'Move selected unmanaged Skills into the library and preserve original backups. Agent links require a separate setSkillLink operation.', { ...mutation, skillIds: z.array(id).min(1).max(100) }, true),
   setSkillIgnored: define('oneskill_set_skill_ignored', 'Hide or restore one unmanaged Skill source without changing its files.', { ...mutation, skillId: id, ignored: z.boolean() }, true),
+  setSkillsIgnored: define('oneskill_set_skills_ignored', 'Hide or restore selected unmanaged Skill sources without changing their files.', { ...mutation, skillIds: z.array(id).min(1).max(100), ignored: z.boolean() }, true),
+  resolveSkillLink: define('oneskill_resolve_skill_link', 'Repair a discovered broken library link using a managed Skill, or remove only that broken link when skillId is omitted.', { ...mutation, issueId: id, skillId: id.optional() }, true),
   openFolder: define('oneskill_open_folder', 'Open a discovered resource folder on the local computer.', { resourceId: id }),
 }
 

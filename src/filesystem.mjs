@@ -30,6 +30,15 @@ export function exists(value) {
   }
 }
 
+export async function canonicalPath(value) {
+  let ancestor = path.resolve(value)
+  const absolute = ancestor
+  while (true) {
+    try { return path.resolve(await fs.promises.realpath(ancestor), path.relative(ancestor, absolute)) }
+    catch (error) { if (error.code !== 'ENOENT' || path.dirname(ancestor) === ancestor) throw error; ancestor = path.dirname(ancestor) }
+  }
+}
+
 export async function readJson(file, fallback = null) {
   try {
     return JSON.parse(await fs.promises.readFile(file, 'utf8'))
@@ -58,6 +67,7 @@ export async function walkBounded(root, options = {}) {
   const matches = []
   let visited = 0
   let truncated = false
+  const diagnostics = []
 
   async function visit(current, depth, ancestors = new Set()) {
     if (followLinks) {
@@ -72,7 +82,8 @@ export async function walkBounded(root, options = {}) {
     let entries
     try {
       entries = await fs.promises.readdir(current, { withFileTypes: true })
-    } catch {
+    } catch (error) {
+      if (error.code !== 'ENOENT') diagnostics.push({ path: displayPath(current), code: error.code || 'READ_FAILED' })
       return
     }
     entries.sort((a, b) => a.name.localeCompare(b.name))
@@ -102,6 +113,6 @@ export async function walkBounded(root, options = {}) {
     }
   }
 
-  if (exists(root)) await visit(root, 0)
-  return { matches, visited, truncated }
+  await visit(root, 0)
+  return { matches, visited, truncated, diagnostics }
 }

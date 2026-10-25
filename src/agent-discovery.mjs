@@ -146,7 +146,7 @@ export function configuredAgentLocations(entry, context = createDiscoveryContext
   for (const root of definition.resources?.skills || []) {
     if (root.base === 'config' && !configRoot) continue
     const directory = root.base === 'config' ? context.paths.join(configRoot, root.path) : expand(root.path, context.home, context.paths, context.env)
-    if (!roots.some((entry) => entry.path === directory)) roots.push({ id: root.id, path: directory, target: false, ignorePrefix: root.ignorePrefix ?? `@${root.id}/` })
+    if (!roots.some((entry) => entry.path === directory)) roots.push({ id: root.id, path: directory, target: false, scope: root.scope, ignorePrefix: root.ignorePrefix ?? `@${root.id}/` })
   }
   // Resolve declared resource paths before the scanners touch the filesystem.
   // Optional file environment overrides share this path handling across vendors.

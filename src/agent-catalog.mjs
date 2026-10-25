@@ -4,7 +4,7 @@ import path from 'node:path'
 const hosts = { darwin: 'macos', win32: 'windows', linux: 'linux' }
 const formats = new Set(['json', 'jsonc', 'toml'])
 const flatKeys = new Set(['name', 'logo', 'references', 'commands', 'appNames', 'executablePaths', 'executableDirEnv', 'extensions', 'extensionDirs', 'packages', 'configDir', 'configDirEnv', 'configDirEnvSuffix', 'skillDir', 'extraSkillDirs', 'skillLinkIgnorePrefix', 'pluginDirs', 'mcp', 'executable', 'probeInstallation'])
-const mapFields = ['configDir', 'skillDir', 'appNames', 'executablePaths', 'executable']
+const mapFields = ['configDir', 'skillDir', 'appNames', 'executablePaths', 'pluginDirs', 'executable']
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 const isText = value => typeof value === 'string' && Boolean(value.trim()) && !value.includes('\0')
 const isArray = value => Array.isArray(value) && value.every(isText)
@@ -30,11 +30,12 @@ function selected(value, host) { return isObject(value) ? value[host] : value }
 function validateFlat(entry, complete) {
   checkKeys(entry, flatKeys, entry.name, '')
   for (const key of ['logo', 'configDirEnv', 'configDirEnvSuffix']) if (entry[key] !== undefined && !isText(entry[key])) invalid(entry.name, `${key} must be nonempty`)
-  for (const key of ['commands', 'extensions', 'extensionDirs', 'packages', 'pluginDirs']) if (entry[key] !== undefined && !isArray(entry[key])) invalid(entry.name, `${key} must be a string array`)
+  for (const key of ['commands', 'extensions', 'extensionDirs', 'packages']) if (entry[key] !== undefined && !isArray(entry[key])) invalid(entry.name, `${key} must be a string array`)
   if (entry.commands?.some(command => !/^[a-z0-9][a-z0-9._-]*$/i.test(command))) invalid(entry.name, 'commands must be executable names, not shell expressions')
   if (entry.configDir !== undefined) checkMap(entry.configDir, entry.name, 'configDir', isText, { complete, requiredMap: true })
   for (const key of ['skillDir', 'executable']) if (entry[key] !== undefined) checkMap(entry[key], entry.name, key, isText, { complete: isObject(entry[key]) && complete })
   for (const key of ['appNames', 'executablePaths']) if (entry[key] !== undefined) checkMap(entry[key], entry.name, key, isArray, { complete: isObject(entry[key]) && complete })
+  if (entry.pluginDirs !== undefined) checkMap(entry.pluginDirs, entry.name, 'pluginDirs', isArray, { complete: isObject(entry.pluginDirs) && complete })
   if (entry.executableDirEnv !== undefined) {
     const value = entry.executableDirEnv
     if (!isObject(value) || !isText(value.name)) invalid(entry.name, 'executableDirEnv requires name and relative')
@@ -85,7 +86,7 @@ export function resolveAgentPlatform(entry, platform = process.platform, { compl
   }
   if (entry.executableDirEnv) discovery.nativeEnv = { name: entry.executableDirEnv.name, relative: selected(entry.executableDirEnv.relative, host) }
   const resources = complete ? { skills: [], plugins: [], mcp: { files: [] } } : {}
-  if (entry.pluginDirs !== undefined) resources.plugins = entry.pluginDirs
+  if (entry.pluginDirs !== undefined) resources.plugins = selected(entry.pluginDirs, host) || []
   if (entry.extraSkillDirs !== undefined) resources.skills = entry.extraSkillDirs.flatMap(({ path: location, ...metadata }) => {
     const value = selected(location, host)
     return value == null ? [] : [{ ...metadata, path: value, ...!isLocation(value) && { base: 'config' } }]

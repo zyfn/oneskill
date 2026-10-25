@@ -60,9 +60,9 @@ test('nested folders survive scan, link, import, and unlink; totals include loca
   assert.equal(imported.results[0].ok, true)
   assert.equal(imported.results[0].relative, 'design/review')
   assert.equal((await f.core.detectSkills()).items.find((item) => item.relative === 'design/review').category, 'design')
-  assert.equal((await f.core.countAgentSkills(await f.core.loadAgents()))[0].totalSkills, 3)
-  await f.core.setSkillLink('test-agent', 'engineering/backend/review', false)
   assert.equal((await f.core.countAgentSkills(await f.core.loadAgents()))[0].totalSkills, 2)
+  await f.core.setSkillLink('test-agent', 'engineering/backend/review', false)
+  assert.equal((await f.core.countAgentSkills(await f.core.loadAgents()))[0].totalSkills, 1)
   assert.equal((await fs.stat(path.join(f.root, 'skills/engineering/backend/review/SKILL.md'))).isFile(), true)
 })
 

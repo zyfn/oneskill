@@ -3,10 +3,11 @@ import fs from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { createDiscoveryContext, prepareDiscoveryContext, configuredAgentLocations, discoverAgent } from './agent-discovery.mjs'
 import { readAgentDefinitions } from './agent-catalog.mjs'
-import { displayPath, exists } from './filesystem.mjs'
+import { canonicalPath, displayPath, exists } from './filesystem.mjs'
 import { detectPlugins as scanPlugins, detectCapabilities as scanCapabilities } from './inventory.mjs'
 import { createSkillService } from './skills.mjs'
 import { defaultWorkspaceRoot, digest } from './runtime/paths.mjs'
+import { inspectSkillLinks, resolveSkillLink as resolveLink } from './skill-links.mjs'
 
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 export const WEB_ROOT = path.join(PROJECT_ROOT, 'web')
@@ -48,7 +49,7 @@ export function createWorkspace({ root = defaultWorkspaceRoot(), discoveryContex
         root: displayPath(root),
         absoluteRoot: root,
         absoluteSkillRoots: roots,
-        skillTargetId: skillDir ? digest(await fs.realpath(skillDir).catch(() => skillDir)) : null,
+        skillTargetId: skillDir ? digest(await canonicalPath(skillDir).catch(() => skillDir)) : null,
         resourceRules: definition.resources,
         support: { skills: roots.length > 0, plugins: Boolean(root && (!definition.resources || definition.resources.plugins?.length)), mcp: Boolean(!definition.resources || definition.resources.mcp?.files?.length) },
         configurationSource: configSource,
@@ -70,19 +71,22 @@ export function createWorkspace({ root = defaultWorkspaceRoot(), discoveryContex
     if (kind === 'mcp') plugins ||= await detectPlugins(agents)
     const result = await scanCapabilities(kind, agents, { plugins: plugins?.items || [] })
     if (plugins?.scan.truncated) result.scan.truncated = true
+    if (plugins?.scan.diagnostics?.length) result.scan.diagnostics.push(...plugins.scan.diagnostics)
     return result
   }
 
   async function workspaceData() {
     const agents = await loadAgents()
     const pluginScan = detectPlugins(agents)
-    const [skills, plugins, mcp, hooks, localSkills, countedAgents] = await Promise.all([
-      detectSkills(agents),
+    const links = inspectSkillLinks(SOURCE_ROOT, agents)
+    const [skills, plugins, mcp, hooks, localSkills, countedAgents, linkScan] = await Promise.all([
+      links.then(result => detectSkills(agents, result)),
       pluginScan,
       pluginScan.then(plugins => detectCapabilities('mcp', agents, plugins)),
       detectCapabilities('hook', agents),
       detectUnmanagedSkills(agents),
       countAgentSkills(agents),
+      links,
     ])
     const installedAgents = agents.filter((agent) => agent.installed).length
     const attention = skills.items.filter((item) => item.status === 'attention').length
@@ -109,6 +113,7 @@ export function createWorkspace({ root = defaultWorkspaceRoot(), discoveryContex
       plugins: inventory('plugin', plugins.items),
       mcp: inventory('mcp', mcp.items),
       hooks: inventory('hook', hooks.items),
+      linkIssues: linkScan.items.map(({ root: _root, destination: _destination, target: _target, ...item }) => item),
       stats: {
         agents: agents.length,
         installedAgents,
@@ -122,7 +127,7 @@ export function createWorkspace({ root = defaultWorkspaceRoot(), discoveryContex
         attention,
       },
       scan: {
-        skills: scanSummary({ ...skills.scan, truncated: skills.scan.truncated || localSkills.scan.truncated, library: scanSummary(skills.scan), unmanaged: scanSummary(localSkills.scan) }),
+        skills: scanSummary({ ...skills.scan, diagnostics: [...skills.scan.diagnostics, ...localSkills.scan.diagnostics, ...linkScan.scan.diagnostics], truncated: skills.scan.truncated || localSkills.scan.truncated || linkScan.scan.truncated, library: scanSummary(skills.scan), unmanaged: scanSummary(localSkills.scan) }),
         plugins: scanSummary(plugins.scan),
         mcp: scanSummary(mcp.scan),
         hooks: scanSummary(hooks.scan),
@@ -130,5 +135,6 @@ export function createWorkspace({ root = defaultWorkspaceRoot(), discoveryContex
     }
   }
 
-  return { root: workspaceRoot, sourceRoot: SOURCE_ROOT, loadAgents, detectPlugins, detectCapabilities, workspaceData, ...skills }
+  return { root: workspaceRoot, sourceRoot: SOURCE_ROOT, loadAgents, detectPlugins, detectCapabilities, workspaceData, ...skills,
+    resolveSkillLink: async (issueId, skillRelative, knownAgents = null) => resolveLink({ sourceRoot: SOURCE_ROOT, agents: knownAgents || await loadAgents(), issueId, skillRelative }) }
 }

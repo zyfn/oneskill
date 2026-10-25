@@ -7,6 +7,7 @@ import { PROTOCOL_VERSION, errorResult, WorkspaceError } from './contracts/opera
 import { workspaceLocation, atomicJson, readJson } from './runtime/paths.mjs'
 import { acquireLock } from './runtime/locks.mjs'
 import { createWorkspaceService } from './runtime/workspace-service.mjs'
+import { APP_VERSION } from './version.mjs'
 
 function cookieValue(request, name) {
   const part = (request.headers.cookie || '').split(';').map(value => value.trim()).find(value => value.startsWith(`${name}=`))
@@ -32,7 +33,7 @@ async function readBody(request) {
 }
 const mime = file => ({ '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json' }[path.extname(file)] || 'application/octet-stream')
 
-export async function startWorkspaceServer({ workspace = createWorkspace(), runtimeRoot, webRoot = WEB_ROOT, port = 0, idleTimeout = 120000, openFolder, onClose } = {}) {
+export async function startWorkspaceServer({ workspace = createWorkspace(), runtimeRoot, webRoot = WEB_ROOT, port = 0, idleTimeout = 120000, openFolder, onClose, appVersion = APP_VERSION } = {}) {
   const location = await workspaceLocation(workspace.root, runtimeRoot)
   await fs.mkdir(location.directory, { recursive: true, mode: 0o700 })
   const release = await acquireLock(path.join(location.directory, 'owner.lock'), { timeout: 1000 })
@@ -43,7 +44,7 @@ export async function startWorkspaceServer({ workspace = createWorkspace(), runt
   let endpoint
   let lastActivity = Date.now()
   let active = 0
-  const identity = { protocol: PROTOCOL_VERSION, workspaceId: location.workspaceId, sessionId: service.sessionId, pid: process.pid }
+  const identity = { protocol: PROTOCOL_VERSION, appVersion, workspaceId: location.workspaceId, sessionId: service.sessionId, pid: process.pid }
   const server = http.createServer(async (request, response) => {
     active++
     try {
@@ -60,6 +61,13 @@ export async function startWorkspaceServer({ workspace = createWorkspace(), runt
         if (!authorized(request, token, cookieName)) throw new WorkspaceError('UNAUTHORIZED', 'Open the current access link from the oneskill terminal.', 401)
         lastActivity = Date.now()
         if (request.method === 'GET' && url.pathname === '/api/identity') return sendJson(response, 200, identity)
+        if (request.method === 'POST' && url.pathname === '/api/shutdown') {
+          await service.drain()
+          sendJson(response, 200, { stopped: true })
+          setImmediate(() => { void close() })
+          return
+        }
+        if (request.headers['x-oneskill-version'] && request.headers['x-oneskill-version'] !== appVersion) throw new WorkspaceError('VERSION_MISMATCH', 'oneskill was updated. Reopen the workspace to load the current interface.', 409)
         const operation = /^\/api\/operations\/([a-zA-Z]+)$/.exec(url.pathname)?.[1]
         if (request.method !== 'POST' || !operation) throw new WorkspaceError('UNKNOWN_OPERATION', 'Unknown workspace operation.', 404)
         return sendJson(response, 200, await service.call(operation, await readBody(request)))

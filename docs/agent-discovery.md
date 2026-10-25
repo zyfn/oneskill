@@ -31,7 +31,7 @@ Agent rules live in `agents.catalog.json`. Commands, icons, resource subdirector
 | `configDir` | Explicit `macos` and `windows` root paths. |
 | `configDirEnv` | Optional documented environment variable replacing that root. |
 | `skillDir` | Skill link target; relative paths use the selected configuration root. |
-| `pluginDirs` | Plugin search roots; relative paths use the selected configuration root. |
+| `pluginDirs` | Plugin search roots; relative paths use the selected configuration root. A `macos`/`windows` map can limit locally observed roots to one host. |
 | `mcp` | Configuration `file` and the server-map `key` inside it. |
 
 Absolute paths, `~`, and environment-based paths remain independent of `configDir`. For example, Codex uses `skillDir: "~/.agents/skills"`, while Claude uses `skillDir: "skills"`. `~/.claude.json` is in the user's home, outside Claude's configuration directory.
@@ -49,6 +49,8 @@ File format is inferred from `.json`, `.jsonc`, and `.toml`. An explicit `format
 A CLI definition must complete `--version` with exit code zero and a recognized version before `detected` or `installed` is true. A missing, killed, timed-out, nonzero, empty, or unrecognizable response never passes. A configured CLI does not fall back to app or extension metadata, even when no command is found. Failed executable evidence remains available with `status: "unavailable"` and the real error code.
 
 Definitions without command rules can confirm desktop or extension installation metadata; their `runnable` and CLI `version` remain null. Qoder desktop (`qoder`) and its CLI (`qoder-cli`, accepting `qodercli` and `qoder` command names) are separate definitions sharing the documented user root. QwenWork is a desktop definition. A found desktop installation is not a certification that the app can launch or authenticate.
+
+Unmanaged Skills in a physical root shared by several Agents appear once with a shared-directory source. Plugin and MCP declarations from the same configuration root are also counted once, with a combined Agent filter. Plugin manifests under `.codex-plugin`, `.claude-plugin`, and `.qoder-plugin` mark package boundaries, so nested examples are not mistaken for an incomplete plugin scan.
 
 A missing configuration directory does not prevent CLI discovery. An existing directory alone never establishes installation. A missing or `null` root for the current host disables that full definition on this host; another host's root is never borrowed. A command-only definition can omit directories entirely.
 

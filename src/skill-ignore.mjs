@@ -9,27 +9,35 @@ async function readRules(file) {
   return new Map(rules.map(rule => [JSON.stringify([rule.agent, rule.relative]), rule.ignored]))
 }
 export function isSkillIgnored(item, rules) {
-  for (const relative of [item.relative, ...(item.ignoreAliases || [])]) {
-    const key = JSON.stringify([item.agent, relative])
+  const sources = [
+    ...[item.relative, ...(item.ignoreAliases || [])].map(relative => ({ agent: item.agent, relative })),
+    ...(item.ignoreSources || []),
+  ]
+  for (const { agent, relative } of sources) {
+    const key = JSON.stringify([agent, relative])
     if (rules.has(key)) return rules.get(key)
   }
   return false
 }
 export function createIgnoreStore(file) {
   let queue = Promise.resolve()
-  function update(resolveCandidate, ignored) {
+  function updateMany(resolveCandidates, ignored) {
     const operation = queue.then(async () => {
       if (typeof ignored !== 'boolean') throw new Error('Ignored must be true or false.')
-      const candidate = await resolveCandidate()
+      const candidates = await resolveCandidates()
       const rules = await readRules(file)
-      if (isSkillIgnored(candidate, rules) === ignored) return { ok: true, changed: false, ignored }
-      rules.set(JSON.stringify([candidate.agent, candidate.relative]), ignored)
+      const results = candidates.map(candidate => {
+        const changed = isSkillIgnored(candidate, rules) !== ignored
+        if (changed) rules.set(JSON.stringify([candidate.agent, candidate.relative]), ignored)
+        return { ok: true, changed, ignored }
+      })
+      if (!results.some(result => result.changed)) return results
       const records = [...rules].map(([key, value]) => { const [agent, relative] = JSON.parse(key); return { agent, relative, ignored: value } })
       await atomicJson(file, records)
-      return { ok: true, changed: true, ignored }
+      return results
     })
     queue = operation.catch(() => {})
     return operation
   }
-  return { read: () => readRules(file), update }
+  return { read: () => readRules(file), updateMany, update: async (resolveCandidate, ignored) => (await updateMany(async () => [await resolveCandidate()], ignored))[0] }
 }

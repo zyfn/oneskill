@@ -21,13 +21,13 @@ async function fixture(t) {
   return { root, sharedRoot, skill }
 }
 
-test('imports a nested package, preserves executable assets, backs up original and links source', async (t) => {
+test('imports a nested package, preserves executable assets and backs up the original without linking its old location', async (t) => {
   const f = await fixture(t)
   const input = await f.skill('first', 'team/writing')
   const result = await adoptLocalSkill(input)
   assert.equal(result.relative, 'team/writing')
-  assert.equal(await fs.realpath(input.source), result.target)
-  assert.equal((await fs.lstat(input.source)).isSymbolicLink(), true)
+  await assert.rejects(fs.lstat(input.source), { code: 'ENOENT' })
+  assert.match(await fs.readFile(path.join(result.target, 'SKILL.md'), 'utf8'), /Original content/)
   assert.equal((await fs.stat(path.join(result.target, 'scripts/run.sh'))).mode & 0o777, 0o755)
   assert.match(await fs.readFile(path.join(result.backup, 'original/SKILL.md'), 'utf8'), /Original content/)
   assert.equal(JSON.parse(await fs.readFile(path.join(result.backup, 'restore.json'), 'utf8')).source, input.source)
@@ -59,17 +59,22 @@ test('rejects source traversal, linked package assets, and escaping destination 
   assert.equal((await fs.lstat(input.source)).isDirectory(), true)
 })
 
-test('restores original folder when link creation fails; complete copy can be safely retried', async (t) => {
+test('keeps the original when moving it to backup fails; the verified library copy can be safely reused', async (t) => {
   const f = await fixture(t)
   const input = await f.skill('first')
-  const mocked = t.mock.method(fs, 'symlink', async () => { throw new Error('simulated link failure') })
-  await assert.rejects(adoptLocalSkill(input), /simulated link failure/)
+  const rename = fs.rename
+  const mocked = t.mock.method(fs, 'rename', async (source, target) => {
+    if (source === input.source) throw new Error('simulated backup failure')
+    return rename(source, target)
+  })
+  await assert.rejects(adoptLocalSkill(input), /simulated backup failure/)
   assert.equal((await fs.lstat(input.source)).isDirectory(), true)
   assert.match(await fs.readFile(path.join(input.source, 'SKILL.md'), 'utf8'), /Original content/)
   mocked.mock.restore()
   const retry = await adoptLocalSkill(input)
   assert.equal(retry.reused, true)
-  assert.equal((await fs.lstat(input.source)).isSymbolicLink(), true)
+  await assert.rejects(fs.lstat(input.source), { code: 'ENOENT' })
+  assert.match(await fs.readFile(path.join(retry.backup, 'original/SKILL.md'), 'utf8'), /Original content/)
 })
 
 test('API core revalidates candidates, respects ignore list and omits backups on later scans', async (t) => {
@@ -88,7 +93,8 @@ test('API core revalidates candidates, respects ignore list and omits backups on
   const remaining = (await core.detectUnmanagedSkills()).items
   assert.equal(remaining.length, 1)
   assert.equal(remaining[0].path, ignored.source)
-  assert.equal((await core.detectSkills()).items[0].bindings[0].state, 'linked')
+  assert.equal((await core.detectSkills()).items[0].bindings[0].state, 'not-linked')
+  await assert.rejects(fs.lstat(input.source), { code: 'ENOENT' })
 })
 
 test('rejects nesting an imported skill inside an existing shared package', async (t) => {

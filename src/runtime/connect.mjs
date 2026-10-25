@@ -5,6 +5,7 @@ import { PROTOCOL_VERSION, WorkspaceError } from '../contracts/operations.mjs'
 import { PROJECT_ROOT } from '../core.mjs'
 import { workspaceLocation, readJson, processAlive } from './paths.mjs'
 import { acquireLock } from './locks.mjs'
+import { APP_VERSION } from '../version.mjs'
 
 async function verify(location) {
   const descriptor = await readJson(path.join(location.directory, 'service.json'))
@@ -15,7 +16,7 @@ async function verify(location) {
     const response = await fetch(`${descriptor.endpoint}/api/identity`, { headers: { authorization: `Bearer ${descriptor.token}` }, signal: AbortSignal.timeout(1000) })
     if (!response.ok) return null
     const identity = await response.json()
-    return identity.sessionId === descriptor.sessionId && identity.workspaceId === location.workspaceId ? descriptor : null
+    return identity.sessionId === descriptor.sessionId && identity.workspaceId === location.workspaceId ? { ...descriptor, appVersion: identity.appVersion } : null
   } catch { return null }
 }
 
@@ -23,10 +24,20 @@ export async function connectWorkspace({ root, runtimeRoot, port, idleTimeout, s
   const location = await workspaceLocation(root, runtimeRoot)
   await fs.mkdir(location.directory, { recursive: true, mode: 0o700 })
   let descriptor = await verify(location)
-  if (!descriptor && start) {
+  if ((!descriptor || descriptor.appVersion !== APP_VERSION) && start) {
     const release = await acquireLock(path.join(location.directory, 'start.lock'))
     try {
       descriptor = await verify(location)
+      if (descriptor && descriptor.appVersion !== APP_VERSION) {
+        const response = await fetch(`${descriptor.endpoint}/api/shutdown`, { method: 'POST', headers: { authorization: `Bearer ${descriptor.token}` }, signal: AbortSignal.timeout(60000) })
+        if (!response.ok) throw new WorkspaceError('VERSION_MISMATCH', 'An older oneskill service is still running. Stop it and reopen oneskill to finish updating.', 409)
+        const deadline = Date.now() + 10000
+        while (await verify(location)) {
+          if (Date.now() > deadline) throw new WorkspaceError('SERVICE_RESTARTING', 'The previous oneskill service is still closing. Retry shortly.', 503)
+          await new Promise(resolve => setTimeout(resolve, 60))
+        }
+        descriptor = null
+      }
       if (!descriptor) {
         const log = await fs.open(path.join(location.directory, 'service.log'), 'a', 0o600)
         const child = spawn(process.execPath, [path.join(PROJECT_ROOT, 'src/cli.mjs'), '_runtime', '--workspace', location.root, '--runtime-dir', location.runtimeRoot, ...(port !== undefined ? ['--port', String(port)] : []), ...(idleTimeout !== undefined ? ['--idle-timeout', String(idleTimeout)] : [])], { cwd: location.directory, detached: true, windowsHide: true, stdio: ['ignore', log.fd, log.fd] })
@@ -44,8 +55,10 @@ export async function connectWorkspace({ root, runtimeRoot, port, idleTimeout, s
     } finally { await release() }
   }
   if (!descriptor) throw new WorkspaceError('SERVICE_UNAVAILABLE', 'The local workspace service is not running.', 503)
+  if (descriptor.appVersion !== APP_VERSION) throw new WorkspaceError('VERSION_MISMATCH', 'Reopen oneskill with the current version.', 409)
   async function reconnect(previous) {
     const next = await verify(location)
+    if (next && next.appVersion !== APP_VERSION) throw new WorkspaceError('VERSION_MISMATCH', 'oneskill was updated. Reopen this entrypoint.', 409)
     if (!next || next.sessionId === previous.sessionId) return false
     descriptor = next
     return true

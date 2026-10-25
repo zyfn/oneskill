@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { readText, walkBounded } from './filesystem.mjs'
+import { displayPath, walkBounded } from './filesystem.mjs'
 
 function parseFrontmatter(text) {
   const result = {}
@@ -14,13 +14,13 @@ function parseFrontmatter(text) {
     if (!match) continue
     const key = match[1]
     const value = match[2].trim()
-    if (value === '>' || value === '|') {
+    if (/^[>|](?:[+-]?[1-9]?|[1-9][+-]?)$/.test(value)) {
       const parts = []
-      while (index + 1 < lines.length && /^\s+/.test(lines[index + 1])) {
+      while (index + 1 < lines.length && (/^\s+/.test(lines[index + 1]) || !lines[index + 1].trim())) {
         index += 1
         parts.push(lines[index].trim())
       }
-      result[key] = value === '|' ? parts.join('\n').trim() : parts.join(' ').replace(/\s+/g, ' ').trim()
+      result[key] = value[0] === '|' ? parts.join('\n').trim() : parts.join(' ').replace(/\s+/g, ' ').trim()
     } else {
       result[key] = value.replace(/^['"]|['"]$/g, '')
     }
@@ -29,7 +29,7 @@ function parseFrontmatter(text) {
 }
 
 async function describeSkill(manifest) {
-  const text = await readText(manifest)
+  const text = await fs.promises.readFile(manifest, 'utf8')
   const metadata = parseFrontmatter(text)
   const body = text.replace(/^---[\s\S]*?---\s*/, '')
   const firstParagraph = body
@@ -53,8 +53,8 @@ export async function findSkillPackages(root, followLinks = false) {
   const packages = []
   for (const manifest of scan.matches) {
     const dir = path.dirname(manifest)
-    const info = await describeSkill(manifest)
-    packages.push({ manifest, dir, ...info })
+    try { packages.push({ manifest, dir, ...await describeSkill(manifest) }) }
+    catch (error) { scan.diagnostics.push({ path: displayPath(manifest), code: error.code || 'READ_FAILED' }) }
   }
   return { packages, scan }
 }
@@ -84,11 +84,12 @@ export function agentSkillRoots(agent) {
 export async function findAgentSkills(agent, followLinks = false) {
   const packages = []
   const seen = new Map()
-  const scan = { visited: 0, truncated: false }
+  const scan = { visited: 0, truncated: false, diagnostics: [] }
   for (const root of agentSkillRoots(agent)) {
     const result = await findSkillPackages(root.path, followLinks)
     scan.visited += result.scan.visited
     scan.truncated ||= result.scan.truncated
+    scan.diagnostics.push(...result.scan.diagnostics)
     for (const item of result.packages) {
       const real = await fs.promises.realpath(item.dir).catch(() => item.dir)
       const existing = seen.get(real)

@@ -14,6 +14,8 @@ import { connectWorkspace } from '../src/runtime/connect.mjs'
 import { createMcpServer, WORKSPACE_UI } from '../src/adapters/mcp.mjs'
 import { digest, atomicJson } from '../src/runtime/paths.mjs'
 import { parseOperation } from '../src/contracts/operations.mjs'
+import { createWorkspaceService } from '../src/runtime/workspace-service.mjs'
+import { APP_VERSION } from '../src/version.mjs'
 
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-runtime-'))
@@ -74,7 +76,10 @@ test('mutations reject stale revisions, deduplicate retries and persist ignores 
   assert.equal(imported.results[0].ok, true)
   assert.equal(imported.results[0].id, 'local:fixture:local')
   assert.match(await fs.readFile(path.join(f.root, 'skills/local/SKILL.md'), 'utf8'), /Read this package/)
-  assert.equal((await f.client.call('getWorkspace')).skills.filter(item => !item.managed).length, 0)
+  const afterImport = await f.client.call('getWorkspace')
+  assert.equal(afterImport.skills.filter(item => !item.managed).length, 0)
+  assert.equal(afterImport.skills.find(item => item.id === 'managed:local').bindings[0].state, 'not-linked')
+  await assert.rejects(fs.lstat(path.join(f.root, 'agent/skills/local')), { code: 'ENOENT' })
 })
 
 test('interrupted requests are not replayed; conflicting real directories remain intact', async t => {
@@ -125,4 +130,77 @@ test('existing clients reconnect after service replacement and preserve mutation
   samePort = await startWorkspaceServer({ workspace: createWorkspace({ root: f.root }), runtimeRoot: f.runtimeRoot, port })
   assert.equal((await f.client.heartbeat()).sessionId, samePort.identity.sessionId)
   assert.equal(f.client.descriptor.token, samePort.token)
+})
+
+test('unchanged rescans preserve revisions; expired snapshots refresh and expose scan failures', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-snapshot-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  let clock = 0, scans = 0, fail = false, value = 1
+  const service = createWorkspaceService({ workspace: { workspaceData: async () => { scans++; if (fail) throw new Error('unreadable'); return { value, checkedAt: String(clock) } } }, location: { directory: root, runtimeRoot: root, workspaceId: 'fixture' }, now: () => clock, snapshotTtlMs: 100 })
+  const first = await service.call('getWorkspace')
+  clock = 50
+  assert.equal((await service.call('refreshWorkspace')).revision, first.revision)
+  assert.equal((await service.call('getWorkspace')).revision, first.revision)
+  assert.equal(scans, 2)
+  clock = 151; value = 2
+  assert.notEqual((await service.call('getWorkspace')).revision, first.revision)
+  fail = true; clock = 252
+  const stale = await service.call('getWorkspace')
+  assert.equal(stale.stale, true)
+  assert.equal(stale.value, 2)
+  assert.equal(stale.scanError.message, 'unreadable')
+})
+
+test('a committed mutation is acknowledged and replayable even if the next scan fails', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oneskill-commit-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  let fail = false, writes = 0
+  const workspace = {
+    loadAgents: async () => [],
+    workspaceData: async () => { if (fail) throw new Error('scan unavailable'); return { agents: [{ id: 'agent:fixture', name: 'fixture' }], skills: [{ id: 'managed:alpha', managed: true, relative: 'alpha' }] } },
+    setSkillLink: async () => { writes++; fail = true; return { changed: true, state: 'linked' } },
+  }
+  const service = createWorkspaceService({ workspace, location: { directory: root, runtimeRoot: root, workspaceId: 'fixture' } })
+  const first = await service.call('getWorkspace')
+  const request = { requestId: 'commit', expectedRevision: first.revision, agentId: 'agent:fixture', skillId: 'managed:alpha', linked: true }
+  const result = await service.call('setSkillLink', request)
+  assert.equal(result.changed, true)
+  await assert.rejects(service.call('getWorkspace'), /scan unavailable/)
+  assert.deepEqual(await service.call('setSkillLink', request), result)
+  assert.equal(writes, 1)
+  assert.equal(JSON.parse(await fs.readFile(path.join(root, 'requests', `${digest('commit')}.json`))).state, 'complete')
+})
+
+test('bulk ignore validates all selected sources before persisting and can restore them', async t => {
+  const f = await fixture(t)
+  const extra = path.join(f.root, 'agent/skills/extra')
+  await fs.mkdir(extra); await fs.writeFile(path.join(extra, 'SKILL.md'), 'Extra workflow')
+  let data = await f.client.call('refreshWorkspace')
+  const skillIds = data.skills.filter(item => !item.managed).map(item => item.id)
+  const first = await f.client.call('setSkillsIgnored', { requestId: randomUUID(), expectedRevision: data.revision, skillIds, ignored: true })
+  assert.equal(first.results.length, 2)
+  assert.ok(first.results.every(result => result.ok))
+  data = await f.client.call('getWorkspace')
+  assert.equal(data.skills.filter(item => item.ignored).length, 2)
+  await f.client.call('setSkillsIgnored', { requestId: randomUUID(), skillIds, ignored: false })
+  await f.client.call('getWorkspace')
+  await fs.rm(extra, { recursive: true })
+  await assert.rejects(f.client.call('setSkillsIgnored', { requestId: randomUUID(), skillIds, ignored: true }), { code: 'SOURCE_CHANGED' })
+  assert.equal((await f.client.call('refreshWorkspace')).skills.filter(item => item.ignored).length, 0)
+})
+
+test('entrypoints replace an authenticated older service instead of silently reusing its code', async t => {
+  const f = await fixture(t)
+  await f.runtime.close()
+  const old = await startWorkspaceServer({ workspace: createWorkspace({ root: f.root }), runtimeRoot: f.runtimeRoot, appVersion: '0.0.0-test' })
+  t.after(old.close)
+  const current = await connectWorkspace({ root: f.root, runtimeRoot: f.runtimeRoot, idleTimeout: 2000 })
+  assert.equal(current.descriptor.appVersion, APP_VERSION)
+  assert.notEqual(current.descriptor.sessionId, old.identity.sessionId)
+  assert.ok((await current.call('getWorkspace')).skills.length)
+  await fetch(`${current.descriptor.endpoint}/api/shutdown`, { method: 'POST', headers: { authorization: `Bearer ${current.descriptor.token}` } })
+  for (let attempt = 0; attempt < 100; attempt++) {
+    if (!await fs.stat(path.join(current.location.directory, 'service.json')).catch(() => null)) break
+    await new Promise(resolve => setTimeout(resolve, 30))
+  }
 })

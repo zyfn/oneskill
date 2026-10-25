@@ -6,7 +6,7 @@ import { configurationEntries, readConfiguration } from './configuration.mjs'
 
 const CONFIG_NAMES = new Set(['.mcp.json', 'mcp.json', 'hooks.json', 'settings.json'])
 const MANIFEST_NAMES = new Set(['plugin.json', 'package.json'])
-const MANIFEST_DIRS = new Set(['.codex-plugin', '.claude-plugin'])
+const MANIFEST_DIRS = new Set(['.codex-plugin', '.claude-plugin', '.qoder-plugin'])
 
 function pluginManifestCandidate(file, entry) {
   if (entry.isDirectory()) return MANIFEST_DIRS.has(entry.name) && exists(path.join(file, 'plugin.json'))
@@ -20,7 +20,7 @@ function pluginManifestCandidate(file, entry) {
 
 function pluginDirectory(manifest) {
   const parent = path.basename(path.dirname(manifest))
-  return parent === '.codex-plugin' || parent === '.claude-plugin'
+  return MANIFEST_DIRS.has(parent)
     ? path.dirname(path.dirname(manifest))
     : path.dirname(manifest)
 }
@@ -39,8 +39,7 @@ function capabilityList(manifest, pluginDir) {
 }
 
 function isPluginManifest(file, manifest) {
-  if (path.basename(path.dirname(file)) === '.codex-plugin') return true
-  if (path.basename(path.dirname(file)) === '.claude-plugin') return true
+  if (MANIFEST_DIRS.has(path.basename(path.dirname(file)))) return true
   if (path.basename(file) === 'plugin.json') return true
   const keywords = Array.isArray(manifest?.keywords) ? manifest.keywords.join(' ').toLowerCase() : ''
   return Boolean(
@@ -81,51 +80,72 @@ async function pluginIcon(pluginDir, manifest) {
 export async function detectPlugins(agents) {
   const items = []
   const scans = []
-  const seen = new Set()
-  const seenDirectories = new Set()
+  const rootScans = new Map()
+  const seen = new Map()
+  const seenDirectories = new Map()
+  const diagnostics = []
 
   for (const agent of agents.filter((entry) => entry.absoluteRoot && (entry.detected || entry.configured))) {
     const configuredRoots = agent.resourceRules ? agent.resourceRules.plugins || [] : ['plugins']
     for (const configuredRoot of configuredRoots) {
       const root = path.resolve(agent.absoluteRoot, configuredRoot)
-      if (!exists(root)) continue
-      const scan = await walkBounded(root, {
-        maxDepth: 8,
-        maxEntries: 8000,
-        shouldCollect: pluginManifestCandidate,
-        stopAtMatch: true,
-      })
-      scans.push({ agent: agent.name, root: displayPath(root), visited: scan.visited, truncated: scan.truncated })
+      const rootIdentity = await fs.promises.realpath(root).catch(() => root)
+      let scan = rootScans.get(rootIdentity)
+      if (!scan) {
+        scan = await walkBounded(root, {
+          maxDepth: 8,
+          maxEntries: 8000,
+          shouldCollect: pluginManifestCandidate,
+          stopAtMatch: true,
+        })
+        rootScans.set(rootIdentity, scan)
+        diagnostics.push(...scan.diagnostics.map(item => ({ ...item, agent: agent.name })))
+        scans.push({ agent: agent.name, root: displayPath(root), visited: scan.visited, truncated: scan.truncated })
+      }
       const manifests = scan.matches.map(file => MANIFEST_DIRS.has(path.basename(file)) ? path.join(file, 'plugin.json') : file).sort((left, right) => {
-        const leftPreferred = /\/(?:\.codex-plugin|\.claude-plugin)\/plugin\.json$/.test(left.split(path.sep).join('/'))
-        const rightPreferred = /\/(?:\.codex-plugin|\.claude-plugin)\/plugin\.json$/.test(right.split(path.sep).join('/'))
+        const leftPreferred = /\/(?:\.codex-plugin|\.claude-plugin|\.qoder-plugin)\/plugin\.json$/.test(left.split(path.sep).join('/'))
+        const rightPreferred = /\/(?:\.codex-plugin|\.claude-plugin|\.qoder-plugin)\/plugin\.json$/.test(right.split(path.sep).join('/'))
         return Number(rightPreferred) - Number(leftPreferred)
       })
       for (const manifestPath of manifests) {
-        const manifest = await readJson(manifestPath)
+        const parsed = await readConfiguration(manifestPath, 'json')
+        if (parsed.error || parsed.missing) { diagnostics.push({ agent: agent.name, path: displayPath(manifestPath), code: parsed.error || 'SOURCE_CHANGED', format: 'json' }); continue }
+        const manifest = parsed.data
         if (!manifest || !isPluginManifest(manifestPath, manifest)) continue
         const pluginDir = pluginDirectory(manifestPath)
-        const directoryKey = `${agent.name}\0${pluginDir}`
-        if (seenDirectories.has(directoryKey)) continue
+        const directoryKey = await fs.promises.realpath(pluginDir).catch(() => pluginDir)
+        const previous = seenDirectories.get(directoryKey)
+        if (previous) {
+          if (!previous.agents.includes(agent.name)) previous.agents.push(agent.name)
+          continue
+        }
         const name = manifest.interface?.displayName || manifest.displayName || manifest.name || path.basename(pluginDir)
         const version = String(manifest.version || path.basename(pluginDir).match(/^\d+\.\d+/)?.[0] || '')
         const source = pluginSource(pluginDir, root)
-        const key = `${agent.name}\0${source}\0${name}\0${version}`
-        if (seen.has(key)) continue
-        seen.add(key)
-        seenDirectories.add(directoryKey)
+        const key = JSON.stringify([rootIdentity, source, name, version])
+        const equivalent = seen.get(key)
+        if (equivalent) {
+          seenDirectories.set(directoryKey, equivalent)
+          if (!equivalent.agents.includes(agent.name)) equivalent.agents.push(agent.name)
+          continue
+        }
         const capabilities = capabilityList(manifest, pluginDir)
-        items.push({
+        const item = {
           name,
           agent: agent.name,
+          agents: [agent.name],
           description: manifest.interface?.shortDescription || manifest.description || '',
           source,
           path: displayPath(pluginDir),
           manifest: displayPath(manifestPath),
           version,
+          activation: 'unknown',
           capabilities,
           icon: await pluginIcon(pluginDir, manifest),
-        })
+        }
+        items.push(item)
+        seen.set(key, item)
+        seenDirectories.set(directoryKey, item)
       }
     }
   }
@@ -136,6 +156,7 @@ export async function detectPlugins(agents) {
       visited: scans.reduce((total, scan) => total + scan.visited, 0),
       truncated: scans.some((scan) => scan.truncated),
       roots: scans,
+      diagnostics,
     },
   }
 }
@@ -164,6 +185,7 @@ async function pluginMcpSpecifications(plugin, diagnostics) {
 export async function detectCapabilities(kind, agents, { plugins = [] } = {}) {
   const items = []
   const byCapability = new Map()
+  const byFileCapability = new Map()
   let visited = 0
   let truncated = false
   const diagnostics = []
@@ -172,8 +194,9 @@ export async function detectCapabilities(kind, agents, { plugins = [] } = {}) {
       ? agent.resourceRules.mcp?.files || []
       : [...CONFIG_NAMES].filter((name) => kind === 'mcp' ? name.includes('mcp') || name === 'settings.json' : name === 'hooks.json' || name === 'settings.json')
         .map((name) => ({ base: 'config', path: name, key: kind === 'mcp' ? 'mcpServers' : 'hooks', recursive: true }))
-    const pluginSpecifications = kind === 'mcp' ? (await Promise.all(plugins.filter(plugin => plugin.agent === agent.name).map(plugin => pluginMcpSpecifications(plugin, diagnostics)))).flat() : []
+    const pluginSpecifications = kind === 'mcp' ? (await Promise.all(plugins.filter(plugin => plugin.agents?.includes(agent.name) || plugin.agent === agent.name).map(plugin => pluginMcpSpecifications(plugin, diagnostics)))).flat() : []
     const specifications = [...pluginSpecifications, ...agentSpecifications]
+    const ownerRoot = agent.absoluteRoot ? await fs.promises.realpath(agent.absoluteRoot).catch(() => path.resolve(agent.absoluteRoot)) : agent.name
     const seenFiles = new Set()
     const recursiveNames = new Map()
     const baseFor = (specification) => specification.pluginRoot || (specification.base === 'home' ? agent.configurationHome || os.homedir() : agent.absoluteRoot)
@@ -188,6 +211,7 @@ export async function detectCapabilities(kind, agents, { plugins = [] } = {}) {
       const scan = await walkBounded(base, { maxDepth: 4, maxEntries: 2500, shouldCollect: (_file, entry) => entry.isFile() && names.has(entry.name) })
       visited += scan.visited
       truncated ||= scan.truncated
+      diagnostics.push(...scan.diagnostics.map(item => ({ ...item, agent: agent.name })))
       recursiveFiles.set(base, scan.matches)
     }
     for (const specification of specifications) {
@@ -207,19 +231,28 @@ export async function detectCapabilities(kind, agents, { plugins = [] } = {}) {
         if (result.error) { diagnostics.push({ agent: agent.name, path: displayPath(file), code: result.error, format }); continue }
         visited += 1
         const basename = path.basename(file)
+        const fileIdentity = await fs.promises.realpath(file).catch(() => path.resolve(file))
         for (const { name, enabled } of configurationEntries(result.data, specification.key)) {
-          const key = JSON.stringify([agent.name, specification.pluginId || null, name])
+          const key = JSON.stringify([ownerRoot, specification.pluginId || null, name])
+          const fileKey = JSON.stringify([fileIdentity, name])
           const pathValue = displayPath(file)
-          const existing = byCapability.get(key)
+          const existing = byFileCapability.get(fileKey) || byCapability.get(key)
           if (existing) {
+            if (!existing.agents.includes(agent.name)) existing.agents.push(agent.name)
             if (!existing.paths.includes(pathValue)) existing.paths.push(pathValue)
             if (!existing.sources.includes(basename)) existing.sources.push(basename)
+            if (specification.plugin && !existing.plugin) {
+              existing.plugin = specification.plugin
+              existing.pluginId = specification.pluginId
+            }
             if (existing.enabled !== enabled) delete existing.enabled
+            byFileCapability.set(fileKey, existing)
             continue
           }
           const item = {
             name,
             agent: agent.name,
+            agents: [agent.name],
             path: pathValue,
             source: basename,
             paths: [pathValue],
@@ -228,6 +261,7 @@ export async function detectCapabilities(kind, agents, { plugins = [] } = {}) {
             ...(enabled === undefined ? {} : { enabled }),
           }
           byCapability.set(key, item)
+          byFileCapability.set(fileKey, item)
           items.push(item)
         }
       }

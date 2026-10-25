@@ -3,6 +3,7 @@ import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { atomicJson, processAlive, readJson, digest } from './paths.mjs'
 import { WorkspaceError } from '../contracts/operations.mjs'
+import { canonicalPath } from '../filesystem.mjs'
 
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
 export async function acquireLock(directory, { timeout = 15000 } = {}) {
@@ -35,13 +36,7 @@ export async function acquireLock(directory, { timeout = 15000 } = {}) {
 }
 export async function lockTargets(runtimeRoot, targets, action) {
   const releases = []
-  const canonical = await Promise.all(targets.map(async target => {
-    let ancestor = target
-    while (true) {
-      try { return path.resolve(await fs.realpath(ancestor), path.relative(ancestor, target)) }
-      catch (error) { if (error.code !== 'ENOENT') throw error; const parent = path.dirname(ancestor); if (parent === ancestor) throw error; ancestor = parent }
-    }
-  }))
+  const canonical = await Promise.all(targets.map(canonicalPath))
   try {
     for (const target of [...new Set(canonical)].sort()) releases.push(await acquireLock(path.join(runtimeRoot, 'targets', digest(target))))
     return await action()

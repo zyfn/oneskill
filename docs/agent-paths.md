@@ -6,7 +6,7 @@ The catalog explicitly selects macOS or native Windows before any path access. `
 
 | Agent | macOS default root | Native Windows default root | Root override | User MCP source / evidence |
 | --- | --- | --- | --- | --- |
-| QwenWork | `~/.qwenworkcn` | `H/.qwenworkcn` | — | Both roots are published in the [macOS](https://docs.qwenwork.cn/install/macos) and [Windows](https://docs.qwenwork.cn/install/windows) uninstall instructions. macOS Skill/MCP children are retained as locally observed compatibility rules; Windows children remain unconfigured. |
+| QwenWork | `~/.qwenworkcn` | `H/.qwenworkcn` | — | Both roots are published in the [macOS](https://docs.qwenwork.cn/install/macos) and [Windows](https://docs.qwenwork.cn/install/windows) uninstall instructions. macOS Skill, plugin and MCP children are retained as locally observed compatibility rules; Windows children remain unconfigured. |
 | Qwen Code | `~/.qwen` | `H/.qwen` | `QWEN_HOME` | `settings.json` → `mcpServers`; [configuration](https://qwenlm.github.io/qwen-code-docs/en/users/configuration/settings/) and [Skills](https://qwenlm.github.io/qwen-code-docs/en/users/features/skills/). |
 | Codex | `~/.codex` | `H/.codex` | `CODEX_HOME` | `config.toml` → `mcp_servers`; [environment variables](https://learn.chatgpt.com/docs/config-file/environment-variables), [MCP](https://learn.chatgpt.com/docs/extend/mcp?surface=cli). Personal Skills use `H/.agents/skills`; [Skills](https://learn.chatgpt.com/docs/build-skills). |
 | Claude Code | `~/.claude` | `H/.claude` | `CLAUDE_CONFIG_DIR` | `H/.claude.json` → `mcpServers`; [settings](https://code.claude.com/docs/en/settings), [MCP scopes](https://code.claude.com/docs/en/mcp), [Skills](https://code.claude.com/docs/en/skills). |
